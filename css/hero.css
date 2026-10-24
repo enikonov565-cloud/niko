@@ -1,3 +1,4 @@
+/* фирменный шрифт — только для логотипа, весь остальной текст набран Inter */
 @font-face {
 	font-family: 'Tupik';
 	src: url('../fonts/Tupik.ttf') format('truetype');
@@ -16,11 +17,36 @@
 	/* токены из Figma */
 	--c-light: #ebebeb;
 	--c-dark: #0b0f15; /* чёрный с синевой — в него уходит лес через экран-паузу */
-	--c-type: rgba(255, 252, 252, 0.25);
+	--bg-page: linear-gradient(180deg, #1a242b 59.14%, #0b0c11 94.73%);
 
-	/* поля: лево/право 60, верх/низ 80 */
-	--pad-x: 60px;
+	--font-text: 'Inter', sans-serif;
+	--font-logo: 'Tupik', sans-serif;
+
+	/* размеры текста: минимум на 375 → норма на 1440 → потолок.
+	   Середина в rem + vw — страница честно увеличивается в браузере */
+	--fs-h1: clamp(2.125rem, 1.5528rem + 2.4413vw, 5.3125rem);    /* 34 → 60 → 85 */
+	--fs-h2: clamp(1.625rem, 1.3169rem + 1.3146vw, 3.5rem);       /* 26 → 40 → 56 */
+	--fs-sub: clamp(1.25rem, 1.0739rem + 0.7512vw, 2.25rem);      /* 20 → 28 → 36 */
+	--fs-text: clamp(1rem, 0.956rem + 0.1878vw, 1.25rem);         /* 16 → 18 → 20 */
+	--fs-small: clamp(0.875rem, 0.853rem + 0.0939vw, 1rem);       /* 14 → 15 → 16 */
+	--fs-btn: clamp(1rem, 0.7359rem + 1.1268vw, 2rem);            /* 16 → 28 → 32 (кнопка в Figma — 32) */
+
+	/* межстрочный: чем мельче шрифт, тем больше интервал */
+	--lh-h1: 1.05;
+	--lh-h2: 1.15;
+	--lh-sub: 1.3;
+	--lh-text: 1.55;
+
+	/* воздух */
+	--pad-x: clamp(1.25rem, 0.3697rem + 3.7559vw, 5rem);          /* поля по краям: 20 → 60 → 80 */
+	--section-gap: clamp(3.75rem, 2.4296rem + 5.6338vw, 10rem);   /* между секциями: 60 → 120 → 160 */
+	--card-pad: clamp(1.25rem, 0.9859rem + 1.1268vw, 2.5rem);     /* внутри карточек: 20 → 32 → 40 */
 	--pad-y: 80px;
+
+	/* общий контейнер до 2400px: на широких мониторах поля растут, контент по центру */
+	--container: 2400px;
+	--gutter: max(var(--pad-x), calc((100vw - var(--container)) / 2));
+	--measure: 65ch; /* ширина абзаца */
 
 	/* шапка */
 	/* бургер по размеру = текст ссылки: от верха строчных букв до подчёркивания */
@@ -29,22 +55,24 @@
 	--line: 2px;
 	--logo-w: 170px;
 	--brand-gap: 40px; /* толщина линий бургера и подчёркивания */
-	--contact-size: 20px;
-	--topbar-y: 40px; /* шапка первого экрана выше общего поля 80 */
+	--contact-size: var(--fs-btn);
+	--topbar-y: clamp(1.25rem, 0.8099rem + 1.8779vw, 2.5rem);     /* 20 → 40 */
 }
 
-html,
+html {
+	background: #0b0c11; /* низ градиента страницы — под ним ничего не мелькает */
+}
+
 body {
 	margin: 0;
-	background: var(--c-dark);
+	background: var(--bg-page);
 	color: var(--c-light);
-	font-family: 'Inter', sans-serif;
+	font-family: var(--font-text);
+	font-size: var(--fs-text);
 	font-weight: 300;
+	line-height: var(--lh-text);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-}
-
-body {
 	overflow-x: hidden;
 }
 
@@ -52,71 +80,46 @@ img {
 	display: block;
 }
 
-/* ---------- HERO ---------- */
+/* ---------- ТИПОГРАФИКА (стили из Figma) ---------- */
 
-.hero {
-	/* зона стыка с первым экраном: hero заезжает на хвост параллакса
-	   и проявляется из прозрачного — шва нет */
-	--seam: 20vh;
-	--seam: 20svh; /* = .parallax__tail */
-
-	position: relative;
-	z-index: 3;
-	height: 100vh;
-	height: 100svh;
-	min-height: 560px;
-	/* без наезда на предыдущий экран: над галереей с плёнками наезд перекрыл бы нижнюю плёнку */
-	overflow: hidden;
-	background: linear-gradient(to bottom,
-		rgba(11, 15, 21, 0) 0,
-		rgba(11, 15, 21, 0.35) calc(var(--seam) * 0.35),
-		rgba(11, 15, 21, 0.8) calc(var(--seam) * 0.7),
-		var(--c-dark) var(--seam));
+h1,
+.t-h1 {
+	font-family: var(--font-text);
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
 }
 
-/* портрет: в макете 1619×1079 из 1920×1080, прижат влево */
-.hero__photo {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 84.33%;
-	height: 100%;
-	object-fit: cover;
-	object-position: 30% 50%;
-	pointer-events: none;
-	user-select: none;
-	/* верх фото проявляется из первого экрана, низ растворяется в подложку */
-	-webkit-mask-image: linear-gradient(to bottom, transparent 0, rgba(0, 0, 0, 0.25) calc(var(--seam) * 0.5), #000 calc(var(--seam) * 1.4), #000 72%, transparent 100%);
-	mask-image: linear-gradient(to bottom, transparent 0, rgba(0, 0, 0, 0.25) calc(var(--seam) * 0.5), #000 calc(var(--seam) * 1.4), #000 72%, transparent 100%);
+h2,
+.t-h2 {
+	font-family: var(--font-text);
+	font-size: var(--fs-h2);
+	font-weight: 400;
+	line-height: var(--lh-h2);
+	letter-spacing: -0.01em;
 }
 
-/* кинетическая типографика: 6 строк на всю высоту экрана */
-.hero__type {
-	position: absolute;
-	inset: 0;
-	display: grid;
-	grid-template-rows: repeat(6, 1fr);
-	font-family: 'Tupik', sans-serif;
-	/* 170px в макете 1920 → 8.854vw, но не выше 1/6 экрана */
-	font-size: min(8.854vw, 15.4svh);
-	line-height: 1;
+h3,
+.t-h3 {
+	font-family: var(--font-text);
+	font-size: var(--fs-sub);
+	font-weight: 300;
+	line-height: var(--lh-sub);
 	letter-spacing: 0.02em;
-	text-transform: uppercase;
-	color: var(--c-type);
-	pointer-events: none;
-	user-select: none;
 }
 
-.hero__row {
-	display: flex;
-	align-items: center;
-	gap: 0.1765em; /* 30px при 170px */
-	white-space: nowrap;
-	will-change: transform;
+p {
+	max-width: var(--measure);
 }
 
-.hero__row span {
-	flex: none;
+/* кнопки и ссылки-кнопки */
+.t-btn {
+	font-family: var(--font-text);
+	font-size: var(--fs-btn);
+	font-weight: 300;
+	line-height: normal;
+	text-transform: lowercase;
 }
 
 /* ---------- ШАПКА ПЕРВОГО ЭКРАНА ---------- */
@@ -126,8 +129,8 @@ img {
 	position: fixed;
 	z-index: 50;
 	top: var(--topbar-y);
-	left: var(--pad-x);
-	right: var(--pad-x);
+	left: var(--gutter);
+	right: var(--gutter);
 	display: flex;
 	/* по нижней линии: нижняя полоска бургера = подчёркивание ссылки */
 	align-items: flex-end;
@@ -195,7 +198,10 @@ img {
 }
 
 .topbar__burger {
-	display: block;
+	display: flex;
+	align-items: flex-end;
+	min-width: 44px;
+	min-height: 44px; /* палец попадает и на телефоне */
 	padding: 0;
 	margin: 0;
 	border: 0;
@@ -269,19 +275,25 @@ img {
 		linear-gradient(currentColor, currentColor) 0 100% / 100% var(--line) no-repeat;
 }
 
-/* главная кнопка шапки — белая, читается на градиенте под шапкой */
-.topbar__contact {
+/* кнопка-ссылка: «связаться со мной» в шапке и такие же ссылки на экранах (about.css) */
+.topbar__contact,
+.about__link {
 	position: relative;
+	display: inline-flex;
+	align-items: flex-end;
+	min-height: 44px; /* палец попадает и на телефоне */
 	padding-bottom: 5px;
 	font-size: var(--contact-size);
-	font-weight: 400;
+	font-weight: 300;
 	line-height: normal;
+	text-transform: lowercase;
 	color: #fff;
 	text-decoration: none;
 	white-space: nowrap;
 }
 
-.topbar__contact::after {
+.topbar__contact::after,
+.about__link::after {
 	content: "";
 	position: absolute;
 	left: 0;
@@ -317,65 +329,40 @@ img {
 		opacity: 0.7;
 	}
 
-	.topbar__contact:hover::after {
+	.topbar__contact:hover::after,
+	.about__link:hover::after {
 		animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
 	}
 }
 
 /* с клавиатуры — тот же эффект */
-.topbar__contact:focus-visible::after {
+.topbar__contact:focus-visible::after,
+.about__link:focus-visible::after {
 	animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.topbar__contact::after {
+	.topbar__contact::after,
+	.about__link::after {
 		animation: none !important;
 	}
 }
 
 .topbar__burger:focus-visible,
-.topbar__contact:focus-visible {
+.topbar__contact:focus-visible,
+.about__link:focus-visible {
 	outline: 1px solid var(--c-light);
 	outline-offset: 6px;
 }
 
 /* ---------- АДАПТИВ ---------- */
-
-/* ноутбуки */
-@media (max-width: 1440px) {
-	:root {
-		--contact-size: 18px;
-	}
-}
-
-/* планшеты */
-@media (max-width: 1024px) {
-	:root {
-		--pad-x: 40px;
-		--pad-y: 48px;
-		--topbar-y: 32px;
-		--contact-size: 16px;
-	}
-}
+/* размеры текста и поля — через clamp в :root, здесь только логотип в шапке */
 
 /* телефоны */
 @media (max-width: 767px) {
 	:root {
-		--pad-x: 20px;
-		--pad-y: 28px;
 		--logo-w: 104px;
 		--brand-gap: 20px;
-		--topbar-y: 20px;
-		--contact-size: 14px;
-	}
-
-	.hero__photo {
-		width: 100%;
-		object-position: 45% 50%;
-	}
-
-	.hero__type {
-		font-size: min(22vw, 15.4svh);
 	}
 }
 
@@ -384,7 +371,6 @@ img {
 	:root {
 		--logo-w: 88px;
 		--brand-gap: 14px;
-		--contact-size: 13px;
 	}
 }
 
@@ -393,9 +379,5 @@ img {
 	:root {
 		--pad-y: 20px;
 		--topbar-y: 16px;
-	}
-
-	.hero {
-		min-height: 320px;
 	}
 }

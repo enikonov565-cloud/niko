@@ -1,0 +1,438 @@
+/* ---------- ГАЛЕРЕЯ-КОМНАТА — четвёртый экран ----------
+   Эффект: Codrops 3D Gallery Room (https://tympanus.net/codrops/2013/01/15/3d-image-gallery-room/),
+   переписан без jQuery. Фото висят на стенах; шаг — проезд вдоль стены,
+   в конце стены — поворот на 90° к следующей. У каждой стены свой оттенок света (задаёт js/room.js) */
+
+.room {
+	--wall: #171b21;   /* стена — светлее макетной #0c0d12: зал не мрачный */
+	--floor: #1b2229;  /* пол — чуть светлее макетного #141b22 */
+	--frame: #1a242b;  /* рамка — из макета, паспарту светлее (см. .room__frame) */
+	--seam: #0b0f15;   /* низ экрана с плёнками — с него начинается потолок комнаты, без шва */
+	--light: 232, 226, 214; /* цвет ламп текущей стены, RGB */
+
+	/* высота экрана по содержимому: на 1366×768 фото и навигация помещаются целиком */
+	--room-h: clamp(35rem, 24rem + 26vw, 68rem);
+	--floor-h: clamp(5.5rem, 4rem + 3vw, 8rem);
+	/* шинопровод с лампами — сразу под шапкой */
+	--track-y: calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1.25rem + 2vw, 3.5rem));
+	--plinth: clamp(0.5rem, 0.35rem + 0.4vw, 0.875rem);
+
+	--mat: clamp(0.75rem, 0.4rem + 1.4vw, 1.875rem);       /* паспарту: 12 → 30 */
+	--frame-r: clamp(0.5rem, 0.3rem + 0.6vw, 0.9375rem);   /* скругление: 8 → 15 */
+	--print: clamp(3rem, 2rem + 3.5vw, 7rem);              /* следы */
+	--arrow: clamp(2rem, 1.5rem + 1.3vw, 3.125rem);        /* стрелка: 32 → 50 */
+
+	--ease-walk: cubic-bezier(0.65, 0, 0.35, 1);
+
+	position: relative;
+	z-index: 3;
+	height: var(--room-h);
+	overflow: hidden;
+	background: var(--seam);
+	color: var(--c-light);
+}
+
+/* сцена с перспективой — в ней стены поворачиваются как в настоящей комнате */
+.room__stage {
+	position: absolute;
+	inset: 0;
+	perspective: 1400px;
+	perspective-origin: 50% 42%;
+	overflow: hidden;
+	touch-action: pan-y; /* свайп вбок листает, вертикальный скролл страницы не мешает */
+	user-select: none;
+}
+
+/* ---------- стена ---------- */
+
+.room__wall {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: calc(100% - var(--floor-h));
+	transform-style: preserve-3d;
+	will-change: transform;
+	background-color: var(--wall);
+	/* штукатурка с мелкой фактурой. Сверху стена долго и плавно выходит из цвета предыдущего экрана —
+	   кривая без изломов, поэтому стыка не видно; у пола чуть темнее, как в настоящем зале */
+	background-image:
+		linear-gradient(to bottom,
+			var(--seam) 0,
+			rgba(11, 15, 21, 0.94) 5%,
+			rgba(11, 15, 21, 0.82) 10%,
+			rgba(11, 15, 21, 0.64) 16%,
+			rgba(11, 15, 21, 0.44) 22%,
+			rgba(11, 15, 21, 0.26) 28%,
+			rgba(11, 15, 21, 0.12) 34%,
+			rgba(11, 15, 21, 0.04) 40%,
+			rgba(11, 15, 21, 0) 46%,
+			rgba(11, 15, 21, 0) 82%,
+			rgba(0, 0, 0, 0.22) 100%),
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.7  0 0 0 0 0.74  0 0 0 0 0.78  0 0 0 0.1 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+	background-size: 100% 100%, 260px 260px;
+}
+
+/* плинтус: тонкая светлая кромка и тень — граница стены и пола */
+.room__wall::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: var(--plinth);
+	border-top: 1px solid rgba(235, 235, 235, 0.07);
+	background: linear-gradient(to bottom, #1a2128, #0e1217);
+}
+
+/* пол едет и поворачивается вместе со стеной */
+.room__floor {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	height: var(--floor-h);
+	background-color: var(--floor);
+	/* полированный бетон: тень от стены и швы между плитами — по ним видно движение */
+	background-image:
+		linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 40%),
+		repeating-linear-gradient(90deg, rgba(235, 235, 235, 0.035) 0 1px, transparent 1px 220px);
+}
+
+/* шинопровод: металлический профиль — блик сверху, тень снизу, паз для ламп,
+   висит на тонких тросах и отбрасывает тень на стену */
+.room__track {
+	--rail: clamp(0.4375rem, 0.3rem + 0.4vw, 0.75rem); /* толщина: 7 → 12 */
+	position: absolute;
+	top: var(--track-y);
+	left: 0;
+	width: 100%;
+	height: var(--rail);
+	border-radius: calc(var(--rail) / 2);
+	background: linear-gradient(to bottom,
+		#8a959e 0%,
+		#5b666f 18%,
+		#323b43 45%,
+		#1d242a 72%,
+		#0f1317 100%);
+	box-shadow:
+		0 1px 0 rgba(0, 0, 0, 0.6),
+		0 calc(var(--rail) * 1.4) calc(var(--rail) * 2) rgba(0, 0, 0, 0.45);
+}
+
+/* паз снизу профиля */
+.room__track::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 18%;
+	height: 1px;
+	background: rgba(0, 0, 0, 0.7);
+}
+
+/* тросы подвеса — уходят к потолку */
+.room__track::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 100%;
+	height: var(--track-y);
+	background: repeating-linear-gradient(90deg,
+		transparent 0 calc(min(36vw, 520px) - 1px),
+		rgba(150, 162, 172, 0.22) calc(min(36vw, 520px) - 1px) min(36vw, 520px));
+	-webkit-mask-image: linear-gradient(to top, #000, transparent 85%);
+	mask-image: linear-gradient(to top, #000, transparent 85%);
+}
+
+/* ---------- свет: лампа → луч → пятно на стене → отблеск на полу ---------- */
+
+/* трековый светильник: цилиндр с бликом на переходнике, линза снизу */
+.room__lamp {
+	position: absolute;
+	top: calc(var(--track-y) + clamp(0.4375rem, 0.3rem + 0.4vw, 0.75rem) - 1px);
+	width: clamp(0.75rem, 0.55rem + 0.55vw, 1.25rem);
+	height: clamp(1.375rem, 1rem + 1vw, 2.25rem);
+	transform: translateX(-50%);
+	border-radius: 3px 3px 2px 2px;
+	background: linear-gradient(90deg, #0e1215 0%, #3b444c 30%, #6b7680 42%, #2a3238 62%, #0e1215 100%);
+	box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* переходник к шинопроводу */
+.room__lamp::before {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: -2px;
+	width: 55%;
+	height: 28%;
+	transform: translateX(-50%);
+	border-radius: 2px;
+	background: linear-gradient(90deg, #11161a, #48525a 45%, #11161a);
+}
+
+/* линза: светится, когда лампа включена */
+.room__lamp::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	bottom: -2px;
+	width: 80%;
+	height: 4px;
+	transform: translateX(-50%);
+	border-radius: 50%;
+	background: rgb(var(--light));
+	box-shadow: 0 0 10px 2px rgba(var(--light), 0.7);
+	opacity: 0.08;
+	transition: opacity 0.6s ease;
+}
+
+.room__beam {
+	position: absolute;
+	pointer-events: none;
+	/* конус света из лампы: мягкие края, к картине растворяется — свет, а не абажур */
+	background: conic-gradient(from 180deg at 50% 0,
+		rgba(var(--light), 0.3) 0deg,
+		rgba(var(--light), 0.16) 18deg,
+		rgba(var(--light), 0) 38deg,
+		rgba(var(--light), 0) 322deg,
+		rgba(var(--light), 0.16) 342deg,
+		rgba(var(--light), 0.3) 360deg);
+	-webkit-mask-image: linear-gradient(to bottom, #000 0, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+	mask-image: linear-gradient(to bottom, #000 0, rgba(0, 0, 0, 0.7) 45%, transparent 100%);
+	mix-blend-mode: screen;
+	opacity: 0;
+	transition: opacity 0.9s ease;
+}
+
+.room__pool {
+	position: absolute;
+	pointer-events: none;
+	/* свет ровный у рамки и ярче над ней — лампа сверху */
+	/* эллипс целиком внутри блока — края гаснут в ноль, обрезанной линии нет */
+	background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(var(--light), 0.2) 0, rgba(var(--light), 0.15) 45%, rgba(var(--light), 0.06) 72%, rgba(var(--light), 0) 100%);
+	opacity: 0.12;
+	transition: opacity 0.9s ease;
+}
+
+.room__glow {
+	position: absolute;
+	top: 0;
+	height: 70%;
+	pointer-events: none;
+	background: radial-gradient(ellipse 50% 60% at 50% 0, rgba(var(--light), 0.12), rgba(var(--light), 0) 70%);
+	opacity: 0;
+	transition: opacity 0.9s ease;
+}
+
+/* лампа включается с коротким миганием — как настоящая */
+.room__lamp.is-lit::after {
+	opacity: 1;
+	animation: lamp-on 0.5s steps(1, end);
+}
+
+.room__beam.is-lit,
+.room__glow.is-lit,
+.room__pool.is-lit {
+	opacity: 1;
+}
+
+@keyframes lamp-on {
+	0% { opacity: 0.08; }
+	20% { opacity: 1; }
+	35% { opacity: 0.3; }
+	55% { opacity: 1; }
+}
+
+/* ---------- рамка: размер под пропорции снимка, фото не обрезается ---------- */
+
+.room__frame {
+	--bevel: clamp(0.25rem, 0.15rem + 0.4vw, 0.5625rem); /* скос паспарту к фото: 4 → 9 */
+	position: absolute;
+	margin: 0;
+	padding: var(--mat);
+	border: 3px solid #0b0e12;
+	border-radius: var(--frame-r);
+	/* паспарту светлее макетного и с лёгким светом сверху — зал не мрачный */
+	background: linear-gradient(165deg, #56636e 0%, #47535d 45%, #3a454e 100%);
+	/* тень падает вниз — свет сверху */
+	box-shadow:
+		inset 0 1px 0 rgba(235, 235, 235, 0.14),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+		0 4px 8px rgba(0, 0, 0, 0.45),
+		0 28px 40px -12px rgba(0, 0, 0, 0.7);
+	cursor: pointer;
+}
+
+/* скос паспарту: фото утоплено внутрь рамки. Свет сверху — верхний скос в тени, нижний освещён */
+.room__frame::before {
+	content: "";
+	position: absolute;
+	inset: calc(var(--mat) - var(--bevel));
+	border-radius: 2px;
+	background: linear-gradient(to bottom, #1f272e 0%, #2b343c 40%, #56626c 85%, #6d7a85 100%);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+/* мягкая тень от верхнего края проёма на фото — снимок смотрит изнутри, без лишней темноты */
+.room__frame::after {
+	content: "";
+	position: absolute;
+	z-index: 2;
+	inset: var(--mat);
+	pointer-events: none;
+	box-shadow:
+		inset 0 calc(var(--bevel) * 1.4) calc(var(--bevel) * 2.2) calc(var(--bevel) * -1) rgba(0, 0, 0, 0.55),
+		inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.room__frame img {
+	position: relative;
+	z-index: 1;
+	display: block;
+	max-width: none;
+	filter: brightness(0.55) saturate(0.8);
+	transition: filter 0.9s ease;
+}
+
+.room__frame.is-lit {
+	cursor: default;
+}
+
+.room__frame.is-lit img {
+	filter: none;
+}
+
+/* ---------- навигация на полу ---------- */
+
+.room__nav {
+	position: absolute;
+	z-index: 2;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: var(--floor-h);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(1rem, -1rem + 9vw, 13rem);
+	pointer-events: none;
+}
+
+.room__step {
+	display: flex;
+	align-items: center;
+	gap: clamp(0.25rem, 0.6vw, 1rem);
+	min-width: 44px;
+	min-height: 44px;
+	padding: 0 4px;
+	border: 0;
+	background: none;
+	/* в цвет ламп текущей стены, светлее — читается на тёмном полу */
+	color: var(--c-light);
+	color: color-mix(in srgb, rgb(var(--light)) 55%, var(--c-light));
+	opacity: 0.55;
+	cursor: pointer;
+	pointer-events: auto;
+	transition: opacity 0.3s ease, color 0.9s ease;
+}
+
+.room__step:focus-visible {
+	opacity: 1;
+	outline: 1px solid var(--c-light);
+	outline-offset: 6px;
+}
+
+@media (hover: hover) {
+	.room__step:hover {
+		opacity: 1;
+	}
+}
+
+.room__arrow {
+	flex: none;
+	width: var(--arrow);
+	height: auto;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* следы из макета: картинка служит маской, цвет — от текста, поэтому подстраиваются под фон */
+.room__prints {
+	position: relative;
+	flex: none;
+	width: var(--print);
+	height: var(--print);
+}
+
+.room__step--prev .room__prints {
+	transform: rotate(-90deg);
+}
+
+.room__step--next .room__prints {
+	transform: rotate(90deg);
+}
+
+.room__print {
+	position: absolute;
+	inset: 0;
+	background: currentColor;
+	-webkit-mask: url(../img/room/steps.png) center / contain no-repeat;
+	mask: url(../img/room/steps.png) center / contain no-repeat;
+	opacity: 0.4; /* это просто следы на полу — приглушённые, ярче стрелок не спорят */
+}
+
+/* левый и правый отпечаток — по половинке картинки */
+.room__print--a {
+	clip-path: inset(0 55% 0 0);
+}
+
+.room__print--b {
+	clip-path: inset(0 0 0 45%);
+}
+
+/* по нажатию следы «шагают»: сначала задний отпечаток, потом передний */
+.room__step.is-stepping .room__print {
+	animation: print-step 0.7s ease-out;
+}
+
+.room__step.is-stepping .room__print--b {
+	animation-delay: 0.18s;
+}
+
+@keyframes print-step {
+	0% { opacity: 0.4; transform: none; }
+	30% { opacity: 0.75; transform: scale(1.06); }
+	100% { opacity: 0.4; transform: none; }
+}
+
+/* в комнате затемнение под шапкой не нужно: стена у потолка и так тёмная, а лампы оно гасит */
+.topbar-scrim {
+	transition: opacity 0.6s ease;
+}
+
+.is-room .topbar-scrim {
+	opacity: 0;
+}
+
+/* подпись для экранного диктора — на экране её нет */
+.room__status {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.room__lamp.is-lit::after,
+	.room__step.is-stepping .room__print {
+		animation: none;
+	}
+}

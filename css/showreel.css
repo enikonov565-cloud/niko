@@ -16,7 +16,7 @@
 	height: 100svh;
 	min-height: 600px;
 	/* снизу запас под наклон нижней плёнки */
-	padding: calc(var(--topbar-y) + 84px) var(--pad-x) clamp(40px, 6svh, 72px);
+	padding: calc(var(--topbar-y) + 84px) var(--gutter) clamp(40px, 6svh, 72px);
 	/* по горизонтали обрезаем (плёнки шире экрана), по вертикали нет — сетка выходит вверх на переход */
 	overflow-x: clip;
 	overflow-y: visible;
@@ -94,10 +94,7 @@
 .showreel__title {
 	max-width: 20em;
 	margin: 0;
-	font-size: clamp(32px, 3.333vw, 64px);
-	font-weight: 500;
-	line-height: 1.08; /* чуть больше воздуха между строками */
-	letter-spacing: -0.01em;
+	/* H2 из Figma: размер, жирность и интервал — в hero.css */
 	text-transform: uppercase;
 	text-wrap: balance;
 }
@@ -107,14 +104,15 @@
 	grid-column: 2;
 	grid-row: 1;
 	justify-self: end;
+	max-width: none;
 	margin: 0 0 0.35em;
-	font-family: 'Inter', sans-serif;
-	font-size: 16px;
-	font-style: normal;
+	/* H3 из Figma */
+	font-family: var(--font-text);
+	font-size: var(--fs-sub);
 	font-weight: 300;
-	line-height: 1.2; /* 24px */
-	letter-spacing: 0.4px;
-	color: rgba(235, 235, 235, 0.82);
+	line-height: var(--lh-sub);
+	letter-spacing: 0.02em;
+	color: var(--c-light);
 }
 
 /* каждая половина — своей строкой */
@@ -132,8 +130,8 @@
 	min-height: 0;
 	max-height: 360px;
 	/* шире экрана с запасом: после наклона края и углы плёнки уходят за экран — пустот нет */
-	width: calc(100% + var(--pad-x) * 2 + 24vw);
-	margin: 0 0 0 calc(var(--pad-x) * -1 - 12vw);
+	width: calc(100% + var(--gutter) * 2 + 24vw);
+	margin: 0 0 0 calc(var(--gutter) * -1 - 12vw);
 	overflow: hidden;
 }
 
@@ -264,14 +262,6 @@
 @media (max-width: 767px) {
 	.showreel {
 		--film-band: 20px;
-	}
-
-	.showreel__title {
-		font-size: 26px;
-	}
-
-	.showreel__sub {
-		font-size: 14px;
 	}
 
 	/* на телефоне строки переносятся по ширине */

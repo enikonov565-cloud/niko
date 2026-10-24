@@ -15,6 +15,8 @@
 		<link rel="stylesheet" href="css/hero.css" />
 		<link rel="stylesheet" href="css/parallax.css" />
 		<link rel="stylesheet" href="css/showreel.css" />
+		<link rel="stylesheet" href="css/about.css" />
+		<link rel="stylesheet" href="css/room.css" />
 		<link rel="stylesheet" href="css/art.css" />
 	</head>
 	<body>
@@ -113,6 +115,41 @@
 					</div>
 				</div>
 			</div>
+		</section>
+
+		<!-- Третий экран: о фотографе — плашка с текстом и фото поверх чёрно-белого портрета -->
+		<section class="about" id="about" aria-labelledby="about-title">
+			<img class="about__bg" src="img/about/portrait-bg.webp" alt="" width="1280" height="853" loading="lazy" decoding="async">
+			<div class="about__inner">
+				<div class="about__card">
+					<h2 class="about__title" id="about-title">Я фотограф</h2>
+					<p class="about__text">Портреты, улицы, архитектура, пейзажи&nbsp;— я&nbsp;замечаю то, мимо чего люди проходят: полоску света на&nbsp;лице, тишину пустого двора, туман над&nbsp;водой. Мне интересно не&nbsp;место, а&nbsp;состояние.</p>
+				</div>
+				<figure class="about__photo">
+					<img src="img/about/photographer.png" alt="Фотограф nikonovphoto с камерой" width="640" height="640" loading="lazy" decoding="async">
+					<!-- TODO: страница «Мой подход» будет позже — тогда заменить #approach на её адрес -->
+					<a class="about__link" href="#approach">мой подход</a>
+				</figure>
+			</div>
+		</section>
+
+		<!-- Четвёртый экран: галерея-комната. Стены с фото строит js/room.js из списка js/gallery-photos.js -->
+		<section class="room" id="room" aria-label="Галерея: фото на стенах комнаты" aria-roledescription="галерея">
+			<div class="room__stage"></div>
+
+			<!-- навигация на полу: стрелка и следы — шаг к соседнему фото -->
+			<div class="room__nav">
+				<button class="room__step room__step--prev" type="button" aria-label="Предыдущее фото">
+					<svg class="room__arrow" viewBox="0 0 52 22" aria-hidden="true"><path d="M51 11H2M11 2 2 11l9 9"/></svg>
+					<span class="room__prints" aria-hidden="true"><span class="room__print room__print--a"></span><span class="room__print room__print--b"></span></span>
+				</button>
+				<button class="room__step room__step--next" type="button" aria-label="Следующее фото">
+					<span class="room__prints" aria-hidden="true"><span class="room__print room__print--a"></span><span class="room__print room__print--b"></span></span>
+					<svg class="room__arrow" viewBox="0 0 52 22" aria-hidden="true"><path d="M1 11h49M41 2l9 9-9 9"/></svg>
+				</button>
+			</div>
+
+			<p class="room__status" aria-live="polite"></p>
 		</section>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -468,6 +505,8 @@
 
 		</script>
 		<script src="js/film.js"></script>
+		<script src="js/gallery-photos.js"></script>
+		<script src="js/room.js"></script>
 		<script src="js/art.js"></script>
 	</body>
 </html>
