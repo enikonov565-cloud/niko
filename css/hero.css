@@ -100,7 +100,7 @@ h2,
 .t-h2 {
 	font-family: var(--font-text);
 	font-size: var(--fs-h2);
-	font-weight: 400;
+	font-weight: 300; /* H2 — Light везде на сайте */
 	line-height: var(--lh-h2);
 	letter-spacing: -0.01em;
 }

@@ -75,7 +75,7 @@
 	max-width: 30em;
 	margin: 0;
 	font-size: var(--fs-sub);
-	font-weight: 400;
+	font-weight: 300; /* как H2 — Light */
 	line-height: var(--lh-sub);
 	letter-spacing: -0.01em;
 }
