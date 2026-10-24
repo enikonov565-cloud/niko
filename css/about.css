@@ -4,6 +4,7 @@
 
 .about {
 	--about-r: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление: 10 → 15 */
+	--about-pad: clamp(1.25rem, 0.6rem + 2.66vw, 3.25rem); /* поля плашки — по ним же стоит «мой подход» */
 
 	position: relative;
 	z-index: 3;
@@ -18,15 +19,15 @@
 	color: var(--c-light);
 }
 
-/* портрет на фоне: прижат влево, справа и по краям растворяется в фон экрана */
+/* портрет на фоне: прижат влево, справа и по краям растворяется в фон экрана.
+   js/about.js сдвигает его так, чтобы глаз стоял в промежутке между заголовком и текстом */
 .about__bg {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 84.33%; /* 1619 из 1920 в макете */
-	height: 100%;
-	object-fit: cover;
-	object-position: 30% 40%;
+	max-width: none;
+	height: auto;
 	opacity: 0.5;
 	pointer-events: none;
 	user-select: none;
@@ -54,7 +55,7 @@
 	flex-direction: column;
 	justify-content: space-between;
 	gap: clamp(2rem, 1rem + 3vw, 4rem);
-	padding: clamp(1.25rem, 0.6rem + 2.66vw, 3.25rem);
+	padding: var(--about-pad);
 	border-radius: var(--about-r);
 	/* полупрозрачная заливка из макета — сквозь неё виден портрет */
 	background: linear-gradient(149.6deg, rgba(12, 13, 18, 0.16) 3.5%, rgba(1, 2, 7, 0.4) 66.3%);
@@ -69,8 +70,9 @@
 	text-transform: uppercase;
 }
 
+/* шкала подзаголовка: Inter 400, 20 → 28 → 36 */
 .about__text {
-	max-width: 34em;
+	max-width: 30em;
 	margin: 0;
 	font-size: var(--fs-sub);
 	font-weight: 400;
@@ -97,12 +99,13 @@
 	object-position: 50% 100%;
 }
 
-/* «мой подход» — в правом нижнем углу фото; стиль как у «связаться со мной» (hero.css) */
+/* «мой подход» — в правом нижнем углу фото, на одном уровне с последней строкой текста плашки:
+   отступы те же, что поля плашки. Стиль как у «связаться со мной» (hero.css) */
 .about__link {
 	position: absolute;
 	z-index: 1;
-	right: clamp(1rem, 0.5rem + 1.6vw, 2.25rem);
-	bottom: clamp(0.75rem, 0.35rem + 1.3vw, 1.875rem);
+	right: var(--about-pad);
+	bottom: var(--about-pad);
 	text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55); /* читается на любом участке снимка */
 }
 
@@ -114,17 +117,19 @@
 		grid-template-columns: minmax(0, 1fr);
 	}
 
+	/* между заголовком и текстом — место под глаз с портрета на фоне */
 	.about__card {
 		justify-content: flex-start;
+		gap: clamp(5.5rem, 4rem + 6vw, 8rem);
 	}
 
+	/* фото — на всю ширину плашки: края совпадают */
 	.about__photo {
-		width: min(100%, 36rem);
+		width: 100%;
 	}
 
+	/* портрет крупнее экрана — глаз (~130px шириной) читается и на телефоне; положение задаёт js/about.js */
 	.about__bg {
-		width: 100%;
-		height: 70%;
-		object-position: 35% 35%;
+		width: 190%;
 	}
 }

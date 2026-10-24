@@ -12,12 +12,13 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap">
-		<link rel="stylesheet" href="css/hero.css" />
-		<link rel="stylesheet" href="css/parallax.css" />
-		<link rel="stylesheet" href="css/showreel.css" />
-		<link rel="stylesheet" href="css/about.css" />
-		<link rel="stylesheet" href="css/room.css" />
-		<link rel="stylesheet" href="css/art.css" />
+		<!-- ?v=… — версия файлов: после изменений CSS/JS увеличьте число, и браузеры не покажут старую копию из кэша -->
+		<link rel="stylesheet" href="css/hero.css?v=14" />
+		<link rel="stylesheet" href="css/parallax.css?v=14" />
+		<link rel="stylesheet" href="css/showreel.css?v=14" />
+		<link rel="stylesheet" href="css/about.css?v=14" />
+		<link rel="stylesheet" href="css/room.css?v=14" />
+		<link rel="stylesheet" href="css/art.css?v=14" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -72,8 +73,8 @@
 			<!-- фон: 3D-сетка кубиков с волнами от курсора (скрипт внизу страницы) -->
 			<div class="showreel__waves" aria-hidden="true"></div>
 			<div class="showreel__head">
-				<h2 class="showreel__title" id="showreel-title">Моменты, которые останутся с&nbsp;Вами навсегда</h2>
-				<p class="showreel__sub"><span>Независимо от&nbsp;жанра, моя цель&nbsp;— запечатлеть</span> <span>особенные моменты, которые будут длиться&nbsp;вечно.</span></p>
+				<h2 class="showreel__title t-h1" id="showreel-title"><span>Моменты, которые</span> <span>останутся с&nbsp;Вами навсегда</span></h2>
+				<p class="showreel__sub t-h3"><span>Независимо от&nbsp;жанра, моя цель&nbsp;— запечатлеть</span> <span>особенные моменты, которые будут&nbsp;длиться&nbsp;вечно.</span></p>
 			</div>
 			<div class="film film--left">
 				<div class="film__track">
@@ -123,7 +124,7 @@
 			<div class="about__inner">
 				<div class="about__card">
 					<h2 class="about__title" id="about-title">Я фотограф</h2>
-					<p class="about__text">Портреты, улицы, архитектура, пейзажи&nbsp;— я&nbsp;замечаю то, мимо чего люди проходят: полоску света на&nbsp;лице, тишину пустого двора, туман над&nbsp;водой. Мне интересно не&nbsp;место, а&nbsp;состояние.</p>
+					<p class="about__text">Портреты, улицы, архитектура, пейзажи&nbsp;— я&nbsp;замечаю то, мимо&nbsp;чего люди проходят: полоску света на&nbsp;лице, тишину пустого двора, туман над&nbsp;водой. Мне&nbsp;интересно не&nbsp;место, а&nbsp;состояние.</p>
 				</div>
 				<figure class="about__photo">
 					<img src="img/about/photographer.png" alt="Фотограф nikonovphoto с камерой" width="640" height="640" loading="lazy" decoding="async">
@@ -155,8 +156,8 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 		<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
-		<script src="js/hero.js"></script>
-		<script src="js/parallax.js"></script>
+		<script src="js/hero.js?v=14"></script>
+		<script src="js/parallax.js?v=14"></script>
 		<!-- 3D-сетка с волнами — фон галереи. Код встроен в страницу (а не отдельным файлом): так эффект работает и при открытии index.html двойным щелчком -->
 		<script type="importmap">
 			{
@@ -504,9 +505,10 @@
 			}
 
 		</script>
-		<script src="js/film.js"></script>
-		<script src="js/gallery-photos.js"></script>
-		<script src="js/room.js"></script>
-		<script src="js/art.js"></script>
+		<script src="js/film.js?v=14"></script>
+		<script src="js/about.js?v=14"></script>
+		<script src="js/gallery-photos.js?v=14"></script>
+		<script src="js/room.js?v=14"></script>
+		<script src="js/art.js?v=14"></script>
 	</body>
 </html>

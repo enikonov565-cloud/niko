@@ -308,9 +308,21 @@
         let inView = false;
         new IntersectionObserver((entries) => {
             inView = entries[0].intersectionRatio > 0.5;
-            // затемнение под шапкой гасило бы лампы — в комнате его убираем
-            document.body.classList.toggle('is-room', inView);
         }, { threshold: [0, 0.5, 1] }).observe(section);
+
+        // затемнение под шапкой гасило бы лампы — убираем его, когда предыдущий экран целиком ушёл из-под шапки
+        // (иначе он проходил бы под шапкой без затемнения и надписи наезжали друг на друга)
+        const prev = section.previousElementSibling;
+        const topbar = document.querySelector('.topbar');
+        if (prev && topbar) {
+            const scrim = () => {
+                const free = prev.getBoundingClientRect().bottom <= topbar.getBoundingClientRect().bottom + 8;
+                document.body.classList.toggle('is-room', free);
+            };
+            window.addEventListener('scroll', scrim, { passive: true });
+            window.addEventListener('resize', scrim);
+            scrim();
+        }
         document.addEventListener('keydown', (e) => {
             if (!inView || e.altKey || e.ctrlKey || e.metaKey) return;
             if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;

@@ -78,41 +78,46 @@
 
 /* ---------- заголовок ---------- */
 
+/* заголовок и подзаголовок в одной ячейке: заголовок — две строки слева,
+   подзаголовок — справа, рядом с первой (короткой) строкой заголовка */
 .showreel__head {
 	position: relative;
 	display: grid;
-	/* заголовок слева, подзаголовок в том же ряду справа — по нижней строке заголовка */
-	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-columns: minmax(0, 1fr);
 	align-items: end;
-	column-gap: 40px;
 	flex: none;
 	/* запас под наклон верхней плёнки — её край не касается подзаголовка */
 	margin-bottom: clamp(80px, 11svh, 130px);
 }
 
-/* как «Я фотограф» (about.css) */
+/* H1 (стиль — .t-h1 в hero.css), ровно две строки: «Моменты, которые» / «останутся с Вами навсегда» */
 .showreel__title {
-	max-width: 20em;
+	grid-area: 1 / 1;
 	margin: 0;
-	/* H2 из Figma: размер, жирность и интервал — в hero.css */
 	text-transform: uppercase;
-	text-wrap: balance;
 }
 
-/* подзаголовок — справа, по правому полю (как «связаться со мной»), ровно две строки */
+.showreel__title span {
+	display: block;
+}
+
+/* H3 (стиль — .t-h3 в hero.css), ровно две строки: под заголовком, по правому краю —
+   над длинной второй строкой заголовка не нависает */
 .showreel__sub {
-	grid-column: 2;
-	grid-row: 1;
+	grid-area: 2 / 1;
 	justify-self: end;
 	max-width: none;
-	margin: 0 0 0.35em;
-	/* H3 из Figma */
-	font-family: var(--font-text);
-	font-size: var(--fs-sub);
-	font-weight: 300;
-	line-height: var(--lh-sub);
-	letter-spacing: 0.02em;
+	margin: clamp(0.75rem, 0.4rem + 0.8vw, 1.5rem) 0 0;
 	color: var(--c-light);
+}
+
+/* очень широкий экран: места хватает — подзаголовок справа от второй строки, по её нижней линии */
+@media (min-width: 2000px) {
+	.showreel__sub {
+		grid-area: 1 / 1;
+		align-self: end;
+		margin: 0 0 0.3em;
+	}
 }
 
 /* каждая половина — своей строкой */
@@ -246,14 +251,19 @@
 		padding-top: calc(var(--topbar-y) + 80px);
 	}
 
-	/* планшет и телефон: подзаголовок под заголовком */
-	.showreel__head {
-		grid-template-columns: minmax(0, 1fr);
-	}
+}
 
+/* планшет и телефон: первая строка — всегда «Моменты, которые», вторая переносится ровно,
+   без одиночного слова в конце */
+@media (max-width: 1023px) {
+	.showreel__title span {
+		text-wrap: balance;
+	}
+}
+
+/* планшет и телефон: подзаголовок под заголовком, по левому краю — как и весь текст */
+@media (max-width: 1023px) {
 	.showreel__sub {
-		grid-column: 1;
-		grid-row: 2;
 		justify-self: start;
 		margin-top: 20px;
 	}
