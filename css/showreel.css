@@ -1,0 +1,304 @@
+/* ---------- ГАЛЕРЕЯ: ДВЕ КИНОПЛЁНКИ ----------
+   заголовок как «Я фотограф», подзаголовок — Inter Light 20,
+   через всю ширину — две плёнки с перфорацией, едут навстречу друг другу.
+   Кадры одной высоты, ширина — по пропорции снимка: фото не обрезаются */
+
+/* экран ровно в высоту окна: заголовок сверху, две плёнки делят остальное место пополам */
+.showreel {
+	--film-band: clamp(16px, 2.6svh, 26px); /* поля плёнки под перфорацию — тоньше на невысоких экранах */
+	--film-base: #141c26;                /* плёнка — тёмный сине-серый */
+
+	position: relative;
+	z-index: 3; /* над низом леса — сетка заходит на переход */
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	height: 100svh;
+	min-height: 600px;
+	/* снизу запас под наклон нижней плёнки */
+	padding: calc(var(--topbar-y) + 84px) var(--pad-x) clamp(40px, 6svh, 72px);
+	/* по горизонтали обрезаем (плёнки шире экрана), по вертикали нет — сетка выходит вверх на переход */
+	overflow-x: clip;
+	overflow-y: visible;
+	/* начинается тем же тёмно-синим, которым заканчивается лес, и плавно уходит в фон сайта — без полосы на стыке */
+	background: linear-gradient(to bottom,
+		rgb(12, 18, 25) 0%,
+		rgb(12, 18, 25) 4%,
+		rgb(12, 17, 24) 14%,
+		rgb(12, 16, 23) 26%,
+		rgb(11, 16, 22) 40%,
+		rgb(11, 15, 21) 56%,
+		var(--c-dark) 70%);
+	color: var(--c-light);
+}
+
+/* ---------- фон: 3D-сетка с волнами (скрипт в index.html) ---------- */
+
+/* сетка начинается выше секции — заходит на затемнённый низ леса и проступает из него */
+.showreel__waves {
+	position: absolute;
+	z-index: 0;
+	top: -22svh;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	pointer-events: none;
+	-webkit-mask-image: linear-gradient(to bottom,
+		transparent 0%, rgba(0, 0, 0, 0.08) 6%, rgba(0, 0, 0, 0.25) 12%, rgba(0, 0, 0, 0.5) 18%,
+		rgba(0, 0, 0, 0.75) 24%, rgba(0, 0, 0, 0.92) 30%, #000 36%);
+	mask-image: linear-gradient(to bottom,
+		transparent 0%, rgba(0, 0, 0, 0.08) 6%, rgba(0, 0, 0, 0.25) 12%, rgba(0, 0, 0, 0.5) 18%,
+		rgba(0, 0, 0, 0.75) 24%, rgba(0, 0, 0, 0.92) 30%, #000 36%);
+}
+
+.showreel__canvas {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* снизу сетка уходит в фон сайта */
+.showreel__waves::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to bottom,
+		rgba(11, 15, 21, 0) 86%,
+		rgba(11, 15, 21, 0.6) 94%,
+		var(--c-dark) 100%);
+}
+
+/* заголовок и плёнки — над сеткой */
+.showreel__head,
+.film {
+	z-index: 1;
+}
+
+/* ---------- заголовок ---------- */
+
+.showreel__head {
+	position: relative;
+	display: grid;
+	/* заголовок слева, подзаголовок в том же ряду справа — по нижней строке заголовка */
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: end;
+	column-gap: 40px;
+	flex: none;
+	/* запас под наклон верхней плёнки — её край не касается подзаголовка */
+	margin-bottom: clamp(80px, 11svh, 130px);
+}
+
+/* как «Я фотограф» (about.css) */
+.showreel__title {
+	max-width: 20em;
+	margin: 0;
+	font-size: clamp(32px, 3.333vw, 64px);
+	font-weight: 500;
+	line-height: 1.08; /* чуть больше воздуха между строками */
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+	text-wrap: balance;
+}
+
+/* подзаголовок — справа, по правому полю (как «связаться со мной»), ровно две строки */
+.showreel__sub {
+	grid-column: 2;
+	grid-row: 1;
+	justify-self: end;
+	margin: 0 0 0.35em;
+	font-family: 'Inter', sans-serif;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: 300;
+	line-height: 1.2; /* 24px */
+	letter-spacing: 0.4px;
+	color: rgba(235, 235, 235, 0.82);
+}
+
+/* каждая половина — своей строкой */
+.showreel__sub span {
+	display: block;
+	white-space: nowrap;
+}
+
+/* ---------- плёнка ---------- */
+
+.film {
+	position: relative;
+	/* делит оставшуюся высоту экрана поровну со второй плёнкой */
+	flex: 1 1 0;
+	min-height: 0;
+	max-height: 360px;
+	/* шире экрана с запасом: после наклона края и углы плёнки уходят за экран — пустот нет */
+	width: calc(100% + var(--pad-x) * 2 + 24vw);
+	margin: 0 0 0 calc(var(--pad-x) * -1 - 12vw);
+	overflow: hidden;
+}
+
+/* плёнки лежат свободно, под разными углами — не по линейке */
+.film--left {
+	z-index: 1;
+	transform: rotate(-3deg);
+}
+
+.film--right {
+	z-index: 2;
+	transform: rotate(2.5deg);
+}
+
+.film + .film {
+	margin-top: clamp(12px, 2svh, 32px);
+}
+
+/* на высоких экранах плёнки упираются в max-height — центрируем их в свободном месте */
+.showreel__head + .film {
+	margin-top: auto;
+}
+
+.film:last-child {
+	margin-bottom: auto;
+}
+
+.film__track {
+	display: flex;
+	width: max-content;
+	height: 100%;
+	will-change: transform;
+}
+
+/* один набор кадров; перфорация сверху и снизу — рисунком по фону плёнки */
+.film__set {
+	display: flex;
+	flex: none;
+	gap: 14px;
+	box-sizing: border-box;
+	height: 100%;
+	padding: var(--film-band) 7px;
+	background-color: var(--film-base);
+	background-image:
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='26'><rect x='9' y='7' width='12' height='12' rx='2.5' fill='%230b0f15'/></svg>"),
+		url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='26'><rect x='9' y='7' width='12' height='12' rx='2.5' fill='%230b0f15'/></svg>");
+	background-repeat: repeat-x;
+	background-position: 0 0, 0 100%;
+	background-size: 30px var(--film-band);
+}
+
+.film__frame {
+	flex: none;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	background: #0e141c;
+}
+
+.film__frame img {
+	display: block;
+	width: auto;
+	height: 100%;
+	transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+}
+
+/* навстречу друг другу: верхняя влево, нижняя вправо */
+.film--left .film__track {
+	animation: film-left 70s linear infinite;
+}
+
+.film--right .film__track {
+	animation: film-right 70s linear infinite;
+}
+
+@keyframes film-left {
+	from { transform: translateX(0); }
+	to { transform: translateX(-50%); }
+}
+
+@keyframes film-right {
+	from { transform: translateX(-50%); }
+	to { transform: translateX(0); }
+}
+
+/* навели — плёнка замирает, кадр чуть приближается */
+@media (hover: hover) {
+	.film:hover .film__track {
+		animation-play-state: paused;
+	}
+
+	.film__frame:hover img {
+		transform: scale(1.04);
+		filter: brightness(1.08);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.film__track {
+		animation: none;
+	}
+
+	.film {
+		overflow-x: auto;
+	}
+}
+
+/* ---------- АДАПТИВ ---------- */
+
+@media (max-width: 1024px) {
+	.showreel {
+		padding-top: calc(var(--topbar-y) + 80px);
+	}
+
+	/* планшет и телефон: подзаголовок под заголовком */
+	.showreel__head {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.showreel__sub {
+		grid-column: 1;
+		grid-row: 2;
+		justify-self: start;
+		margin-top: 20px;
+	}
+}
+
+@media (max-width: 767px) {
+	.showreel {
+		--film-band: 20px;
+	}
+
+	.showreel__title {
+		font-size: 26px;
+	}
+
+	.showreel__sub {
+		font-size: 14px;
+	}
+
+	/* на телефоне строки переносятся по ширине */
+	.showreel__sub span {
+		display: inline;
+		white-space: normal;
+	}
+
+	.film__set {
+		gap: 10px;
+		background-size: 24px var(--film-band);
+	}
+}
+
+/* телефон боком: экран низкий — секция растёт по содержимому, плёнки фиксированной высоты */
+@media (max-height: 500px) and (orientation: landscape) {
+	.showreel {
+		height: auto;
+		min-height: 100svh;
+	}
+
+	.showreel__head {
+		margin-bottom: 48px;
+	}
+
+	.film {
+		flex: none;
+		height: clamp(120px, 44svh, 200px);
+	}
+}

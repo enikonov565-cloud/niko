@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>nikonovphoto — фотограф</title>
+		<meta name="description" content="nikonovphoto — портретная фотография. Кадр, стиль, креатив." />
+		<meta name="author" content="nikonovphoto" />
+		<meta name="theme-color" content="#0b0f15" />
+		<link rel="shortcut icon" href="favicon.ico">
+		<link rel="preload" href="fonts/Tupik.ttf" as="font" type="font/ttf" crossorigin>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap">
+		<link rel="stylesheet" href="css/hero.css" />
+		<link rel="stylesheet" href="css/parallax.css" />
+		<link rel="stylesheet" href="css/showreel.css" />
+		<link rel="stylesheet" href="css/art.css" />
+	</head>
+	<body>
+		<!-- плёночное зерно (css/art.css) -->
+		<div class="grain" aria-hidden="true"></div>
+
+		<!-- Шапка: закреплена, все экраны уходят под неё -->
+		<div class="topbar">
+			<div class="topbar__brand">
+				<button class="topbar__burger" type="button" aria-label="Открыть меню">
+					<span class="topbar__burger-icon" aria-hidden="true"></span>
+				</button>
+				<!-- логотип появляется со второго экрана -->
+				<a class="topbar__logo" href="#top" aria-label="nikonovphoto — наверх" tabindex="-1">
+					<img src="img/hero/logo.png" alt="" width="628" height="353">
+				</a>
+			</div>
+			<a class="topbar__contact" href="https://t.me/nikonovphoto" target="_blank" rel="noopener">связаться со&nbsp;мной</a>
+		</div>
+
+		<!-- Градиент под шапкой: сверху тёмный, плавно уходит в прозрачность (стоит после шапки — так CSS знает, на каком она экране) -->
+		<div class="topbar-scrim" aria-hidden="true"></div>
+
+		<!-- Первый экран: параллакс -->
+		<div class="parallax" id="top">
+			<section class="parallax__header">
+				<div class="parallax__visuals">
+					<div class="parallax__black-line-overflow"></div>
+
+					<div data-parallax-layers class="parallax__layers">
+						<!-- Слой 1 — фон: лес и свет -->
+						<img src="img/parallax/bg.jpg" data-parallax-layer="1" class="parallax__layer-img" width="1672" height="941" loading="eager" fetchpriority="high" alt="">
+
+						<!-- Слой 2 — свечение лучей -->
+						<div data-parallax-layer="2" class="parallax__layer-glow"></div>
+
+						<!-- Слой 3 — логотип между лесом и человеком -->
+						<div data-parallax-layer="3" class="parallax__layer-title">
+							<h1 class="parallax__title"><img src="img/hero/logo-volume.webp" class="parallax__logo" width="1730" height="1042" loading="eager" decoding="async" alt="Nikonovphoto"></h1>
+						</div>
+
+						<!-- Слой 4 — передний план: человек -->
+						<img src="img/parallax/person.png" data-parallax-layer="4" class="parallax__layer-img" width="1281" height="721" loading="eager" alt="">
+					</div>
+					<div class="parallax__fade"></div>
+				</div>
+			</section>
+			<div class="parallax__tail" aria-hidden="true"></div>
+		</div>
+
+		<!-- Галерея: заголовок и две киноплёнки поверх 3D-сетки с волнами -->
+		<section class="showreel" id="gallery" aria-labelledby="showreel-title">
+			<!-- фон: 3D-сетка кубиков с волнами от курсора (скрипт внизу страницы) -->
+			<div class="showreel__waves" aria-hidden="true"></div>
+			<div class="showreel__head">
+				<h2 class="showreel__title" id="showreel-title">Моменты, которые останутся с&nbsp;Вами навсегда</h2>
+				<p class="showreel__sub"><span>Независимо от&nbsp;жанра, моя цель&nbsp;— запечатлеть</span> <span>особенные моменты, которые будут длиться&nbsp;вечно.</span></p>
+			</div>
+			<div class="film film--left">
+				<div class="film__track">
+					<div class="film__set">
+					<figure class="film__frame"><img src="img/gallery/railing.jpg" alt="Кованая ограда набережной, город в дымке" width="960" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/portrait/DSC04053.jpg" alt="Девушка держит флакон духов у лица" width="1334" height="2000" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/lake.jpg" alt="Силуэт человека у озера в сумерках" width="1304" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/birches.jpg" alt="Две пожилые женщины гуляют у пруда среди берёз" width="428" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/architecture/arch-sunset.jpg" alt="Арка с видом на колесо обозрения на закате" width="1280" height="960" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/bench.jpg" alt="Пара на скамейке в парке" width="426" height="640" loading="lazy" decoding="async"></figure>
+					</div>
+					<!-- копия набора — для бесшовной прокрутки -->
+					<div class="film__set" aria-hidden="true">
+					<figure class="film__frame"><img src="img/gallery/railing.jpg" alt="" width="960" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/portrait/DSC04053.jpg" alt="" width="1334" height="2000" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/lake.jpg" alt="" width="1304" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/birches.jpg" alt="" width="428" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/architecture/arch-sunset.jpg" alt="" width="1280" height="960" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/bench.jpg" alt="" width="426" height="640" loading="lazy" decoding="async"></figure>
+					</div>
+				</div>
+			</div>
+			<div class="film film--right">
+				<div class="film__track">
+					<div class="film__set">
+					<figure class="film__frame"><img src="img/gallery/walk.jpg" alt="Семья идёт по солнечной аллее" width="958" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/architecture/kremlin-towers.jpg" alt="Башни кремля на закате" width="960" height="1280" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/squirrel-cafe.jpg" alt="Кормушка «Беличье кафе» на дереве" width="960" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/portrait/DSC04026.jpg" alt="Девушка с флаконом духов в руках" width="1334" height="2000" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/bridge.jpg" alt="Мостик над прудом в весеннем парке, сепия" width="960" height="640" loading="lazy" decoding="async"></figure>
+					</div>
+					<!-- копия набора — для бесшовной прокрутки -->
+					<div class="film__set" aria-hidden="true">
+					<figure class="film__frame"><img src="img/gallery/walk.jpg" alt="" width="958" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/architecture/kremlin-towers.jpg" alt="" width="960" height="1280" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/squirrel-cafe.jpg" alt="" width="960" height="640" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/genres/portrait/DSC04026.jpg" alt="" width="1334" height="2000" loading="lazy" decoding="async"></figure>
+					<figure class="film__frame"><img src="img/gallery/bridge.jpg" alt="" width="960" height="640" loading="lazy" decoding="async"></figure>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+		<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
+		<script src="js/hero.js"></script>
+		<script src="js/parallax.js"></script>
+		<!-- 3D-сетка с волнами — фон галереи. Код встроен в страницу (а не отдельным файлом): так эффект работает и при открытии index.html двойным щелчком -->
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+				}
+			}
+		</script>
+		<script type="module">
+			// 3D-сетка кубиков с волнами от курсора — фон экрана галереи (под заголовком и плёнками).
+			// Основа: franky-adl/3d-wave-grid (MIT, https://github.com/franky-adl/3d-wave-grid),
+			// переписано в один модуль без сборщика и перекрашено в фирменные цвета сайта — без белого.
+			// Рисуется только пока экран виден (остальное время пауза).
+			import * as THREE from 'three';
+			import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+			import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+			import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+			import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+			const host = document.querySelector('.showreel__waves');
+			if (host) init(host);
+
+			function init(host) {
+			    // ---------- фирменная палитра (без белого) ----------
+			    const COLORS = {
+			        // гамма главного экрана — цвета взяты из фото леса (img/parallax/bg.jpg), без белого
+			        background: '#0b0f15', // фон сайта — чёрный с синевой
+			        cubeBase: '#142a35',   // кубики в покое — глубокий сине-бирюзовый, как тени леса
+			        cubeHigh: '#5d7d84',   // гребень волны — приглушённый серо-бирюзовый, без яркого свечения
+			        ambient: '#3e5c68',
+			        key: '#8fa6ab',        // основной свет — мягкий, приглушённый
+			        fill: '#1d3846'        // заполняющий — тёмный бирюзовый
+			    };
+
+			    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+			    // ---------- холст ----------
+			    const canvas = document.createElement('canvas');
+			    canvas.className = 'showreel__canvas';
+			    canvas.setAttribute('aria-hidden', 'true');
+			    host.prepend(canvas);
+
+			    let renderer;
+			    try {
+			        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+			    } catch (e) {
+			        canvas.remove(); // нет WebGL — остаётся градиентный фон экрана
+			        return;
+			    }
+
+			    const size = { w: host.clientWidth, h: host.clientHeight, dpr: Math.min(window.devicePixelRatio, 1.5) };
+
+			    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			    renderer.toneMappingExposure = 1.25;
+			    renderer.shadowMap.enabled = false; // при мелких кубиках тени почти не видны, а нагрузку удваивают
+			    renderer.shadowMap.type = THREE.PCFShadowMap;
+			    renderer.setPixelRatio(size.dpr);
+			    renderer.setSize(size.w, size.h, false);
+
+			    const scene = new THREE.Scene();
+			    scene.background = new THREE.Color(COLORS.background);
+
+			    // ---------- камера: смотрит на сетку сверху, слегка покачивается за мышью ----------
+			    const camera = new THREE.PerspectiveCamera(40, size.w / size.h, 0.1, 200);
+			    const cam = { radius: 52, alphaRange: Math.PI * 0.03, betaRange: Math.PI * 0.05 };
+			    const mouse = new THREE.Vector2();
+			    const lerped = new THREE.Vector2();
+			    const placeCamera = (mx, my) => {
+			        const a = my * cam.alphaRange;
+			        const b = mx * cam.betaRange;
+			        camera.position.set(
+			            -cam.radius * Math.cos(a) * Math.sin(b),
+			            cam.radius * Math.cos(a) * Math.cos(b),
+			            cam.radius * Math.sin(a)
+			        );
+			        camera.up.set(0, 0, -1);
+			        camera.lookAt(0, 0, 0);
+			    };
+			    placeCamera(0, 0);
+			    scene.add(camera);
+
+			    // ---------- свет ----------
+			    scene.add(new THREE.AmbientLight(COLORS.ambient, 0.6));
+			    const key = new THREE.DirectionalLight(COLORS.key, 2.4);
+			    key.position.set(-20, 10, 6);
+			    key.castShadow = false;
+			    key.shadow.mapSize.set(2048, 2048);
+			    key.shadow.radius = 6;
+			    Object.assign(key.shadow.camera, { near: 0.1, far: 100, left: -36, right: 36, top: 36, bottom: -36 });
+			    key.shadow.bias = 0.0001;
+			    scene.add(key);
+			    const fill = new THREE.DirectionalLight(COLORS.fill, 1.2);
+			    fill.position.set(10, 5, -3);
+			    scene.add(fill);
+
+			    // ---------- след мыши: точки, от которых расходятся волны ----------
+			    const GRID = 110, CUBE_W = 0.8, CUBE_H = 3, GAP = 0.01;
+			    const BOUNDS = GRID * (CUBE_W + GAP);
+			    const MAX_TRAIL = 128; // = 128 в шейдере
+			    const params = {
+			        waveAmplitude: 0.9, waveSpeed: 13.5, waveFrequency: 0.52, waveWidth: 7.0,
+			        waveJitter: 0.2, waveMaxHeight: 0.9, fadeTime: 2.0, trailSpacing: 0.1
+			    };
+
+			    const trail = [];
+			    let lastPoint = null;
+			    let idle = 0, randomTimer = 0, randomMode = true;
+			    const trailData = new Float32Array(MAX_TRAIL * 4);
+			    const trailTexture = new THREE.DataTexture(trailData, MAX_TRAIL, 1, THREE.RGBAFormat, THREE.FloatType);
+			    trailTexture.needsUpdate = true;
+			    const trailUniforms = {
+			        uTrailTexture: { value: trailTexture },
+			        uTrailCount: { value: 0 },
+			        uFadeTime: { value: params.fadeTime }
+			    };
+
+			    const raycaster = new THREE.Raycaster();
+			    const rayPlane = new THREE.Mesh(
+			        new THREE.PlaneGeometry(BOUNDS, BOUNDS),
+			        new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, visible: false })
+			    );
+			    rayPlane.rotation.x = -Math.PI / 2;
+			    rayPlane.updateMatrixWorld(true);
+			    const ndc = new THREE.Vector2();
+
+			    const pushPoint = (x, z, distDelta) => {
+			        if (trail.length >= MAX_TRAIL) trail.shift();
+			        trail.push({ x, z, age: 0, distDelta });
+			    };
+
+			    const addRandomPoint = () => {
+			        pushPoint((Math.random() * 0.5 - 0.25) * BOUNDS, (Math.random() * 0.5 - 0.25) * BOUNDS, 0.8 + Math.random() * 0.2);
+			    };
+
+			    window.addEventListener('pointermove', (e) => {
+			        const r = canvas.getBoundingClientRect();
+			        if (e.clientY < r.top || e.clientY > r.bottom) return; // мышь не над этим экраном
+			        mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+			        mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+
+			        ndc.set(mouse.x, mouse.y);
+			        raycaster.setFromCamera(ndc, camera);
+			        const hit = raycaster.intersectObject(rayPlane)[0];
+			        if (!hit) return;
+			        const { x, z } = hit.point;
+			        let distDelta = 0;
+			        if (lastPoint) {
+			            distDelta = Math.hypot(x - lastPoint.x, z - lastPoint.z);
+			            if (distDelta < params.trailSpacing) return;
+			        }
+			        pushPoint(x, z, distDelta);
+			        lastPoint = { x, z };
+			        idle = 0; randomMode = false; randomTimer = 0;
+			    }, { passive: true });
+
+			    const updateTrail = (delta) => {
+			        const expiry = params.fadeTime * 4;
+			        for (let i = trail.length - 1; i >= 0; i--) {
+			            trail[i].age += delta;
+			            if (trail[i].age > expiry) trail.splice(i, 1);
+			        }
+			        // мышь стоит 3 с — волны запускаются сами, раз в 1.5 с
+			        idle += delta;
+			        if (idle >= 2 && !randomMode) { randomMode = true; randomTimer = 0; }
+			        if (randomMode) {
+			            randomTimer += delta;
+			            if (randomTimer >= 0.9) { addRandomPoint(); randomTimer = 0; }
+			        }
+			        const count = Math.min(trail.length, MAX_TRAIL);
+			        if (count > 0 || trailUniforms.uTrailCount.value > 0) {
+			            for (let i = 0; i < count; i++) {
+			                const t = i * 4;
+			                trailData[t] = trail[i].x;
+			                trailData[t + 1] = trail[i].z;
+			                trailData[t + 2] = trail[i].age;
+			                trailData[t + 3] = trail[i].distDelta;
+			            }
+			            trailTexture.needsUpdate = true;
+			            trailUniforms.uTrailCount.value = count;
+			        }
+			    };
+
+			    // ---------- сетка кубиков с волновой деформацией в шейдере ----------
+			    const waveVertex = (vs) => vs
+			        .replace('#include <common>', `#include <common>
+			            varying float vHeight;
+			            attribute vec2 aOffset;
+			            uniform sampler2D uTrailTexture;
+			            uniform int uTrailCount;
+			            uniform float uWaveSpeed, uWaveFreq, uWaveWidth, uFadeTime, uAmplitude, uJitter, uMaxHeight;
+			            vec2 hash2(vec2 p) {
+			                p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+			                return fract(sin(p) * 43758.5453123) - 0.5;
+			            }`)
+			        .replace('#include <begin_vertex>', `#include <begin_vertex>
+			            vHeight = 0.0;
+			            if (position.y > 0.0) {
+			                vec2 worldXZ = aOffset + hash2(aOffset) * uJitter;
+			                float waveHeight = 0.0, totalWeight = 0.0;
+			                for (int i = 0; i < uTrailCount; i++) {
+			                    vec4 td = texture2D(uTrailTexture, vec2((float(i) + 0.5) / 128.0, 0.5));
+			                    float dist = length(worldXZ - td.rg);
+			                    float relDist = dist - uWaveSpeed * td.b;
+			                    float window = exp(-(relDist * relDist) / (uWaveWidth * uWaveWidth));
+			                    float weight = exp(-td.b / uFadeTime) * window * (1.0 / (1.0 + dist * 0.1)) * td.a;
+			                    waveHeight += weight * cos(uWaveFreq * relDist);
+			                    totalWeight += weight;
+			                }
+			                waveHeight /= max(totalWeight, 1.0);
+			                float displacement = clamp(waveHeight * uAmplitude, -uMaxHeight, uMaxHeight);
+			                transformed.y += displacement;
+			                vHeight = displacement;
+			            }`);
+
+			    const waveUniforms = (shader) => {
+			        Object.assign(shader.uniforms, trailUniforms, {
+			            uWaveSpeed: { value: params.waveSpeed },
+			            uWaveFreq: { value: params.waveFrequency },
+			            uWaveWidth: { value: params.waveWidth },
+			            uAmplitude: { value: params.waveAmplitude },
+			            uJitter: { value: params.waveJitter },
+			            uMaxHeight: { value: params.waveMaxHeight }
+			        });
+			        shader.vertexShader = waveVertex(shader.vertexShader);
+			    };
+
+			    const count = GRID * GRID;
+			    const geometry = new THREE.BoxGeometry(CUBE_W, CUBE_H, CUBE_W);
+			    const offsets = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+			    geometry.setAttribute('aOffset', offsets);
+
+			    const material = new THREE.MeshPhongMaterial({ color: COLORS.cubeBase, shininess: 6 });
+			    material.onBeforeCompile = (shader) => {
+			        waveUniforms(shader);
+			        shader.uniforms.uColorBase = { value: new THREE.Color(COLORS.cubeBase) };
+			        shader.uniforms.uColorHigh = { value: new THREE.Color(COLORS.cubeHigh) };
+			        shader.fragmentShader = shader.fragmentShader
+			            .replace('#include <common>', `#include <common>
+			                varying float vHeight;
+			                uniform vec3 uColorBase, uColorHigh;
+			                uniform float uMaxHeight;`)
+			            .replace('#include <color_fragment>', `#include <color_fragment>
+			                diffuseColor.rgb = mix(uColorBase, uColorHigh, clamp(vHeight / uMaxHeight, 0.0, 1.0));`);
+			    };
+
+			    const depthMaterial = new THREE.MeshDepthMaterial();
+			    depthMaterial.onBeforeCompile = waveUniforms;
+
+			    const mesh = new THREE.InstancedMesh(geometry, material, count);
+			    mesh.customDepthMaterial = depthMaterial;
+			    mesh.castShadow = false;
+			    mesh.receiveShadow = true;
+			    scene.add(mesh);
+
+			    const dummy = new THREE.Object3D();
+			    const spacing = CUBE_W + GAP;
+			    const half = ((GRID - 1) * spacing) / 2;
+			    for (let i = 0; i < GRID; i++) {
+			        for (let j = 0; j < GRID; j++) {
+			            const idx = i * GRID + j;
+			            const x = i * spacing - half;
+			            const z = j * spacing - half;
+			            dummy.position.set(x, 0, z);
+			            dummy.updateMatrix();
+			            mesh.setMatrixAt(idx, dummy.matrix);
+			            offsets.setXY(idx, x, z);
+			        }
+			    }
+			    mesh.instanceMatrix.needsUpdate = true;
+
+			    // ---------- постобработка: виньетка с лёгким цветовым сдвигом по краям ----------
+			    const VignetteRGBShift = {
+			        uniforms: {
+			            tDiffuse: { value: null },
+			            shiftAmount: { value: 0.004 },
+			            vignetteRadius: { value: 0.3 },
+			            vignetteSoftness: { value: 0.35 }
+			        },
+			        vertexShader: `varying vec2 vUv;
+			            void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+			        fragmentShader: `uniform sampler2D tDiffuse;
+			            uniform float shiftAmount, vignetteRadius, vignetteSoftness;
+			            varying vec2 vUv;
+			            void main() {
+			                vec2 c = vec2(0.5);
+			                float dist = distance(vUv, c);
+			                vec2 q = vec2(sign(vUv.x - c.x), sign(vUv.y - c.y));
+			                float v = smoothstep(vignetteRadius, vignetteRadius + vignetteSoftness, dist);
+			                float s = shiftAmount * v;
+			                float r = texture2D(tDiffuse, vUv + s * q).r;
+			                float g = texture2D(tDiffuse, vUv).g;
+			                float b = texture2D(tDiffuse, vUv - s * q).b;
+			                gl_FragColor = vec4(vec3(r, g, b) * (1.0 - v * 0.3), 1.0);
+			            }`
+			    };
+
+			    const composer = new EffectComposer(renderer);
+			    composer.addPass(new RenderPass(scene, camera));
+			    composer.addPass(new ShaderPass(VignetteRGBShift));
+			    composer.addPass(new OutputPass());
+			    composer.setPixelRatio(size.dpr);
+			    composer.setSize(size.w, size.h);
+
+			    // ---------- размер ----------
+			    const resize = () => {
+			        size.w = host.clientWidth;
+			        size.h = host.clientHeight;
+			        camera.aspect = size.w / size.h;
+			        camera.updateProjectionMatrix();
+			        renderer.setSize(size.w, size.h, false);
+			        composer.setSize(size.w, size.h);
+			    };
+			    window.addEventListener('resize', resize);
+
+			    // ---------- цикл: только пока экран виден ----------
+			    const clock = new THREE.Clock();
+			    const frame = () => {
+			        const delta = Math.min(clock.getDelta(), 0.05);
+			        lerped.x += (mouse.x - lerped.x) * 0.04;
+			        lerped.y += (mouse.y - lerped.y) * 0.04;
+			        placeCamera(lerped.x, lerped.y);
+			        updateTrail(delta);
+			        composer.render();
+			    };
+
+			    if (reduced) {
+			        // без анимации: одна волна, один кадр
+			        addRandomPoint();
+			        trail[0].age = 0.6;
+			        updateTrail(0);
+			        composer.render();
+			        return;
+			    }
+
+			    let running = false;
+			    const setRunning = (on) => {
+			        if (on === running) return;
+			        running = on;
+			        if (on) { clock.getDelta(); renderer.setAnimationLoop(frame); }
+			        else renderer.setAnimationLoop(null);
+			    };
+			    new IntersectionObserver((entries) => setRunning(entries[0].isIntersecting), { rootMargin: '100px 0px' })
+			        .observe(host);
+			}
+
+		</script>
+		<script src="js/film.js"></script>
+		<script src="js/art.js"></script>
+	</body>
+</html>

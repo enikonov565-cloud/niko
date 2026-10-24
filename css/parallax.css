@@ -1,0 +1,173 @@
+/* ---------- ПАРАЛЛАКС — первый экран ----------
+   Эффект: Osmo Parallax Image Layers (https://osmo.supply/) */
+
+html.lenis,
+html.lenis body {
+	height: auto;
+}
+
+.lenis.lenis-smooth {
+	scroll-behavior: auto !important;
+}
+
+.parallax {
+	/* низ кадра растворяется в цвет подложки сайта */
+	--parallax-fade-rgb: 12, 18, 25; /* между тёмно-синим леса и силуэтом — ни то, ни другое не выделяется пятном */
+
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	background: rgb(var(--parallax-fade-rgb));
+}
+
+.parallax__header {
+	position: relative;
+	z-index: 2;
+	min-height: 100svh;
+}
+
+.parallax__visuals {
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 120%;
+}
+
+.parallax__layers {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+
+/* слои с фото: одинаковая рамка и пропорции, чтобы человек точно совпадал с фоном */
+.parallax__layer-img {
+	position: absolute;
+	top: -17.5%;
+	left: 0;
+	width: 100%;
+	height: 117.5%;
+	display: block;
+	object-fit: cover;
+	pointer-events: none;
+	user-select: none;
+	will-change: transform;
+}
+
+/* свечение лучей — усиливает глубину */
+.parallax__layer-glow {
+	position: absolute;
+	top: -17.5%;
+	left: 0;
+	width: 100%;
+	height: 117.5%;
+	pointer-events: none;
+	/* без mix-blend-mode: смешивание движущегося слоя пересчитывалось каждый кадр */
+	background:
+		radial-gradient(ellipse 34% 30% at 63% 26%, rgba(214, 236, 248, 0.3), transparent 70%),
+		radial-gradient(ellipse 60% 55% at 63% 30%, rgba(120, 170, 190, 0.12), transparent 75%);
+	will-change: transform;
+}
+
+.parallax__layer-title {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100svh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding-bottom: 8svh;
+	will-change: transform;
+}
+
+.parallax__title {
+	margin: 0;
+	line-height: 0;
+}
+
+/* logo-volume.webp — заранее «запечённый» логотип: сглаживание, рельеф и тени уже в картинке,
+   живых фильтров нет — браузер ничего не пересчитывает при скролле.
+   В картинке поля под тени (80 из 1570 px с каждой стороны) — компенсируем отрицательным отступом */
+.parallax__logo {
+	--plogo-w: clamp(300px, 58vw, 1100px); /* ширина самой подписи */
+	display: block;
+	width: calc(var(--plogo-w) * 1.1019);
+	max-width: none;
+	height: auto;
+	margin: calc(var(--plogo-w) * -0.051);
+}
+
+.parallax__fade {
+	position: absolute;
+	z-index: 30;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	/* длинное мягкое затемнение: нижние 18% — сплошной цвет, выше — плавная кривая без ступенек */
+	height: 52%;
+	background: linear-gradient(to top,
+		rgba(var(--parallax-fade-rgb), 1) 0%,
+		rgba(var(--parallax-fade-rgb), 1) 18%,
+		rgba(var(--parallax-fade-rgb), 0.96) 24%,
+		rgba(var(--parallax-fade-rgb), 0.88) 30%,
+		rgba(var(--parallax-fade-rgb), 0.76) 36%,
+		rgba(var(--parallax-fade-rgb), 0.62) 42%,
+		rgba(var(--parallax-fade-rgb), 0.48) 48%,
+		rgba(var(--parallax-fade-rgb), 0.35) 54%,
+		rgba(var(--parallax-fade-rgb), 0.24) 60%,
+		rgba(var(--parallax-fade-rgb), 0.15) 67%,
+		rgba(var(--parallax-fade-rgb), 0.08) 75%,
+		rgba(var(--parallax-fade-rgb), 0.035) 84%,
+		rgba(var(--parallax-fade-rgb), 0.01) 93%,
+		transparent 100%);
+}
+
+.parallax__black-line-overflow {
+	position: absolute;
+	z-index: 20;
+	left: 0;
+	bottom: -1px;
+	width: 100%;
+	height: 2px;
+	background-color: rgb(var(--parallax-fade-rgb));
+}
+
+/* хвост под экраном: в нём кадр уходит в затемнение и стыкуется со вторым экраном */
+.parallax__tail {
+	height: 20svh;
+}
+
+@media (max-width: 767px) {
+	.parallax__logo {
+		--plogo-w: 88vw;
+	}
+}
+
+/* ---------- логотип «рисуется» слева направо ----------
+   маска с мягким краем едет по подписи, как перо по бумаге */
+.parallax__logo {
+	-webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+	mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+	-webkit-mask-size: 250% 100%;
+	mask-size: 250% 100%;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: 100% 0;
+	mask-position: 100% 0;
+	animation: logo-draw 4.5s cubic-bezier(0.45, 0.05, 0.25, 1) 0.4s forwards;
+}
+
+@keyframes logo-draw {
+	to {
+		-webkit-mask-position: 0 0;
+		mask-position: 0 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.parallax__logo {
+		animation: none;
+		-webkit-mask-image: none;
+		mask-image: none;
+	}
+}
