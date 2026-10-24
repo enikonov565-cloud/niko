@@ -32,7 +32,12 @@
     new IntersectionObserver((entries, io) => {
         if (!entries[0].isIntersecting) return;
         io.disconnect();
-        Promise.all(photos.map(measure)).then((list) => {
+        // ждём и шрифт: от него зависит, сколько строк займёт название на этикетке
+        // (начертания и кириллицу этикетки грузим явно — браузер скачивает шрифт, только когда текст им уже нарисован)
+        const fontsReady = document.fonts
+            ? Promise.all([document.fonts.load('500 11px Inter', 'Ая'), document.fonts.load('400 11px Inter', 'Ая')]).catch(() => {})
+            : Promise.resolve();
+        Promise.all([fontsReady, Promise.all(photos.map(measure))]).then(([, list]) => {
             const items = list.filter(Boolean);
             if (items.length) init(items);
         });
@@ -94,7 +99,6 @@
                     label.appendChild(genre);
                 }
                 el.appendChild(label);
-                fitLabel(label);
                 return { fig, img, label, p };
             });
 
@@ -127,7 +131,7 @@
                 }
                 let w = imgW + edge * 2;
                 let h = imgH + edge * 2;
-                const labelW = f.label.offsetWidth; // у каждой этикетки своя ширина — по тексту
+                const labelW = f.label.offsetWidth; // этикетки одного размера — из CSS
                 const side = W >= 768 || w + labelGap + labelW <= W * 0.94;
                 // этикетка под рамкой (только на телефоне) не помещается над плинтусом — снимок чуть меньше, ровно на сколько нужно
                 if (!side) {
@@ -180,22 +184,6 @@
 
         // короткие предлоги и союзы не остаются в конце строки — переносятся вместе со следующим словом
         const glue = (text) => text.replace(/(^|[\s(«])(в|во|на|у|с|со|к|ко|о|об|от|из|до|по|за|под|над|при|без|для|про|и|а|но|не|ни)\s/gi, '$1$2\u00a0');
-
-        // этикетка ровно по самой длинной строке: перенесённый текст не оставляет пустоты справа
-        function fitLabel(label) {
-            // меряем только текст: у строки раздела (блок) прямоугольник на всю ширину карточки
-            const rects = [];
-            const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
-            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-                const range = document.createRange();
-                range.selectNodeContents(n);
-                rects.push(...[...range.getClientRects()].filter((r) => r.width > 0));
-            }
-            if (!rects.length) return;
-            const cs = getComputedStyle(label);
-            const textW = Math.max(...rects.map((r) => r.right)) - Math.min(...rects.map((r) => r.left));
-            label.style.width = Math.ceil(textW + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)) + 'px';
-        }
 
         function add(parent, cls, style) {
             const d = document.createElement('div');

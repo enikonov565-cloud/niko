@@ -358,37 +358,69 @@
 	filter: none;
 }
 
-/* ---------- этикетка у рамки (справа, на телефоне — под ней): светлая карточка, мелкий шрифт — как в настоящей галерее ---------- */
+/* ---------- этикетка у рамки (справа, на телефоне — под ней) — как в музее ----------
+   у всех одинаковый размер: название (до двух строк) и под ним раздел — по центру карточки.
+   Матовая карточка на подложке: тонкая окантовка, светлый верхний край, мягкая тень на стену */
 
 .room__label {
 	position: absolute;
-	/* ширина по тексту — без пустот справа; длинная подпись переносится */
-	width: max-content;
-	max-width: clamp(6.5rem, 5.5rem + 3vw, 9.5rem);
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	justify-content: center; /* название и раздел — ближе к центру */
+	gap: 0.3em;
+	width: 10.2em;
+	height: 4.8em;
+	max-width: none;
 	margin: 0;
-	padding: clamp(0.2rem, 0.15rem + 0.15vw, 0.3rem) clamp(0.3rem, 0.25rem + 0.2vw, 0.45rem); /* компактно */
-	border-radius: 2px;
-	background: #ecebe6;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 10px -4px rgba(0, 0, 0, 0.45);
-	font-size: clamp(0.5625rem, 0.53rem + 0.13vw, 0.6875rem); /* 9 → 11 */
+	padding: 0.6em 0.75em 0.55em;
+	border-radius: 1px;
+	background: linear-gradient(180deg, #f4f2ed 0%, #e7e4dd 100%);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.85),
+		0 0 0 0.5px rgba(0, 0, 0, 0.3),
+		0 1px 1px rgba(0, 0, 0, 0.3),
+		0 6px 12px -6px rgba(0, 0, 0, 0.55);
+	font-size: clamp(0.5rem, 0.47rem + 0.12vw, 0.625rem); /* 8 → 10 */
 	font-weight: 500;
-	line-height: 1.15;
-	letter-spacing: 0;
-	color: #2b2f33;
-	text-wrap: pretty; /* меньше строк; ширину по самой длинной строке подгоняет js/room.js */
+	line-height: 1.2;
+	letter-spacing: 0.01em;
+	color: #23272b;
+	text-wrap: pretty;
+	overflow: hidden;
 	cursor: pointer;
 	/* в полутени, как картины рядом; светлеет, когда лампа включена */
 	filter: brightness(0.55);
 	transition: filter 0.9s ease;
 }
 
-/* раздел — второй строкой, мельче и приглушённее, как на музейной этикетке */
+/* тонкая внутренняя рамка — как оттиск на плотной бумаге */
+.room__label::before {
+	content: "";
+	position: absolute;
+	inset: 0.25em;
+	border: 0.5px solid rgba(35, 39, 43, 0.14);
+	pointer-events: none;
+}
+
+/* раздел — внизу, мельче и приглушённее, с короткой чертой-акцентом */
 .room__label-genre {
-	display: block;
-	margin-top: 0.15em;
-	font-size: 0.9em;
+	display: flex;
+	align-items: center;
+	gap: 0.35em;
+	font-size: 0.85em;
 	font-weight: 400;
-	color: rgba(43, 47, 51, 0.68);
+	letter-spacing: 0.02em;
+	white-space: nowrap; /* раздел — всегда одной строкой, черта не отрывается */
+	color: rgba(35, 39, 43, 0.6);
+}
+
+.room__label-genre::before {
+	content: "";
+	flex: none;
+	width: 0.7em;
+	height: 1px;
+	background: currentColor;
 }
 
 .room__label.is-lit {
