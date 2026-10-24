@@ -26,10 +26,64 @@
 
 	position: relative;
 	z-index: 3;
-	height: var(--room-h);
 	overflow: hidden;
 	background: var(--seam);
 	color: var(--c-light);
+}
+
+/* ---------- цитата над залом: Light, в две строки на всю ширину; подпись автора жирная, справа ---------- */
+
+.room__quote {
+	margin: 0;
+	padding:
+		calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1rem + 3.5vw, 6rem))
+		var(--gutter)
+		clamp(0.5rem, 0.25rem + 1vw, 1.5rem); /* снизу мало: тёмная зона у потолка зала сама даёт воздух */
+}
+
+.room__quote-text {
+	margin: 0;
+	/* чуть меньше H2: 24 → 34 → 46 */
+	font-size: clamp(1.5rem, 1.2887rem + 0.9014vw, 2.875rem);
+	font-weight: 300;
+	line-height: var(--lh-h2);
+}
+
+.room__quote-text p {
+	max-width: none;
+	margin: 0;
+	text-wrap: pretty; /* без висячего слова в конце */
+}
+
+/* на широких экранах — ровно две строки, по предложению в каждой;
+   блок по ширине длинной строки — подпись встаёт точно под её концом */
+@media (min-width: 1280px) {
+	.room__quote {
+		width: fit-content;
+	}
+
+	.room__quote-text span {
+		display: block;
+	}
+}
+
+/* подпись — под цитатой, справа, у конца строк */
+.room__quote-author {
+	margin-top: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem);
+	text-align: right;
+	font-weight: 600;
+	color: var(--c-light);
+}
+
+.room__quote-author::before {
+	content: "— ";
+}
+
+/* зал: стены с фото, пол и навигация. Высота по содержимому: на 1366×768 фото и следы помещаются целиком */
+.room__hall {
+	position: relative;
+	height: var(--room-h);
+	overflow: hidden;
 }
 
 /* сцена с перспективой — в ней стены поворачиваются как в настоящей комнате */
@@ -302,6 +356,44 @@
 
 .room__frame.is-lit img {
 	filter: none;
+}
+
+/* ---------- этикетка у рамки (справа, на телефоне — под ней): светлая карточка, мелкий шрифт — как в настоящей галерее ---------- */
+
+.room__label {
+	position: absolute;
+	/* ширина по тексту — без пустот справа; длинная подпись переносится */
+	width: max-content;
+	max-width: clamp(6.5rem, 5.5rem + 3vw, 9.5rem);
+	margin: 0;
+	padding: clamp(0.2rem, 0.15rem + 0.15vw, 0.3rem) clamp(0.3rem, 0.25rem + 0.2vw, 0.45rem); /* компактно */
+	border-radius: 2px;
+	background: #ecebe6;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 10px -4px rgba(0, 0, 0, 0.45);
+	font-size: clamp(0.5625rem, 0.53rem + 0.13vw, 0.6875rem); /* 9 → 11 */
+	font-weight: 500;
+	line-height: 1.15;
+	letter-spacing: 0;
+	color: #2b2f33;
+	text-wrap: pretty; /* меньше строк; ширину по самой длинной строке подгоняет js/room.js */
+	cursor: pointer;
+	/* в полутени, как картины рядом; светлеет, когда лампа включена */
+	filter: brightness(0.55);
+	transition: filter 0.9s ease;
+}
+
+/* раздел — второй строкой, мельче и приглушённее, как на музейной этикетке */
+.room__label-genre {
+	display: block;
+	margin-top: 0.15em;
+	font-size: 0.9em;
+	font-weight: 400;
+	color: rgba(43, 47, 51, 0.68);
+}
+
+.room__label.is-lit {
+	filter: none;
+	cursor: default;
 }
 
 /* ---------- навигация на полу ---------- */

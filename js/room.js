@@ -81,7 +81,21 @@
                 img.decoding = 'async';
                 fig.appendChild(img);
                 el.appendChild(fig);
-                return { fig, img, p };
+                // этикетка на стене — как в настоящей галерее: название снимка и раздел мелким шрифтом
+                const label = document.createElement('p');
+                label.className = 'room__label';
+                label.dataset.i = i;
+                label.setAttribute('aria-hidden', 'true'); // для диктора то же самое уже есть в alt
+                label.textContent = glue(p.label || p.alt || '');
+                if (p.genre) {
+                    const genre = document.createElement('span');
+                    genre.className = 'room__label-genre';
+                    genre.textContent = p.genre;
+                    label.appendChild(genre);
+                }
+                el.appendChild(label);
+                fitLabel(label);
+                return { fig, img, label, p };
             });
 
             // рамка + паспарту вокруг фото — из CSS (clamp), читаем готовые пиксели
@@ -97,6 +111,9 @@
             const frameH = Math.max(120, zoneH * 0.8);
             const maxW = W * (W < 768 ? 0.8 : 0.62);
             const gap = Math.min(448, Math.max(24, W * 0.175)); // как в макете: 336 на 1920
+            // этикетка справа от рамки, по её нижнему краю; по центру экрана — рамка вместе с этикеткой.
+            // Если справа не помещается (широкий снимок на телефоне) — этикетка под рамкой
+            const labelGap = Math.round(edge * 0.6 + 6);
 
             let left = 0;
             let prevW = 0;
@@ -108,16 +125,32 @@
                     imgW = maxW - edge * 2;
                     imgH = imgW / ratio;
                 }
-                const w = imgW + edge * 2;
-                const h = imgH + edge * 2;
-                left = i === 0 ? W / 2 - w / 2 : left + prevW + gap;
-                prevW = w;
-                // картины висят чуть выше середины — на уровне глаз
-                const top = zoneTop + (zoneH - h) * 0.42;
+                let w = imgW + edge * 2;
+                let h = imgH + edge * 2;
+                const labelW = f.label.offsetWidth; // у каждой этикетки своя ширина — по тексту
+                const side = W >= 768 || w + labelGap + labelW <= W * 0.94;
+                // этикетка под рамкой (только на телефоне) не помещается над плинтусом — снимок чуть меньше, ровно на сколько нужно
+                if (!side) {
+                    const room = zoneH - (f.label.offsetHeight + labelGap) - 4;
+                    if (h > room) {
+                        const k = (room - edge * 2) / imgH;
+                        imgW *= k; imgH *= k;
+                        w = imgW + edge * 2; h = imgH + edge * 2;
+                    }
+                }
+                const groupW = side ? w + labelGap + labelW : w;
+                left = i === 0 ? W / 2 - groupW / 2 : left + prevW + gap;
+                prevW = groupW;
+                // картины висят чуть выше середины — на уровне глаз; если этикетка под рамкой — место и под неё
+                const below = side ? 0 : f.label.offsetHeight + labelGap;
+                const top = zoneTop + Math.max(0, (zoneH - h - below) * 0.42);
 
                 f.img.style.width = imgW + 'px';
                 f.img.style.height = imgH + 'px';
                 Object.assign(f.fig.style, { left: left + 'px', top: top + 'px' });
+                Object.assign(f.label.style, side
+                    ? { left: left + w + labelGap + 'px', top: top + h - f.label.offsetHeight + 'px' }
+                    : { left: left + 'px', top: top + h + labelGap + 'px' });
 
                 const cx = left + w / 2;
                 const lamp = add(el, 'room__lamp', { left: cx + 'px' });
@@ -135,14 +168,33 @@
                 el.insertBefore(pool, el.firstChild);
                 el.insertBefore(beam, f.fig);
 
-                return { left, w, fig: f.fig, lamp, beam, pool, glow, p: f.p };
+                return { left, w, center: left + groupW / 2, fig: f.fig, label: f.label, lamp, beam, pool, glow, p: f.p };
             });
 
             const last = layout[layout.length - 1];
-            el.style.width = Math.ceil(last.left + last.w / 2 + W / 2) + 'px';
+            el.style.width = Math.ceil(last.center + W / 2) + 'px';
             el._layout = layout;
             el._index = index;
             return el;
+        }
+
+        // короткие предлоги и союзы не остаются в конце строки — переносятся вместе со следующим словом
+        const glue = (text) => text.replace(/(^|[\s(«])(в|во|на|у|с|со|к|ко|о|об|от|из|до|по|за|под|над|при|без|для|про|и|а|но|не|ни)\s/gi, '$1$2\u00a0');
+
+        // этикетка ровно по самой длинной строке: перенесённый текст не оставляет пустоты справа
+        function fitLabel(label) {
+            // меряем только текст: у строки раздела (блок) прямоугольник на всю ширину карточки
+            const rects = [];
+            const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                const range = document.createRange();
+                range.selectNodeContents(n);
+                rects.push(...[...range.getClientRects()].filter((r) => r.width > 0));
+            }
+            if (!rects.length) return;
+            const cs = getComputedStyle(label);
+            const textW = Math.max(...rects.map((r) => r.right)) - Math.min(...rects.map((r) => r.left));
+            label.style.width = Math.ceil(textW + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)) + 'px';
         }
 
         function add(parent, cls, style) {
@@ -154,10 +206,10 @@
             return d;
         }
 
-        // сдвиг стены, при котором фото i стоит по центру экрана
+        // сдвиг стены, при котором фото i вместе с этикеткой стоит по центру экрана
         const offset = (el, i) => {
             const it = el._layout[i];
-            return -(it.left + it.w / 2 - stage.clientWidth / 2);
+            return -(it.center - stage.clientWidth / 2);
         };
 
         function place(el, i) {
@@ -169,7 +221,7 @@
         function light(el, i) {
             el._layout.forEach((it, k) => {
                 const on = k === i;
-                [it.fig, it.lamp, it.beam, it.pool, it.glow].forEach((n) => n.classList.toggle('is-lit', on));
+                [it.fig, it.label, it.lamp, it.beam, it.pool, it.glow].forEach((n) => n.classList.toggle('is-lit', on));
             });
             // следы и стрелки на полу — в цвет света текущей стены
             section.style.setProperty('--light', LIGHTS[el._index % LIGHTS.length]);
@@ -193,7 +245,7 @@
 
         // гасим все лампы стены
         const dark = (el) => el._layout.forEach((it) => {
-            [it.fig, it.lamp, it.beam, it.pool, it.glow].forEach((n) => n.classList.remove('is-lit'));
+            [it.fig, it.label, it.lamp, it.beam, it.pool, it.glow].forEach((n) => n.classList.remove('is-lit'));
         });
 
         // ---------- шаг вдоль стены ----------
@@ -284,7 +336,7 @@
 
         // клик по соседней картине — подойти к ней
         stage.addEventListener('click', (e) => {
-            const fig = e.target.closest('.room__frame');
+            const fig = e.target.closest('.room__frame, .room__label');
             if (!fig || walking || moved) return;
             const i = Number(fig.dataset.i);
             if (i !== ci) walk(i);
@@ -304,15 +356,16 @@
             }
         });
 
-        // стрелки клавиатуры — пока комната на экране
+        // стрелки клавиатуры — пока зал на экране
+        const hall = section.querySelector('.room__hall') || section;
         let inView = false;
         new IntersectionObserver((entries) => {
             inView = entries[0].intersectionRatio > 0.5;
-        }, { threshold: [0, 0.5, 1] }).observe(section);
+        }, { threshold: [0, 0.5, 1] }).observe(hall);
 
-        // затемнение под шапкой гасило бы лампы — убираем его, когда предыдущий экран целиком ушёл из-под шапки
-        // (иначе он проходил бы под шапкой без затемнения и надписи наезжали друг на друга)
-        const prev = section.previousElementSibling;
+        // затемнение под шапкой гасило бы лампы — убираем его, когда всё, что выше зала (цитата, предыдущий экран),
+        // целиком ушло из-под шапки (иначе текст проходил бы под шапкой без затемнения и наезжал на неё)
+        const prev = hall.previousElementSibling || section.previousElementSibling;
         const topbar = document.querySelector('.topbar');
         if (prev && topbar) {
             const scrim = () => {
