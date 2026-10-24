@@ -4,7 +4,7 @@
 
 .about {
 	--about-r: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление: 10 → 15 */
-	--about-pad: clamp(1.25rem, 0.6rem + 2.66vw, 3.25rem); /* поля плашки — по ним же стоит «мой подход» */
+	--about-pad: var(--inset); /* поля плашки — по ним же стоит «мой подход» и цитата над галереей */
 
 	position: relative;
 	z-index: 3;
