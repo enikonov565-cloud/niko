@@ -1,7 +1,8 @@
 /* ---------- «МОЙ ПОДХОД» ----------
    По мотивам Fashion concept Jesper Landberg (https://codepen.io/ReGGae/pen/bmyYEj):
    полноэкранные слайды — фон с WebGL-переходом, два снимка в рамках внахлёст, фраза крупно поверх.
-   Цвета, шрифт и шапка — как на остальном сайте. Логика — js/approach.js */
+   Над слайдами — общий заголовок с цитатой. Цвета, шрифт и шапка — как на остальном сайте.
+   Два режима: отдельная страница approach.html и пятый блок главной (.sl--section). Логика — js/approach.js */
 
 .approach-page {
 	overflow: hidden;
@@ -25,11 +26,36 @@ html:has(.approach-page) {
 }
 
 .sl {
+	/* скругление снимков — как у всех фото сайта: 10 → 15 */
+	--r-photo: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem);
+
+	position: relative;
+	background: var(--c-dark);
+	color: var(--c-light);
+}
+
+/* экран со слайдами */
+.sl__pin {
 	position: relative;
 	height: 100vh;
 	height: 100svh;
 	overflow: hidden;
-	touch-action: none; /* свайп листает слайды */
+}
+
+/* страница: свайп листает слайды */
+.approach-page .sl__pin {
+	touch-action: none;
+}
+
+/* блок главной: высота — по экрану на каждый слайд, экран со слайдами закреплён, пока их листает прокрутка */
+.sl--section {
+	z-index: 3;
+	height: calc(var(--sl-n, 5) * 100svh);
+}
+
+.sl--section .sl__pin {
+	position: sticky;
+	top: 0;
 }
 
 /* ---------- фон: WebGL-холст; без WebGL — просто снимки с плавной сменой ---------- */
@@ -61,7 +87,7 @@ html:has(.approach-page) {
 	opacity: 1;
 }
 
-/* снизу и слева фон темнее — фраза читается */
+/* снизу и слева фон темнее — заголовок и фраза читаются */
 .sl__bg::after {
 	content: "";
 	position: absolute;
@@ -70,6 +96,49 @@ html:has(.approach-page) {
 	background:
 		linear-gradient(to top, rgba(11, 15, 21, 0.75) 0%, rgba(11, 15, 21, 0) 45%),
 		linear-gradient(to right, rgba(11, 15, 21, 0.45) 0%, rgba(11, 15, 21, 0) 55%);
+}
+
+/* ---------- заголовок и цитата — общие для всех слайдов ---------- */
+
+.sl__head {
+	position: absolute;
+	z-index: 3;
+	/* отступ от шапки — как у третьего экрана «Я фотограф» */
+	top: calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1rem + 3.5vw, 6rem));
+	left: calc(var(--gutter) + var(--inset));
+	/* на компьютере — левее левого снимка (left: 35%) */
+	width: calc(35% - var(--gutter) - var(--inset) - 2rem);
+	margin: 0;
+	text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* как «Я фотограф» на третьем экране */
+.sl__title {
+	margin: 0;
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+
+/* цитата на месте подзаголовка: H3 Light, автор — жирным */
+.sl__quote {
+	margin: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem) 0 0;
+}
+
+.sl__quote-text {
+	margin: 0;
+}
+
+.sl__quote-text p {
+	margin: 0;
+	text-wrap: pretty;
+}
+
+.sl__quote-author {
+	margin-top: 0.5em;
+	font-weight: 600;
 }
 
 /* ---------- слайд ---------- */
@@ -89,12 +158,13 @@ html:has(.approach-page) {
 	visibility: visible;
 }
 
-/* два снимка в рамках: левый выше, правый ниже — внахлёст, как в референсе */
+/* два снимка в рамках: левый выше, правый ниже — внахлёст, как в референсе; уголки скруглены */
 .sl__img {
 	position: absolute;
 	margin: 0;
 	overflow: hidden;
 	border: 1px solid rgba(235, 235, 235, 0.35);
+	border-radius: var(--r-photo);
 	background: #121820;
 	box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
 	will-change: transform;
@@ -107,18 +177,19 @@ html:has(.approach-page) {
 	object-fit: cover;
 }
 
+/* справа от заголовка; правый край — левее номеров слайдов */
 .sl__img--a {
-	left: 29%;
+	left: 35%;
 	top: 12%;
-	width: 30.5%;
+	width: 26.5%;
 	height: 78%;
 	z-index: 1;
 }
 
 .sl__img--b {
-	left: 59.5%;
+	left: 61.5%;
 	top: 19%;
-	width: 30.5%;
+	width: 26.5%;
 	height: 78%;
 	z-index: 2;
 }
@@ -149,8 +220,8 @@ html:has(.approach-page) {
 
 /* гарантия под фразой — мелким шрифтом */
 .sl__line--note {
-	/* на компьютере — левее левого снимка (left: 29%): мелкий текст поверх фото не читается */
-	max-width: min(26em, calc(29vw - var(--gutter) - var(--inset) - 2rem));
+	/* на компьютере — левее левого снимка (left: 35%): мелкий текст поверх фото не читается */
+	max-width: min(26em, calc(35vw - var(--gutter) - var(--inset) - 2rem));
 	margin-top: clamp(0.75rem, 0.5rem + 0.6vw, 1.25rem);
 	font-size: var(--fs-small);
 	font-weight: 400;
@@ -246,29 +317,38 @@ html:has(.approach-page) {
 
 /* ---------- АДАПТИВ ---------- */
 
-/* планшет и телефон: снимки выше, фраза — под ними */
+/* планшет и телефон: сверху заголовок с цитатой, под ним снимки, под снимками фраза.
+   --head-b (низ заголовка) и --img-h (высота снимков) считает js/approach.js по высоте экрана */
 @media (max-width: 1023px) {
+	/* подпись-логотип в шапке свисает ниже бургера — заголовку отступ побольше */
+	.sl__head {
+		top: calc(var(--topbar-y) + var(--burger-h) + clamp(3rem, 2.25rem + 2vw, 4.5rem));
+		left: var(--gutter);
+		right: var(--gutter);
+		width: auto;
+	}
+
 	/* правый край снимков — левее номеров слайдов */
 	.sl__img--a {
 		left: 6%;
-		top: calc(var(--topbar-y) + var(--burger-h) + 2.75rem);
+		top: calc(var(--head-b, 30%) + 1.25rem);
 		width: 46%;
-		height: 44%;
+		height: var(--img-h, 34%);
 	}
 
 	.sl__img--b {
 		left: 36%;
-		top: calc(var(--topbar-y) + var(--burger-h) + 5.75rem);
+		top: calc(var(--head-b, 30%) + 4.25rem);
 		width: 46%;
-		height: 44%;
+		height: var(--img-h, 34%);
 	}
 
+	/* фраза — сразу под нижним снимком; строка идёт от поля до поля, левый край — по бургеру */
 	.sl__text {
-		/* фраза — сразу под нижним снимком; строка идёт от поля до поля, левый край — по бургеру */
 		width: auto;
 		left: var(--gutter);
 		right: var(--gutter);
-		top: calc(var(--topbar-y) + var(--burger-h) + 5.75rem + 44% + clamp(1.25rem, 0.75rem + 2vh, 2.5rem));
+		top: calc(var(--head-b, 30%) + 5.75rem + var(--img-h, 34%));
 		bottom: auto;
 	}
 
@@ -276,8 +356,16 @@ html:has(.approach-page) {
 		max-width: 26em;
 	}
 
+	/* номера — от верха левого снимка */
 	.sl__bullets {
+		top: calc(var(--head-b, 30%) + 1.25rem);
 		right: calc(var(--gutter) * 0.5);
+		transform: none;
+	}
+
+	/* на телефоне и планшете листают свайпом или прокруткой — стрелка не нужна и занимала бы место */
+	.sl__hint {
+		display: none;
 	}
 }
 
@@ -290,19 +378,6 @@ html:has(.approach-page) {
 
 @media (max-width: 767px) {
 	.sl__br-d {
-		display: none;
-	}
-
-	/* номера — от верха правого снимка: не теснят шапку и не заходят на фразу под снимками */
-	.sl__bullets {
-		top: calc(var(--topbar-y) + var(--burger-h) + 5.75rem);
-		transform: none;
-	}
-}
-
-/* низкий телефон: стрелке-подсказке не хватает места под гарантией */
-@media (max-width: 767px) and (max-height: 700px) {
-	.sl__hint {
 		display: none;
 	}
 }

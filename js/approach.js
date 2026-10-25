@@ -2,6 +2,8 @@
 // Фон — WebGL: смена снимка через «растекание» (карта искажений считается прямо в шейдере).
 // Снимки в рамках уезжают вверх и вытягиваются, новые приходят снизу; фраза меняется построчно.
 // По мотивам Fashion concept Jesper Landberg (https://codepen.io/ReGGae/pen/bmyYEj), переписано на GSAP 3 и three.js r170.
+// Два режима: отдельная страница approach.html (листает колесо, свайп, клавиши)
+// и пятый блок главной (.sl--section): блок закреплён на экране, слайды меняет обычная прокрутка страницы.
 import * as THREE from 'three';
 
 const slides = window.APPROACH || [];
@@ -12,7 +14,11 @@ if (root && gsap && slides.length) init();
 function init() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const T = reduced ? 0.01 : 1; // множитель длительностей
+    const section = root.classList.contains('sl--section');
+    root.style.setProperty('--sl-n', slides.length);
 
+    const pin = root.querySelector('.sl__pin');
+    const head = root.querySelector('.sl__head');
     const slidesEl = root.querySelector('.sl__slides');
     const bulletsEl = root.querySelector('.sl__bullets');
     const bgEl = root.querySelector('.sl__bg');
@@ -122,6 +128,20 @@ function init() {
         // у всех фраз высота — по самой длинной: первая строка на каждом слайде на одном уровне, без «лесенки»
         const h = Math.max(...els.map((e) => e.text.offsetHeight));
         els.forEach((e) => { e.text.style.minHeight = `${h}px`; });
+        layout(h);
+    }
+
+    // телефон и планшет: заголовок с цитатой сверху, снимки — в остаток экрана над фразой.
+    // Высоту снимков считаем здесь, CSS берёт готовые числа (--head-b, --img-h)
+    function layout(textH) {
+        const pinH = pin.clientHeight;
+        const headB = head ? head.offsetTop + head.offsetHeight : 0;
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        // отступ под заголовком + сдвиг правого снимка + отступ до фразы + поле снизу
+        const gaps = rem * (1.25 + 3 + 1.5 + 2);
+        const imgH = Math.max(rem * 8, pinH - headB - gaps - textH);
+        pin.style.setProperty('--head-b', `${headB}px`);
+        pin.style.setProperty('--img-h', `${imgH}px`);
     }
 
     // ---------- фон ----------
@@ -129,8 +149,10 @@ function init() {
 
     // ---------- состояние ----------
     let current = 0;
-    let busy = false;
+    let busy = true; // до появления первого слайда переходов нет
     let hinted = false;
+    let want = 0; // слайд, к которому прокрутили (режим блока): переход к нему — как только закончится текущий
+    const settle = () => { busy = false; if (want !== current) go(want); };
 
     const setBullet = (i, on, dur) => {
         const b = els[i].bullet;
@@ -148,7 +170,7 @@ function init() {
         e.slide.classList.add('is-current');
         setBullet(0, true, 1.2 * T);
         announce(0);
-        gsap.timeline()
+        gsap.timeline({ onComplete: settle })
             .fromTo(e.imgs, { yPercent: 120, scaleY: 1.4 }, { yPercent: 0, scaleY: 1, duration: 1.5 * T, ease: 'expo.out', stagger: 0.1 * T }, 0.1)
             .fromTo(e.lines, { yPercent: 105 }, { yPercent: 0, duration: 1.3 * T, ease: 'power4.out', stagger: 0.08 * T }, 0.5);
     }
@@ -160,7 +182,9 @@ function init() {
         to = (to + n) % n;
         if (to === current) return;
         busy = true;
-        const down = to > current ? !(current === 0 && to === n - 1) : (current === n - 1 && to === 0);
+        // на странице слайды идут по кругу, в блоке главной — только вперёд и назад по прокрутке
+        const down = section ? to > current
+            : to > current ? !(current === 0 && to === n - 1) : (current === n - 1 && to === 0);
         const from = current;
         current = to;
         const a = els[from];
@@ -177,7 +201,7 @@ function init() {
         setBullet(to, true, 1.2 * T);
         announce(to);
 
-        gsap.timeline({ onComplete: () => { busy = false; } })
+        gsap.timeline({ onComplete: settle })
             // уходящие снимки — вверх (или вниз), вытягиваясь
             .to(a.imgs, { yPercent: -185 * s, scaleY: 1.5, duration: 1.2 * T, ease: 'expo.inOut', stagger: 0.07 * T }, 0)
             .to(a.lines, { yPercent: -105 * s, duration: 1 * T, ease: 'power4.inOut', stagger: 0.05 * T }, 0)
@@ -191,32 +215,55 @@ function init() {
     }
 
     // ---------- управление ----------
-    els.forEach((e, i) => e.bullet.addEventListener('click', () => go(i)));
+    if (section) {
+        // блок главной: слайд выбирает прокрутка — каждому слайду своя доля высоты блока
+        const n = els.length;
+        const ST = window.ScrollTrigger;
+        const pick = (p) => Math.min(n - 1, Math.max(0, Math.floor(p * n)));
+        const request = (i) => { want = i; if (!busy) go(want); };
+        const scrollSpan = () => root.offsetHeight - window.innerHeight;
+        const startY = () => root.getBoundingClientRect().top + window.scrollY;
 
-    // колёсико: одна прокрутка — один слайд
-    let wheelLock = 0;
-    window.addEventListener('wheel', (ev) => {
-        if (Math.abs(ev.deltaY) < 8) return;
-        const now = Date.now();
-        if (busy || now < wheelLock) return;
-        wheelLock = now + 600;
-        go(current + (ev.deltaY > 0 ? 1 : -1));
-    }, { passive: true });
+        if (ST) {
+            ST.create({ trigger: root, start: 'top top', end: 'bottom bottom', onUpdate: (self) => request(pick(self.progress)) });
+        } else {
+            window.addEventListener('scroll', () => request(pick((window.scrollY - startY()) / scrollSpan())), { passive: true });
+        }
 
-    // свайп вверх/вниз
-    let y0 = null;
-    root.addEventListener('pointerdown', (ev) => { y0 = ev.clientY; });
-    root.addEventListener('pointerup', (ev) => {
-        if (y0 === null) return;
-        const dy = ev.clientY - y0;
-        y0 = null;
-        if (Math.abs(dy) > 40) go(current + (dy < 0 ? 1 : -1));
-    });
+        // номер слайда — прокрутка к его доле блока
+        els.forEach((e, i) => e.bullet.addEventListener('click', () => {
+            const y = startY() + ((i + 0.5) / n) * scrollSpan();
+            if (window.lenis) window.lenis.scrollTo(y, { duration: 1.2 });
+            else window.scrollTo({ top: y, behavior: 'smooth' });
+        }));
+    } else {
+        els.forEach((e, i) => e.bullet.addEventListener('click', () => go(i)));
 
-    document.addEventListener('keydown', (ev) => {
-        if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(ev.key)) { ev.preventDefault(); go(current + 1); }
-        if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(ev.key)) { ev.preventDefault(); go(current - 1); }
-    });
+        // колёсико: одна прокрутка — один слайд
+        let wheelLock = 0;
+        window.addEventListener('wheel', (ev) => {
+            if (Math.abs(ev.deltaY) < 8) return;
+            const now = Date.now();
+            if (busy || now < wheelLock) return;
+            wheelLock = now + 600;
+            go(current + (ev.deltaY > 0 ? 1 : -1));
+        }, { passive: true });
+
+        // свайп вверх/вниз
+        let y0 = null;
+        root.addEventListener('pointerdown', (ev) => { y0 = ev.clientY; });
+        root.addEventListener('pointerup', (ev) => {
+            if (y0 === null) return;
+            const dy = ev.clientY - y0;
+            y0 = null;
+            if (Math.abs(dy) > 40) go(current + (dy < 0 ? 1 : -1));
+        });
+
+        document.addEventListener('keydown', (ev) => {
+            if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(ev.key)) { ev.preventDefault(); go(current + 1); }
+            if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(ev.key)) { ev.preventDefault(); go(current - 1); }
+        });
+    }
 
     // ресайз — строки фразы пересчитываются по новой ширине
     let rt;
@@ -234,7 +281,12 @@ function init() {
     fonts.then(() => {
         splitAll();
         els.forEach((e, i) => { if (i) gsap.set(e.lines, { yPercent: 105 }); });
-        bg.ready.then(intro);
+        // блок главной появляется, когда до него докрутили; страница — сразу
+        if (section && window.ScrollTrigger) {
+            window.ScrollTrigger.create({ trigger: root, start: 'top 60%', once: true, onEnter: () => bg.ready.then(intro) });
+        } else {
+            bg.ready.then(intro);
+        }
     });
 
     // ---------- фон: WebGL или запасной вариант ----------

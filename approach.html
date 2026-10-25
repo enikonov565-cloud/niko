@@ -14,7 +14,7 @@
 		<!-- ?v=… — версия файлов: после изменений CSS/JS увеличьте число, и браузеры не покажут старую копию из кэша -->
 		<link rel="stylesheet" href="css/hero.css?v=2" />
 		<link rel="stylesheet" href="css/art.css?v=2" />
-		<link rel="stylesheet" href="css/approach.css?v=13" />
+		<link rel="stylesheet" href="css/approach.css?v=16" />
 	</head>
 	<body class="approach-page">
 		<!-- плёночное зерно (css/art.css) -->
@@ -37,15 +37,28 @@
 		<!-- Слайдер: фон на весь экран (WebGL), два снимка в рамках внахлёст и фраза крупно.
 		     Слайды строит js/approach.js из списка js/approach-data.js -->
 		<main class="sl" aria-roledescription="слайдер">
-			<h1 class="sr-only">Мой подход</h1>
-			<div class="sl__bg" aria-hidden="true"></div>
-			<div class="sl__slides"></div>
+			<div class="sl__pin">
+				<div class="sl__bg" aria-hidden="true"></div>
 
-			<nav class="sl__bullets" aria-label="Слайды"></nav>
-			<div class="sl__hint" aria-hidden="true">
-				<svg viewBox="0 0 22 52"><path d="M11 1v49M2 41l9 9 9-9"/></svg>
+				<!-- заголовок и цитата — общие для всех слайдов -->
+				<header class="sl__head">
+					<h1 class="sl__title">Мой подход</h1>
+					<figure class="sl__quote">
+						<blockquote class="sl__quote-text t-h3">
+							<p>«Которая из&nbsp;моих фотографий самая любимая? Та, которую я&nbsp;собираюсь снять завтра».</p>
+						</blockquote>
+						<figcaption class="sl__quote-author t-h3">Имоджен Каннингем</figcaption>
+					</figure>
+				</header>
+
+				<div class="sl__slides"></div>
+
+				<nav class="sl__bullets" aria-label="Слайды"></nav>
+				<div class="sl__hint" aria-hidden="true">
+					<svg viewBox="0 0 22 52"><path d="M11 1v49M2 41l9 9 9-9"/></svg>
+				</div>
+				<p class="sr-only" aria-live="polite" data-sl="status"></p>
 			</div>
-			<p class="sr-only" aria-live="polite" data-sl="status"></p>
 		</main>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -57,6 +70,6 @@
 				}
 			}
 		</script>
-		<script type="module" src="js/approach.js?v=10"></script>
+		<script type="module" src="js/approach.js?v=11"></script>
 	</body>
 </html>

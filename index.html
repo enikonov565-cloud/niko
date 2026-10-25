@@ -19,6 +19,7 @@
 		<link rel="stylesheet" href="css/about.css?v=54" />
 		<link rel="stylesheet" href="css/room.css?v=54" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
+		<link rel="stylesheet" href="css/approach.css?v=16" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -166,7 +167,7 @@
 				</div>
 				<figure class="about__photo">
 					<img src="img/about/photographer.png" alt="Фотограф nikonovphoto с камерой" width="640" height="640" loading="lazy" decoding="async">
-					<a class="about__link" href="approach.html">мой подход</a>
+					<a class="about__link" href="#approach">мой подход</a>
 				</figure>
 			</div>
 		</section>
@@ -198,6 +199,33 @@
 				</div>
 
 				<p class="room__status" aria-live="polite"></p>
+			</div>
+		</section>
+
+		<!-- Пятый экран: «Мой подход» — слайды листаются прокруткой, экран закреплён, пока идут все пять.
+		     Слайды строит js/approach.js из списка js/approach-data.js (тот же слайдер, что на approach.html) -->
+		<section class="sl sl--section" id="approach" aria-labelledby="approach-title" aria-roledescription="слайдер">
+			<div class="sl__pin">
+				<div class="sl__bg" aria-hidden="true"></div>
+
+				<!-- заголовок и цитата — общие для всех слайдов -->
+				<header class="sl__head">
+					<h2 class="sl__title" id="approach-title">Мой подход</h2>
+					<figure class="sl__quote">
+						<blockquote class="sl__quote-text t-h3">
+							<p>«Которая из&nbsp;моих фотографий самая любимая? Та, которую я&nbsp;собираюсь снять завтра».</p>
+						</blockquote>
+						<figcaption class="sl__quote-author t-h3">Имоджен Каннингем</figcaption>
+					</figure>
+				</header>
+
+				<div class="sl__slides"></div>
+
+				<nav class="sl__bullets" aria-label="Слайды"></nav>
+				<div class="sl__hint" aria-hidden="true">
+					<svg viewBox="0 0 22 52"><path d="M11 1v49M2 41l9 9 9-9"/></svg>
+				</div>
+				<p class="sr-only" aria-live="polite" data-sl="status"></p>
 			</div>
 		</section>
 
@@ -558,5 +586,7 @@
 		<script src="js/gallery-photos.js?v=54"></script>
 		<script src="js/room.js?v=54"></script>
 		<script src="js/art.js?v=54"></script>
+		<script src="js/approach-data.js?v=14"></script>
+		<script type="module" src="js/approach.js?v=11"></script>
 	</body>
 </html>
