@@ -20,7 +20,7 @@
 		<link rel="stylesheet" href="css/room.css?v=54" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=20" />
-		<link rel="stylesheet" href="css/services.css?v=5" />
+		<link rel="stylesheet" href="css/services.css?v=29" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -230,27 +230,40 @@
 			</div>
 		</section>
 
-		<!-- Шестой экран: «Выбирайте по душе» — жанры и цены на светлой выставочной стене.
-		     Рамки и карточку строит js/services.js из списка js/services-data.js -->
+		<!-- Шестой экран: «Что снимаем» — жанры и цены. По макету Figma: бирюзовая панель слева, два снимка-полароида,
+		     меню жанров справа внизу, приглушённая плёнка на фоне. Всё строит js/services.js из списка js/services-data.js -->
 		<section class="svc" id="services" aria-labelledby="services-title">
+			<!-- две плёнки на фоне — крест-накрест, едут навстречу друг другу -->
+			<div class="svc__film" aria-hidden="true"><div class="svc__film-track"></div></div>
+			<div class="svc__film svc__film--b" aria-hidden="true"><div class="svc__film-track"></div></div>
+
+			<!-- заголовок и подзаголовок — одной линией над всем экраном -->
 			<header class="svc__head">
-				<h2 class="svc__title t-h1" id="services-title">Выбирайте по&nbsp;душе</h2>
-				<p class="svc__lead">Прозрачные цены без скрытых доплат. Точную смету соберу под&nbsp;вашу задачу после брифа.</p>
+				<h2 class="svc__title t-h1" id="services-title">Кадр под&nbsp;настроение</h2>
+				<p class="svc__lead">Портрет, улица, город или тишина леса. Выберите то, что откликается, и&nbsp;я&nbsp;поймаю это в&nbsp;кадре.</p>
 			</header>
 
-			<div class="svc__body">
-				<!-- карточка выбранного жанра -->
-				<div class="svc__card">
+			<div class="svc__panel">
+
+				<!-- описание выбранного жанра -->
+				<div class="svc__info">
 					<h3 class="svc__name svc__swap" data-svc="name"></h3>
 					<p class="svc__text svc__swap" data-svc="text"></p>
 					<p class="svc__price svc__swap" data-svc="price"></p>
 					<ul class="svc__list svc__swap" data-svc="list"></ul>
-					<a class="svc__cta" href="https://t.me/nikonovphoto" target="_blank" rel="noopener">Обсудить съёмку</a>
+					<!-- запись: Telegram открывается с готовым сообщением про выбранный жанр (ссылку обновляет js/services.js).
+					     Вид — как «связаться со мной» в шапке (.topbar__contact в css/hero.css) -->
+					<a class="topbar__contact svc__cta" href="https://t.me/nikonovphoto" target="_blank" rel="noopener" data-svc="cta">заказать съёмку</a>
 				</div>
-
-				<!-- стена: рамки на подвесах, под каждой этикетка с ценой -->
-				<ul class="svc__wall" aria-label="Жанры съёмки"></ul>
 			</div>
+
+			<!-- два снимка выбранного жанра -->
+			<div class="svc__photos" aria-hidden="true">
+				<figure class="svc__polaroid svc__polaroid--a"><img alt="" decoding="async"></figure>
+				<figure class="svc__polaroid svc__polaroid--b"><img alt="" decoding="async"></figure>
+			</div>
+
+			<ul class="svc__menu" aria-label="Жанры съёмки"></ul>
 			<p class="sr-only" aria-live="polite" data-svc="status"></p>
 		</section>
 
@@ -608,12 +621,12 @@
 		</script>
 		<script src="js/film.js?v=54"></script>
 		<script src="js/about.js?v=54"></script>
-		<script src="js/gallery-photos.js?v=54"></script>
+		<script src="js/gallery-photos.js?v=55"></script>
 		<script src="js/room.js?v=54"></script>
 		<script src="js/art.js?v=54"></script>
 		<script src="js/approach-data.js?v=14"></script>
 		<script type="module" src="js/approach.js?v=12"></script>
-		<script src="js/services-data.js?v=1"></script>
-		<script src="js/services.js?v=2"></script>
+		<script src="js/services-data.js?v=3"></script>
+		<script src="js/services.js?v=10"></script>
 	</body>
 </html>
