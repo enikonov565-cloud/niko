@@ -14,7 +14,7 @@
 	--panel-w: max(26%, 21rem);           /* узкая панель: в ней только описание выбранного жанра */
 	/* снимки начинаются под строкой заголовка */
 	/* снимки начинаются под строкой заголовка; высоту строки (--head-b) уточняет js/services.js */
-	--photos-top: calc(var(--head-b, calc(var(--top) + var(--fs-h1) * var(--lh-h1))) + clamp(2rem, 1rem + 2.5vw, 4rem));
+	--photos-top: calc(var(--head-b, calc(var(--top) + var(--fs-h1) * var(--lh-h1))) + clamp(3rem, 2rem + 2.5vw, 5.5rem));
 
 	position: relative;
 	z-index: 3;
@@ -100,7 +100,8 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	width: var(--panel-w);
-	padding: var(--top) var(--inset) clamp(2.5rem, 1.5rem + 3vw, 5rem) calc(var(--gutter) + var(--inset));
+	/* слева — по линии бургера, как заголовок */
+	padding: var(--top) var(--inset) clamp(2.5rem, 1.5rem + 3vw, 5rem) var(--gutter);
 	border-radius: 0 var(--r-photo) var(--r-photo) 0;
 	background: var(--panel);
 }
@@ -110,8 +111,9 @@
 	position: absolute;
 	z-index: 5;
 	top: var(--top);
-	left: calc(var(--gutter) + var(--inset));
-	right: calc(var(--gutter) + var(--inset));
+	/* поля как у второго экрана: заголовок — по линии бургера, подзаголовок кончается по линии «связаться со мной» */
+	left: var(--gutter);
+	right: var(--gutter);
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
@@ -125,11 +127,16 @@
 	white-space: nowrap;
 }
 
+/* подзаголовок — как у второго экрана (.t-h3): две строки, по предложению в каждой */
 .svc__lead {
-	max-width: 26em;
-	margin: 0 0 0.2em;
-	font-size: var(--fs-text);
-	line-height: var(--lh-text);
+	max-width: none;
+	margin: 0 0 0.3em;
+	color: var(--c-light);
+}
+
+.svc__lead span {
+	display: block;
+	white-space: nowrap;
 }
 
 .svc__name {
@@ -304,6 +311,15 @@
 
 /* ---------- АДАПТИВ ---------- */
 
+/* небольшой ноутбук: рядом с заголовком две строки подзаголовка не помещаются — подзаголовок под ним */
+@media (min-width: 1024px) and (max-width: 1279px) {
+	.svc__head {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: clamp(0.5rem, 0.25rem + 0.6vw, 1rem);
+	}
+}
+
 /* планшет и телефон: всё в столбик — заголовок на тёмном фоне, снимки, меню лентой,
    внизу бирюзовая плашка с описанием жанра */
 @media (max-width: 1023px) {
@@ -335,8 +351,13 @@
 	}
 
 	.svc__lead {
-		max-width: none;
 		margin: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem) 0 0;
+	}
+
+	/* на телефоне строки переносятся сами */
+	.svc__lead span {
+		display: inline;
+		white-space: normal;
 	}
 
 	.svc__photos {
