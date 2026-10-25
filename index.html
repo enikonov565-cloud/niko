@@ -20,6 +20,7 @@
 		<link rel="stylesheet" href="css/room.css?v=54" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=20" />
+		<link rel="stylesheet" href="css/services.css?v=5" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -227,6 +228,30 @@
 				</div>
 				<p class="sr-only" aria-live="polite" data-sl="status"></p>
 			</div>
+		</section>
+
+		<!-- Шестой экран: «Выбирайте по душе» — жанры и цены на светлой выставочной стене.
+		     Рамки и карточку строит js/services.js из списка js/services-data.js -->
+		<section class="svc" id="services" aria-labelledby="services-title">
+			<header class="svc__head">
+				<h2 class="svc__title t-h1" id="services-title">Выбирайте по&nbsp;душе</h2>
+				<p class="svc__lead">Прозрачные цены без скрытых доплат. Точную смету соберу под&nbsp;вашу задачу после брифа.</p>
+			</header>
+
+			<div class="svc__body">
+				<!-- карточка выбранного жанра -->
+				<div class="svc__card">
+					<h3 class="svc__name svc__swap" data-svc="name"></h3>
+					<p class="svc__text svc__swap" data-svc="text"></p>
+					<p class="svc__price svc__swap" data-svc="price"></p>
+					<ul class="svc__list svc__swap" data-svc="list"></ul>
+					<a class="svc__cta" href="https://t.me/nikonovphoto" target="_blank" rel="noopener">Обсудить съёмку</a>
+				</div>
+
+				<!-- стена: рамки на подвесах, под каждой этикетка с ценой -->
+				<ul class="svc__wall" aria-label="Жанры съёмки"></ul>
+			</div>
+			<p class="sr-only" aria-live="polite" data-svc="status"></p>
 		</section>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -588,5 +613,7 @@
 		<script src="js/art.js?v=54"></script>
 		<script src="js/approach-data.js?v=14"></script>
 		<script type="module" src="js/approach.js?v=12"></script>
+		<script src="js/services-data.js?v=1"></script>
+		<script src="js/services.js?v=2"></script>
 	</body>
 </html>

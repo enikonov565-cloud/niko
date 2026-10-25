@@ -1,0 +1,367 @@
+/* ---------- ВЫБИРАЙТЕ ПО ДУШЕ — шестой экран ----------
+   Светлая выставочная стена: снимки жанров в рамках на подвесах, под каждым — музейная этикетка с ценой.
+   Над выбранной рамкой — мягкий свет, как от ламп в галерее; слева — карточка жанра.
+   Стену и карточку строит js/services.js из списка js/services-data.js */
+
+.svc {
+	--ink: #0b0f15;                      /* текст — цвет фона сайта */
+	--ink-2: rgba(11, 15, 21, 0.74);     /* второстепенный текст */
+	--frame: #1a242b;                    /* рамка — как у картин в галерее */
+	--mat: #f6f4ef;                      /* паспарту */
+	--r-photo: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление, как у всех фото сайта: 10 → 15 */
+
+	position: relative;
+	z-index: 3;
+	overflow-x: clip; /* свет крайних рамок не выходит за край экрана */
+	padding: var(--section-gap) var(--gutter);
+	background: var(--c-light);
+	color: var(--ink);
+}
+
+/* ---------- шапка блока: заголовок слева, пояснение справа ---------- */
+
+.svc__head {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 26em);
+	gap: clamp(1.5rem, 1rem + 2vw, 4rem);
+	align-items: end;
+	padding: 0 var(--inset);
+}
+
+.svc__title {
+	margin: 0;
+	text-transform: uppercase;
+}
+
+.svc__lead {
+	margin: 0;
+	font-size: var(--fs-text);
+	line-height: var(--lh-text);
+	color: var(--ink-2);
+}
+
+/* ---------- стена на всю ширину, под ней — табличка выбранного жанра ---------- */
+
+.svc__body {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(2.5rem, 1.5rem + 3vw, 5rem);
+	margin-top: clamp(3rem, 2rem + 4vw, 7rem);
+	padding: 0 var(--inset);
+}
+
+/* табличка — как большая подпись к экспозиции: жанр, цена, что входит */
+.svc__card {
+	order: 2;
+	display: grid;
+	grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.8fr) minmax(0, 1.1fr);
+	grid-template-areas:
+		"name  price list"
+		"text  price list"
+		".     .     cta";
+	column-gap: clamp(1.5rem, 1rem + 2vw, 4rem);
+	align-items: start;
+	padding-top: clamp(1.5rem, 1rem + 1.5vw, 2.75rem);
+	border-top: 1px solid rgba(11, 15, 21, 0.25);
+}
+
+.svc__card .svc__name { grid-area: name; }
+.svc__card .svc__text { grid-area: text; }
+.svc__card .svc__price { grid-area: price; margin-top: 0; }
+.svc__card .svc__list { grid-area: list; margin-top: 0; }
+.svc__card .svc__cta { grid-area: cta; justify-self: start; }
+
+.svc__name {
+	margin: 0;
+	font-size: var(--fs-sub);
+	font-weight: 400;
+	line-height: var(--lh-sub);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.svc__text {
+	margin: 0.6em 0 0;
+	color: var(--ink-2);
+}
+
+.svc__price {
+	margin: clamp(1.25rem, 0.75rem + 1.5vw, 2.5rem) 0 0;
+	font-size: var(--fs-h2);
+	font-weight: 300;
+	line-height: var(--lh-h2);
+	letter-spacing: -0.01em;
+}
+
+.svc__list {
+	margin: clamp(1rem, 0.75rem + 0.8vw, 1.75rem) 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* маркер — короткая черта линией, а не знаком */
+.svc__list li {
+	position: relative;
+	padding-left: 1.4em;
+	line-height: 1.5;
+}
+
+.svc__list li + li {
+	margin-top: 0.45em;
+}
+
+.svc__list li::before {
+	content: "";
+	position: absolute;
+	top: 0.75em;
+	left: 0;
+	width: 0.75em;
+	height: 1px;
+	background: currentColor;
+}
+
+/* кнопка — как «связаться со мной» в шапке: текст с подчёркиванием */
+.svc__cta {
+	display: inline-block;
+	margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.75rem);
+	padding-bottom: 0.15em;
+	border-bottom: 2px solid currentColor;
+	color: inherit;
+	font-size: var(--fs-text);
+	font-weight: 500;
+	text-decoration: none;
+	transition: opacity 0.25s ease;
+}
+
+.svc__cta:hover {
+	opacity: 0.65;
+}
+
+.svc__cta:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 4px;
+}
+
+/* части карточки сменяются мягко (js/services.js) */
+.svc__swap {
+	will-change: transform, opacity;
+}
+
+/* ---------- стена: подвесная рейка, тросики, рамки на разной высоте ---------- */
+
+.svc__wall {
+	--rail: 2px;
+	order: 1;
+	position: relative;
+	display: flex;
+	gap: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+	align-items: flex-start;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	/* рейка под потолком, на ней висят рамки */
+	border-top: var(--rail) solid var(--frame);
+}
+
+.svc__item {
+	position: relative;
+	flex: 1 1 0;
+	min-width: 0;
+	/* у каждой рамки своя длина тросика — висят на разной высоте, как на выставке */
+	padding-top: var(--drop, 2.5rem);
+}
+
+.svc__item:nth-child(1) { --drop: clamp(2rem, 1.5rem + 2vw, 4rem); }
+.svc__item:nth-child(2) { --drop: clamp(3.5rem, 2.5rem + 4vw, 7.5rem); }
+.svc__item:nth-child(3) { --drop: clamp(2.5rem, 2rem + 2.5vw, 5rem); }
+.svc__item:nth-child(4) { --drop: clamp(4.5rem, 3.5rem + 5vw, 9.5rem); }
+.svc__item:nth-child(5) { --drop: clamp(3rem, 2rem + 3vw, 6rem); }
+
+/* два тросика от рейки к углам рамки */
+.svc__item::before,
+.svc__item::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	width: 1px;
+	height: var(--drop, 2.5rem);
+	background: rgba(26, 36, 43, 0.55);
+}
+
+.svc__item::before { left: 22%; }
+.svc__item::after { right: 22%; }
+
+/* свет над выбранной рамкой — как пятно от галерейной лампы */
+.svc__light {
+	position: absolute;
+	z-index: 0;
+	top: 0;
+	left: 50%;
+	width: 180%;
+	height: calc(var(--drop, 2.5rem) + 70%);
+	transform: translateX(-50%);
+	background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(255, 244, 222, 0.95) 0%, rgba(255, 244, 222, 0.45) 45%, rgba(255, 244, 222, 0) 100%);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.8s ease;
+}
+
+.svc__item.is-current .svc__light {
+	opacity: 1;
+}
+
+/* рамка — кнопка: клик выбирает жанр */
+.svc__frame {
+	position: relative;
+	z-index: 1;
+	display: block;
+	width: 100%;
+	margin: 0;
+	padding: clamp(0.4rem, 0.25rem + 0.6vw, 0.9rem); /* паспарту */
+	border: 2px solid var(--frame);
+	border-radius: var(--r-photo);
+	background: var(--mat);
+	box-shadow:
+		0 2px 4px rgba(11, 15, 21, 0.18),
+		0 18px 30px -16px rgba(11, 15, 21, 0.55);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* фото в исходных пропорциях, уголки скруглены */
+.svc__frame img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: calc(var(--r-photo) * 0.45);
+	filter: saturate(0.7) brightness(0.92);
+	transition: filter 0.8s ease;
+}
+
+.svc__frame:hover img,
+.svc__item.is-current .svc__frame img {
+	filter: none;
+}
+
+.svc__item.is-current .svc__frame {
+	transform: translateY(-0.4rem);
+	box-shadow:
+		0 3px 6px rgba(11, 15, 21, 0.2),
+		0 30px 44px -18px rgba(11, 15, 21, 0.6);
+}
+
+.svc__frame:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 4px;
+}
+
+/* музейная этикетка под рамкой: жанр и цена */
+.svc__label {
+	position: relative;
+	z-index: 1;
+	width: fit-content;
+	max-width: 100%;
+	margin: clamp(0.75rem, 0.5rem + 0.6vw, 1.25rem) auto 0;
+	padding: 0.55em 0.9em 0.5em;
+	border-radius: 2px;
+	background: #fbfaf7;
+	box-shadow:
+		0 0 0 0.5px rgba(11, 15, 21, 0.3),
+		0 1px 1px rgba(11, 15, 21, 0.18),
+		0 6px 12px -8px rgba(11, 15, 21, 0.45);
+	font-size: var(--fs-small);
+	line-height: 1.3;
+	text-align: center;
+	cursor: pointer;
+}
+
+.svc__label b {
+	display: block;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.svc__label span {
+	display: block;
+	color: var(--ink-2);
+	white-space: nowrap;
+}
+
+/* ---------- шапка сайта над светлым экраном: тёмная, без затемнения под ней (класс ставит js/services.js) ---------- */
+
+.is-light-top .topbar,
+.is-light-top .topbar__contact {
+	color: var(--c-dark);
+	transition: color 0.4s ease;
+}
+
+/* светлая подпись-логотип становится тёмной */
+.is-light-top .topbar__logo img {
+	filter: brightness(0);
+	opacity: 0.9;
+}
+
+.is-light-top .topbar-scrim {
+	opacity: 0;
+}
+
+/* ---------- АДАПТИВ ---------- */
+
+/* планшет и телефон: шапка в столбик, стена — лентой, листается пальцем; карточка под ней */
+@media (max-width: 1023px) {
+	.svc__head {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 0;
+	}
+
+	.svc__body {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 0;
+	}
+
+	/* табличка — в столбик: жанр, текст, цена, состав, кнопка */
+	.svc__card {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: "name" "text" "price" "list" "cta";
+	}
+
+	.svc__card .svc__price {
+		margin-top: clamp(1rem, 0.75rem + 1vw, 1.75rem);
+	}
+
+	.svc__card .svc__list {
+		margin-top: clamp(0.75rem, 0.5rem + 0.8vw, 1.25rem);
+	}
+
+	.svc__wall {
+		margin: 0 calc(var(--gutter) * -1);
+		padding: 0 var(--gutter) 1.5rem;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		scrollbar-width: none;
+		border-top: 0;
+		/* рейка — фоном по всей ленте */
+		background: linear-gradient(var(--frame), var(--frame)) 0 0 / 100% var(--rail) no-repeat;
+	}
+
+	.svc__wall::-webkit-scrollbar {
+		display: none;
+	}
+
+	.svc__item {
+		flex: 0 0 clamp(9.5rem, 42vw, 15rem);
+		scroll-snap-align: start;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.svc__frame,
+	.svc__frame img,
+	.svc__light {
+		transition: none;
+	}
+}
