@@ -125,6 +125,8 @@ html:has(.approach-page) {
 /* цитата на месте подзаголовка — мельче гарантии (13 → 14 → 15 при гарантии 14 → 15 → 16),
    две строки: по предложению в каждой; автор — жирным */
 .sl__quote {
+	/* ширина — по длинной строке цитаты: подпись справа кончается вместе с ней */
+	width: fit-content;
 	margin: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem) 0 0;
 	font-size: clamp(0.8125rem, 0.7838rem + 0.1174vw, 0.9375rem);
 	font-weight: 300;
@@ -144,9 +146,15 @@ html:has(.approach-page) {
 	white-space: nowrap;
 }
 
+/* подпись — под цитатой справа, с тире, как у цитаты Эллиотта Эрвитта над галереей */
 .sl__quote-author {
-	margin-top: 0.35em;
+	margin-top: 0.6em;
+	text-align: right;
 	font-weight: 600;
+}
+
+.sl__quote-author::before {
+	content: "— ";
 }
 
 /* ---------- слайд ---------- */
