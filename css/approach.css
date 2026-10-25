@@ -122,9 +122,13 @@ html:has(.approach-page) {
 	text-transform: uppercase;
 }
 
-/* цитата на месте подзаголовка: H3 Light, автор — жирным */
+/* цитата на месте подзаголовка — мельче гарантии (13 → 14 → 15 при гарантии 14 → 15 → 16),
+   две строки: по предложению в каждой; автор — жирным */
 .sl__quote {
 	margin: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem) 0 0;
+	font-size: clamp(0.8125rem, 0.7838rem + 0.1174vw, 0.9375rem);
+	font-weight: 300;
+	line-height: 1.5;
 }
 
 .sl__quote-text {
@@ -133,11 +137,15 @@ html:has(.approach-page) {
 
 .sl__quote-text p {
 	margin: 0;
-	text-wrap: pretty;
+}
+
+.sl__quote-text span {
+	display: block;
+	white-space: nowrap;
 }
 
 .sl__quote-author {
-	margin-top: 0.5em;
+	margin-top: 0.35em;
 	font-weight: 600;
 }
 
@@ -316,6 +324,27 @@ html:has(.approach-page) {
 }
 
 /* ---------- АДАПТИВ ---------- */
+
+/* небольшой ноутбук: цитате в две строки нужно чуть больше места — снимки правее */
+@media (min-width: 1024px) and (max-width: 1199px) {
+	.sl__head {
+		width: calc(40% - var(--gutter) - var(--inset) - 1.5rem);
+	}
+
+	.sl__img--a {
+		left: 40%;
+		width: 24%;
+	}
+
+	.sl__img--b {
+		left: 64%;
+		width: 24%;
+	}
+
+	.sl__line--note {
+		max-width: min(26em, calc(40vw - var(--gutter) - var(--inset) - 2rem));
+	}
+}
 
 /* планшет и телефон: сверху заголовок с цитатой, под ним снимки, под снимками фраза.
    --head-b (низ заголовка) и --img-h (высота снимков) считает js/approach.js по высоте экрана */
