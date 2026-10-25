@@ -18,8 +18,8 @@
 
 	position: relative;
 	z-index: 3;
-	/* на невысоких ноутбуках блок чуть выше экрана — заголовок, описание и кнопка помещаются в панель */
-	min-height: max(100svh, 54rem);
+	/* ровно экран: кнопка «заказать съёмку» всегда видна целиком; ниже 40rem — по содержимому */
+	min-height: max(100svh, 40rem);
 	overflow: hidden;
 	background: var(--bg);
 	color: #fff;
@@ -101,7 +101,7 @@
 	justify-content: flex-end;
 	width: var(--panel-w);
 	/* слева — по линии бургера, как заголовок */
-	padding: var(--top) var(--inset) clamp(2.5rem, 1.5rem + 3vw, 5rem) var(--gutter);
+	padding: var(--top) var(--inset) clamp(1.75rem, 1rem + 1.5vw, 3rem) var(--gutter);
 	border-radius: 0 var(--r-photo) var(--r-photo) 0;
 	background: var(--panel);
 }
@@ -261,7 +261,7 @@
 	position: absolute;
 	z-index: 4;
 	right: var(--gutter);
-	bottom: clamp(2rem, 1rem + 2.5vw, 4rem);
+	bottom: clamp(1.75rem, 1rem + 1.5vw, 3rem); /* по нижнему краю — как кнопка в панели */
 	width: max(17.5rem, 22%); /* компактнее макета — снимкам больше места */
 	margin: 0;
 	padding: clamp(0.5rem, 0.35rem + 0.4vw, 0.875rem);
