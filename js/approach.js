@@ -52,7 +52,7 @@ function init() {
         });
 
         const text = document.createElement('p');
-        text.className = 'sl__text t-h2';
+        text.className = 'sl__text';
         slide.appendChild(text);
         slidesEl.appendChild(slide);
 

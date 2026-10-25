@@ -210,7 +210,8 @@ html:has(.approach-page) {
 	z-index: 2;
 }
 
-/* фраза — слева внизу, поверх снимков; строки выезжают из-под маски */
+/* фраза — слева внизу, поверх снимков; строки выезжают из-под маски.
+   Шкала подзаголовка (20 → 28 → 36, Light) — заметно мельче заголовка «Мой подход» и не спорит с ним */
 .sl__text {
 	position: absolute;
 	z-index: 3;
@@ -218,6 +219,10 @@ html:has(.approach-page) {
 	bottom: clamp(2.5rem, 1.5rem + 5vh, 6rem);
 	width: min(62vw, 18em);
 	margin: 0;
+	font-size: var(--fs-sub);
+	font-weight: 300;
+	line-height: var(--lh-sub);
+	letter-spacing: -0.01em;
 	text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 }
 
