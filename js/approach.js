@@ -22,7 +22,7 @@ function init() {
     // короткие предлоги, союзы и частицы не остаются в конце строки (цепочки вроде «а не» — тоже),
     // тире держится за предыдущее слово
     const glue = (text) => text
-        .replace(/(?<=^|[\s(«])(в|во|на|у|с|со|к|ко|о|об|от|из|до|по|за|под|над|при|без|для|про|и|а|но|не|ни|я|что)\s+/gi, '$1 ')
+        .replace(/(?<=^|[\s(«])(в|во|на|у|с|со|к|ко|о|об|от|из|до|по|за|под|над|при|без|для|про|и|а|но|или|не|ни|я|что)\s+/gi, '$1 ')
         .replace(/\s+—/g, ' —');
 
     // ---------- разметка ----------
@@ -57,7 +57,7 @@ function init() {
         bullet.innerHTML = `<span class="sl__bullet-text">${String(i + 1).padStart(2, '0')}</span><span class="sl__bullet-line"></span>`;
         bulletsEl.appendChild(bullet);
 
-        return { slide, imgs, text, phrase: glue(s.text), lines: [], bullet };
+        return { slide, imgs, text, phrase: glue(s.text), note: s.note ? glue(s.note) : '', lines: [], bullet };
     });
 
     // фраза разбивается на строки по фактической ширине — каждая строка под своей маской
@@ -95,6 +95,16 @@ function init() {
             e.text.appendChild(line);
             return inner;
         });
+        // гарантия мелким шрифтом под фразой — выезжает следом за строками
+        if (e.note) {
+            const line = document.createElement('span');
+            line.className = 'sl__line sl__line--note';
+            const inner = document.createElement('span');
+            inner.textContent = e.note;
+            line.appendChild(inner);
+            e.text.appendChild(line);
+            e.lines.push(inner);
+        }
     }
 
     // разбивать можно только видимый текст — на время замера слайд показываем
@@ -130,7 +140,7 @@ function init() {
         gsap.to(b.querySelector('.sl__bullet-line'), { scaleX: on ? 1 : 0, duration: dur, ease: 'expo.inOut' });
     };
 
-    const announce = (i) => { status.textContent = `${i + 1} из ${slides.length}: ${slides[i].text.split(/[|/~]/).map((t) => t.trim()).join(' ')}`; };
+    const announce = (i) => { status.textContent = `${i + 1} из ${slides.length}: ${slides[i].text.split(/[|/~]/).map((t) => t.trim()).join(' ')} ${slides[i].note || ''}`; };
 
     // первый слайд — появление
     function intro() {
