@@ -165,7 +165,7 @@
                 });
                 const pool = add(el, 'room__pool', {
                     left: cx - w * 0.95 + 'px', width: w * 1.9 + 'px',
-                    top: top - h * 0.6 + 'px', height: h * 2 + 'px' // центр света чуть выше середины картины
+                    top: Math.max(0, top - h * 0.6) + 'px', height: h * 2 - Math.max(0, h * 0.6 - top) + 'px' // центр света чуть выше середины картины; не выше края стены
                 });
                 const glow = add(floor, 'room__glow', { left: cx - w * 0.75 + 'px', width: w * 1.5 + 'px' });
                 // свет — под рамкой
