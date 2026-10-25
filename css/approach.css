@@ -1,0 +1,290 @@
+/* ---------- «МОЙ ПОДХОД» ----------
+   По мотивам Fashion concept Jesper Landberg (https://codepen.io/ReGGae/pen/bmyYEj):
+   полноэкранные слайды — фон с WebGL-переходом, два снимка в рамках внахлёст, фраза крупно поверх.
+   Цвета, шрифт и шапка — как на остальном сайте. Логика — js/approach.js */
+
+.approach-page {
+	overflow: hidden;
+	height: 100%;
+	background: var(--c-dark);
+}
+
+html:has(.approach-page) {
+	height: 100%;
+	overflow: hidden;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+.sl {
+	position: relative;
+	height: 100vh;
+	height: 100svh;
+	overflow: hidden;
+	touch-action: none; /* свайп листает слайды */
+}
+
+/* ---------- фон: WebGL-холст; без WebGL — просто снимки с плавной сменой ---------- */
+
+.sl__bg {
+	position: absolute;
+	inset: 0;
+	background: var(--c-dark);
+}
+
+.sl__bg canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.sl__bg-img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	filter: brightness(0.62);
+	opacity: 0;
+	transition: opacity 1.2s ease;
+}
+
+.sl__bg-img.is-current {
+	opacity: 1;
+}
+
+/* снизу и слева фон темнее — фраза читается */
+.sl__bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		linear-gradient(to top, rgba(11, 15, 21, 0.75) 0%, rgba(11, 15, 21, 0) 45%),
+		linear-gradient(to right, rgba(11, 15, 21, 0.45) 0%, rgba(11, 15, 21, 0) 55%);
+}
+
+/* ---------- слайд ---------- */
+
+.sl__slides {
+	position: absolute;
+	inset: 0;
+}
+
+.sl__slide {
+	position: absolute;
+	inset: 0;
+	visibility: hidden;
+}
+
+.sl__slide.is-current {
+	visibility: visible;
+}
+
+/* два снимка в рамках: левый выше, правый ниже — внахлёст, как в референсе */
+.sl__img {
+	position: absolute;
+	margin: 0;
+	overflow: hidden;
+	border: 1px solid rgba(235, 235, 235, 0.35);
+	background: #121820;
+	box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+	will-change: transform;
+}
+
+.sl__img img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.sl__img--a {
+	left: 29%;
+	top: 12%;
+	width: 30.5%;
+	height: 78%;
+	z-index: 1;
+}
+
+.sl__img--b {
+	left: 59.5%;
+	top: 19%;
+	width: 30.5%;
+	height: 78%;
+	z-index: 2;
+}
+
+/* фраза — слева внизу, поверх снимков; строки выезжают из-под маски */
+.sl__text {
+	position: absolute;
+	z-index: 3;
+	left: calc(var(--gutter) + var(--inset));
+	bottom: clamp(2.5rem, 1.5rem + 5vh, 6rem);
+	width: min(62vw, 18em);
+	margin: 0;
+	text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+}
+
+.sl__line {
+	display: block;
+	overflow: hidden;
+	/* место под выносные элементы букв, чтобы маска их не срезала */
+	padding-bottom: 0.08em;
+	margin-bottom: -0.08em;
+}
+
+.sl__line > span {
+	display: block;
+	will-change: transform;
+}
+
+/* ---------- номера слайдов справа ---------- */
+
+.sl__bullets {
+	position: absolute;
+	z-index: 4;
+	top: 50%;
+	right: var(--gutter);
+	display: flex;
+	flex-direction: column;
+	gap: clamp(0.25rem, 0.5vh, 0.5rem);
+	transform: translateY(-50%);
+}
+
+.sl__bullet {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.9em;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--c-light);
+	font: inherit;
+	font-size: var(--fs-small);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	cursor: pointer;
+}
+
+.sl__bullet-text {
+	opacity: 0.3;
+	transition: opacity 0.4s ease;
+}
+
+.sl__bullet-line {
+	display: block;
+	width: clamp(1.25rem, 0.8rem + 1.2vw, 2rem);
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: right;
+}
+
+.sl__bullet:hover .sl__bullet-text,
+.sl__bullet:focus-visible .sl__bullet-text,
+.sl__bullet.is-current .sl__bullet-text {
+	opacity: 1;
+}
+
+.sl__bullet:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 2px;
+}
+
+/* стрелка-подсказка «листайте» — исчезает после первой смены слайда */
+.sl__hint {
+	position: absolute;
+	z-index: 4;
+	left: 50%;
+	bottom: clamp(1rem, 0.5rem + 2vh, 2rem);
+	transform: translateX(-50%);
+	color: var(--c-light);
+	opacity: 0.7;
+}
+
+.sl__hint svg {
+	display: block;
+	width: 14px;
+	height: 40px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	animation: sl-hint 2.2s ease-in-out infinite;
+}
+
+@keyframes sl-hint {
+	0%, 100% { transform: translateY(-4px); }
+	50% { transform: translateY(4px); }
+}
+
+/* ---------- АДАПТИВ ---------- */
+
+/* планшет и телефон: снимки выше, фраза — под ними */
+@media (max-width: 1023px) {
+	/* правый край снимков — левее номеров слайдов */
+	.sl__img--a {
+		left: 6%;
+		top: calc(var(--topbar-y) + var(--burger-h) + 2.75rem);
+		width: 46%;
+		height: 44%;
+	}
+
+	.sl__img--b {
+		left: 36%;
+		top: calc(var(--topbar-y) + var(--burger-h) + 5.75rem);
+		width: 46%;
+		height: 44%;
+	}
+
+	.sl__text {
+		/* фраза — сразу под нижним снимком; строка идёт от поля до поля, левый край — по бургеру */
+		width: auto;
+		left: var(--gutter);
+		right: var(--gutter);
+		top: calc(var(--topbar-y) + var(--burger-h) + 5.75rem + 44% + clamp(1.25rem, 0.75rem + 2vh, 2.5rem));
+		bottom: auto;
+	}
+
+	.sl__bullets {
+		right: calc(var(--gutter) * 0.5);
+	}
+}
+
+/* переносы по смыслу: знак / в тексте — только на телефоне, ~ — только на планшете и компьютере */
+@media (min-width: 768px) {
+	.sl__br-m {
+		display: none;
+	}
+}
+
+@media (max-width: 767px) {
+	.sl__br-d {
+		display: none;
+	}
+
+	/* номера — от верха правого снимка: не теснят шапку и не заходят на фразу под снимками */
+	.sl__bullets {
+		top: calc(var(--topbar-y) + var(--burger-h) + 5.75rem);
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sl__hint svg {
+		animation: none;
+	}
+}
