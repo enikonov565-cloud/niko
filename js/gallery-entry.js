@@ -673,7 +673,8 @@ function init() {
 	let fontsReady = false;
 	let writing = false;
 	let lastT = 0;
-	const pen = { x: 0, y: 0, on: false };
+	const pen = { x: 0, y: 0 };
+	let travel = null; // переход ручки к началу следующей строки
 	function writeFrame(p) {
 		if (!layout || !fontsReady) return;
 		const now = performance.now();
@@ -686,20 +687,38 @@ function init() {
 		} else if (!writing && written < layout.total && atRest && root.getBoundingClientRect().top < window.innerHeight * 0.35) {
 			writing = true;
 		}
-		let tip = null;
+		// кончик пера всегда там, где проявляется буква: текст пишется ровно под ним.
+		// Дописав строку, ручка приподнимается и плавно переходит к началу следующей — текст ждёт её
+		let active = false;
 		if (writing && written < layout.total) {
-			written = Math.min(layout.total, written + layout.size * 5 * dt); // скорость — как у неторопливого почерка
-			tip = renderPage();
-			if (written >= layout.total) writing = false;
+			active = true;
+			if (travel) {
+				travel.t = Math.min(1, travel.t + dt / 0.7);
+				const e = ease(travel.t);
+				pen.x = travel.from.x + (travel.to.x - travel.from.x) * e;
+				pen.y = travel.from.y + (travel.to.y - travel.from.y) * e - Math.sin(Math.PI * e) * layout.size * 0.5; // приподнята над листом
+				if (travel.t >= 1) travel = null;
+			} else {
+				// граница строки впереди: на ней ручка останавливается и переходит на следующую
+				let edge = 0;
+				let next = null;
+				for (let i = 0; i < layout.lines.length; i++) {
+					edge += layout.lines[i].w;
+					if (edge > written + 0.01) { next = layout.lines[i + 1] || null; break; }
+				}
+				let step = written + layout.size * 5 * dt; // скорость — как у неторопливого почерка
+				const lineEnd = step >= edge && next;
+				if (lineEnd) step = edge;
+				written = Math.min(layout.total, step);
+				const tip = renderPage();
+				if (tip) { pen.x = tip.x; pen.y = tip.y + Math.sin(now / 220) * layout.size * 0.015; }
+				if (lineEnd) travel = { t: 0, from: { x: pen.x, y: pen.y }, to: { x: next.x, y: next.y - next.size * 0.12 } };
+				if (written >= layout.total) { writing = false; active = false; }
+			}
 		}
-		// ручка идёт за строкой, чуть покачиваясь; дописала — уходит вниз-вправо
+		// дописала — уходит вниз-вправо
 		const w = layout.size * 8;
-		if (tip) {
-			if (!pen.on) { pen.x = tip.x; pen.y = tip.y; pen.on = true; }
-			pen.x += (tip.x - pen.x) * 0.14;
-			pen.y += (tip.y + Math.sin(now / 160) * layout.size * 0.03 - pen.y) * 0.14;
-		}
-		const show = tip && atRest;
+		const show = active && atRest;
 		hand.style.width = `${w}px`;
 		hand.style.opacity = show ? '1' : '0';
 		const s = w / HAND_VB;

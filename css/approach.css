@@ -308,6 +308,91 @@ html:has(.approach-page) {
 	outline-offset: 2px;
 }
 
+/* «мои работы» — кнопка под текстовой частью слайда, по её левой линии.
+   Наведение: светлая заливка медленно наплывает слева, текст под ней сам меняет цвет на тёмный */
+.approach-page {
+	--works-fs: clamp(0.8125rem, 0.75rem + 0.25vw, 1rem);
+	--works-h: calc(var(--works-fs) + clamp(0.7rem, 0.6rem + 0.4vw, 1rem) * 2 + 2px);
+}
+
+.sl__works {
+	position: absolute;
+	z-index: 4;
+	left: calc(var(--gutter) + var(--inset));
+	bottom: clamp(1.25rem, 0.75rem + 2vh, 2.5rem);
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px; /* палец попадает и на телефоне */
+	padding: clamp(0.7rem, 0.6rem + 0.4vw, 1rem) clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+	overflow: hidden;
+	isolation: isolate;
+	font-size: var(--works-fs);
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.06em;
+	text-transform: lowercase;
+	color: #fff;
+	text-decoration: none;
+	border: 1px solid rgba(235, 235, 235, 0.55);
+	border-radius: 999px;
+	background: rgba(11, 15, 21, 0.28);
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+	transition: border-color 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* заливка — светлая фирменная, наплывает слева */
+.sl__works::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--c-light);
+	border-radius: inherit;
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* текст инвертирует то, что под ним: на тёмном — светлый, на заливке — тёмный, и посередине пути — по буквам */
+.sl__works-label {
+	color: #fff;
+	mix-blend-mode: difference;
+}
+
+@media (hover: hover) {
+	.sl__works:hover {
+		border-color: var(--c-light);
+	}
+
+	.sl__works:hover::before {
+		transform: scaleX(1);
+	}
+}
+
+.sl__works:active::before {
+	transform: scaleX(1);
+}
+
+.sl__works:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sl__works,
+	.sl__works::before {
+		transition: none;
+	}
+}
+
+/* на странице фраза поднимается над кнопкой (компьютер; на телефоне и планшете фраза стоит от верха) */
+@media (min-width: 1024px) {
+	.approach-page .sl__text {
+		bottom: calc(clamp(1.25rem, 0.75rem + 2vh, 2.5rem) + max(var(--works-h), 44px) + clamp(2rem, 1rem + 3vh, 3.5rem));
+	}
+}
+
 /* стрелка-подсказка «листайте» — исчезает после первой смены слайда */
 .sl__hint {
 	position: absolute;
@@ -396,6 +481,13 @@ html:has(.approach-page) {
 
 	.sl__line--note {
 		max-width: 26em;
+	}
+
+	/* кнопка идёт сразу за фразой (высоту фразы даёт js/approach.js) — не наедет на текст ни на каком экране */
+	.sl__works {
+		left: var(--gutter);
+		top: calc(var(--head-b, 30%) + 5.75rem + var(--img-h, 34%) + var(--text-h, 6rem) + 1.5rem);
+		bottom: auto;
 	}
 
 	/* номера — от верха левого снимка */

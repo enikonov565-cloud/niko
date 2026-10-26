@@ -138,10 +138,14 @@ function init() {
         const headB = head ? head.offsetTop + head.offsetHeight : 0;
         const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
         // отступ под заголовком + сдвиг правого снимка + отступ до фразы + поле снизу
-        const gaps = rem * (1.25 + 3 + 1.5 + 2);
+        // на странице под фразой — кнопка «мои работы»: снимки уступают ей место
+        const works = pin.querySelector('.sl__works');
+        const worksH = works ? works.offsetHeight + rem * 1.5 : 0;
+        const gaps = rem * (1.25 + 3 + 1.5 + 2) + worksH;
         const imgH = Math.max(rem * 8, pinH - headB - gaps - textH);
         pin.style.setProperty('--head-b', `${headB}px`);
         pin.style.setProperty('--img-h', `${imgH}px`);
+        pin.style.setProperty('--text-h', `${textH}px`);
     }
 
     // ---------- фон ----------
