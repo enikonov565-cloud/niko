@@ -13,7 +13,7 @@
 	/* высота экрана по содержимому: на 1366×768 фото и навигация помещаются целиком */
 	--room-h: clamp(35rem, 24rem + 26vw, 68rem);
 	--floor-h: clamp(5.5rem, 4rem + 3vw, 8rem);
-	/* шинопровод с лампами — у самого верха зала: над залом цитата, запас под шапку не нужен */
+	/* шинопровод с лампами — у самого верха зала: запас под шапку даёт отступ экрана сверху */
 	--track-y: clamp(1.25rem, 0.8rem + 1.2vw, 2.5rem);
 	--plinth: clamp(0.5rem, 0.35rem + 0.4vw, 0.875rem);
 
@@ -31,48 +31,9 @@
 	color: var(--c-light);
 }
 
-/* ---------- цитата над залом: Light, в две строки на всю ширину; подпись автора жирная, справа ---------- */
-
-.room__quote {
-	margin: 0;
-	padding:
-		calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1rem + 3.5vw, 6rem))
-		/* по бокам — на линиях текста «Я фотограф» и кнопки «мой подход» */
-		calc(var(--gutter) + var(--inset))
-		clamp(0.5rem, 0.25rem + 1vw, 1.5rem); /* снизу мало: тёмная зона у потолка зала сама даёт воздух */
-}
-
-.room__quote-text {
-	margin: 0;
-	/* чуть меньше H2: 24 → 34 → 46 */
-	font-size: clamp(1.5rem, 1.2887rem + 0.9014vw, 2.875rem);
-	font-weight: 300;
-	line-height: var(--lh-h2);
-}
-
-.room__quote-text p {
-	max-width: none;
-	margin: 0;
-	text-wrap: pretty; /* без висячего слова в конце */
-}
-
-/* на широких экранах — ровно две строки, по предложению в каждой */
-@media (min-width: 1280px) {
-	.room__quote-text span {
-		display: block;
-	}
-}
-
-/* подпись — под цитатой, справа: конец на линии кнопки «мой подход» */
-.room__quote-author {
-	margin-top: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem);
-	text-align: right;
-	font-weight: 600;
-	color: var(--c-light);
-}
-
-.room__quote-author::before {
-	content: "— ";
+/* над залом — вход в галерею (css/gallery-entry.css); сверху место под шапку, чтобы лампы зала не уходили под неё */
+.room {
+	padding-top: calc(var(--topbar-y) + var(--burger-h) + clamp(1rem, 0.5rem + 1.5vw, 2rem));
 }
 
 /* зал: стены с фото, пол и навигация. Высота по содержимому: на 1366×768 фото и следы помещаются целиком */

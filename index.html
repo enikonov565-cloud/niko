@@ -17,10 +17,11 @@
 		<link rel="stylesheet" href="css/parallax.css?v=54" />
 		<link rel="stylesheet" href="css/showreel.css?v=54" />
 		<link rel="stylesheet" href="css/about.css?v=54" />
-		<link rel="stylesheet" href="css/room.css?v=54" />
+		<link rel="stylesheet" href="css/room.css?v=55" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=20" />
 		<link rel="stylesheet" href="css/services.css?v=62" />
+		<link rel="stylesheet" href="css/gallery-entry.css?v=7" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -173,16 +174,53 @@
 			</div>
 		</section>
 
-		<!-- Четвёртый экран: галерея-комната. Стены с фото строит js/room.js из списка js/gallery-photos.js -->
-		<section class="room" id="room" aria-label="Галерея: фото на стенах комнаты" aria-roledescription="галерея">
-			<!-- цитата-подзаголовок над залом -->
-			<figure class="room__quote">
-				<blockquote class="room__quote-text">
-					<p><span>«Для&nbsp;меня фотография&nbsp;— это искусство наблюдения.</span> <span>Это умение найти что-то интересное в&nbsp;самом обыкновенном&nbsp;месте…»</span></p>
-				</blockquote>
-				<figcaption class="room__quote-author t-h3">Эллиотт Эрвитт</figcaption>
-			</figure>
+		<!-- Четвёртый экран: вход в галерею. Страница с цитатой Эллиотта Эрвитта спроецирована на объёмную сцену
+		     (плёнка с кадрами галереи, диафрагма, объектив, полароиды): в покое — плоская страница, при прокрутке камера
+		     облетает сцену, экран закреплён. Код — js/gallery-entry.js (тот же блок, что на gallery-entry.html) -->
+		<section class="ge" id="gallery-entry" aria-labelledby="ge-title">
+			<div class="ge__pin">
+				<div class="ge__stage" aria-hidden="true"></div>
 
+				<!-- тот же текст для поиска и экранного диктора: на экране он нарисован в WebGL -->
+				<figure class="sr-only">
+					<h2 id="ge-title">Галерея</h2>
+					<blockquote>
+						<p>«Для меня фотография — это искусство наблюдения. Это умение найти что-то интересное в самом обыкновенном месте…»</p>
+					</blockquote>
+					<figcaption>Эллиотт Эрвитт</figcaption>
+				</figure>
+
+				<!-- приглашение: по кругу вращается надпись, внутри «дышит» диафрагма — с первым движением колеса
+				     она раскрывается настежь и сцена уходит в облёт. Клик делает то же самое. Лепестки открывает js/gallery-entry.js -->
+				<button class="ge__invite" type="button" aria-label="Приглашаю в галерею — чтобы войти, листай">
+					<span class="ge__invite-title" aria-hidden="true">Приглашаю в&nbsp;галерею</span>
+					<svg class="ge__invite-svg" viewBox="0 0 200 200" aria-hidden="true">
+						<defs>
+							<path id="ge-orbit" d="M100,100 m-82,0 a82,82 0 1,1 164,0 a82,82 0 1,1 -164,0"/>
+							<clipPath id="ge-lens"><circle cx="100" cy="100" r="46"/></clipPath>
+						</defs>
+						<g class="ge__invite-ring">
+							<text><textPath href="#ge-orbit" textLength="512" lengthAdjust="spacing">чтобы войти — листай · чтобы войти — листай ·</textPath></text>
+						</g>
+						<circle class="ge__invite-rim" cx="100" cy="100" r="50"/>
+						<g clip-path="url(#ge-lens)">
+							<circle cx="100" cy="100" r="46" fill="#0b0f15"/>
+							<g class="ge__blades">
+								<g transform="rotate(0 100 100)"><path class="ge__blade" d="M100 100 L100 40 L151.96 70 Z"/></g>
+								<g transform="rotate(60 100 100)"><path class="ge__blade ge__blade--b" d="M100 100 L100 40 L151.96 70 Z"/></g>
+								<g transform="rotate(120 100 100)"><path class="ge__blade" d="M100 100 L100 40 L151.96 70 Z"/></g>
+								<g transform="rotate(180 100 100)"><path class="ge__blade ge__blade--b" d="M100 100 L100 40 L151.96 70 Z"/></g>
+								<g transform="rotate(240 100 100)"><path class="ge__blade" d="M100 100 L100 40 L151.96 70 Z"/></g>
+								<g transform="rotate(300 100 100)"><path class="ge__blade ge__blade--b" d="M100 100 L100 40 L151.96 70 Z"/></g>
+							</g>
+						</g>
+					</svg>
+				</button>
+			</div>
+		</section>
+
+		<!-- Галерея-комната. Стены с фото строит js/room.js из списка js/gallery-photos.js -->
+		<section class="room" id="room" aria-label="Галерея: фото на стенах комнаты" aria-roledescription="галерея">
 			<!-- зал: стены с фото, пол и навигация -->
 			<div class="room__hall">
 				<div class="room__stage"></div>
@@ -638,5 +676,6 @@
 		<script type="module" src="js/approach.js?v=14"></script>
 		<script src="js/services-data.js?v=3"></script>
 		<script src="js/services.js?v=25"></script>
+		<script type="module" src="js/gallery-entry.js?v=13"></script>
 	</body>
 </html>

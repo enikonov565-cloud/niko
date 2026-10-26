@@ -1,0 +1,168 @@
+/* ---------- «ПРОЯВКА» — вход в галерею (gallery-entry.html) ----------
+   Цитата Эллиотта Эрвитта спроецирована на мозаику пластин разной глубины (WebGL, js/gallery-entry.js).
+   Блок высотой в несколько экранов, сцена закреплена — её ведёт прокрутка */
+
+.ge-page {
+	background: var(--c-dark);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.ge {
+	position: relative;
+	z-index: 3; /* как соседние экраны главной */
+	height: 500svh; /* прокрутка на всю «проявку» */
+	background: var(--c-dark);
+}
+
+.ge__pin {
+	position: sticky;
+	top: 0;
+	height: 100svh;
+	overflow: hidden;
+}
+
+.ge__stage,
+.ge__stage canvas {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* приглашение — круглый знак внизу по центру: по кругу вращается надпись, внутри диафрагма */
+.ge__invite {
+	position: absolute;
+	z-index: 2;
+	left: 50%;
+	bottom: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: clamp(0.5rem, 0.25rem + 0.8vw, 1rem);
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--c-light);
+	cursor: pointer;
+	transform: translateX(-50%);
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* приглашение — крупно, светлым, шрифтом подзаголовков сайта */
+.ge__invite-title {
+	font-family: var(--font-text);
+	font-size: var(--fs-sub);
+	font-weight: 300;
+	line-height: var(--lh-sub);
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+}
+
+.ge__invite-svg {
+	position: relative;
+	display: block;
+	width: clamp(8.5rem, 7rem + 3.5vw, 11rem);
+	height: auto;
+	aspect-ratio: 1;
+	overflow: visible;
+}
+
+.ge__invite-ring {
+	transform-origin: 100px 100px;
+	animation: ge-orbit 22s linear infinite;
+}
+
+.ge__invite-ring text {
+	fill: currentColor;
+	font-family: var(--font-text);
+	font-size: 16px;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+/* светлый ободок «объектива» и мягкое бирюзовое свечение вокруг — знак виден и зовёт */
+.ge__invite-rim {
+	fill: none;
+	stroke: rgba(235, 235, 235, 0.85);
+	stroke-width: 1.2;
+}
+
+.ge__invite::after {
+	content: '';
+	position: absolute;
+	bottom: calc(clamp(8.5rem, 7rem + 3.5vw, 11rem) * 0.25);
+	left: 50%;
+	width: calc(clamp(8.5rem, 7rem + 3.5vw, 11rem) * 0.5);
+	aspect-ratio: 1;
+	translate: -50% 0;
+	border-radius: 50%;
+	box-shadow: 0 0 0 0 rgba(40, 76, 88, 0.55);
+	animation: ge-pulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+	pointer-events: none;
+}
+
+.ge__blade {
+	fill: #284c58;
+	stroke: #0b0f15;
+	stroke-width: 1.2;
+	stroke-linejoin: round;
+}
+
+.ge__blade--b {
+	fill: #3a6878;
+}
+
+.ge__invite:hover .ge__invite-ring,
+.ge__invite:focus-visible .ge__invite-ring {
+	animation-duration: 9s;
+}
+
+.ge__invite:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 6px;
+}
+
+@keyframes ge-orbit {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes ge-pulse {
+	0% { box-shadow: 0 0 0 0 rgba(58, 104, 120, 0.6); }
+	100% { box-shadow: 0 0 0 1.6rem rgba(58, 104, 120, 0); }
+}
+
+/* после блока — зал галереи */
+.ge-next {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+	min-height: 70svh;
+	padding: clamp(4rem, 2rem + 6vw, 9rem) var(--gutter);
+	background: var(--c-dark);
+}
+
+.ge-next__text {
+	margin: 0;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+	.ge__invite-ring,
+	.ge__invite::after {
+		animation: none;
+	}
+}
