@@ -137,12 +137,19 @@ function init() {
         const pinH = pin.clientHeight;
         const headB = head ? head.offsetTop + head.offsetHeight : 0;
         const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-        // отступ под заголовком + сдвиг правого снимка + отступ до фразы + поле снизу
-        // на странице под фразой — кнопка «мои работы»: снимки уступают ей место
+        // отступы: под заголовком, сдвиг правого снимка, до фразы, до кнопки «мои работы», поле снизу (в rem).
+        // На невысоком экране (телефон с панелями браузера) отступы ужимаются, чтобы фраза и кнопка поместились целиком
         const works = pin.querySelector('.sl__works');
-        const worksH = works ? works.offsetHeight + rem * 1.5 : 0;
-        const gaps = rem * (1.25 + 3 + 1.5 + 2) + worksH;
-        const imgH = Math.max(rem * 8, pinH - headB - gaps - textH);
+        const worksH = works ? works.offsetHeight : 0;
+        const fit = (g) => pinH - headB - textH - worksH - rem * (g.top + g.shift + g.text + (works ? g.works : 0) + g.bottom);
+        const roomy = { top: 1.25, shift: 3, text: 1.5, works: 1.5, bottom: 2 };
+        const tight = { top: 0.75, shift: 1.75, text: 1, works: 1, bottom: 1 };
+        const g = fit(roomy) >= rem * 9 ? roomy : tight;
+        const imgH = Math.max(rem * 5, fit(g));
+        pin.style.setProperty('--g-top', `${g.top}rem`);
+        pin.style.setProperty('--g-shift', `${g.shift}rem`);
+        pin.style.setProperty('--g-text', `${g.text}rem`);
+        pin.style.setProperty('--g-works', `${g.works}rem`);
         pin.style.setProperty('--head-b', `${headB}px`);
         pin.style.setProperty('--img-h', `${imgH}px`);
         pin.style.setProperty('--text-h', `${textH}px`);

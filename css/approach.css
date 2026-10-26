@@ -310,7 +310,7 @@ html:has(.approach-page) {
 
 /* «мои работы» — кнопка под текстовой частью слайда, по её левой линии.
    Наведение: светлая заливка медленно наплывает слева, текст под ней сам меняет цвет на тёмный */
-.approach-page {
+.sl {
 	--works-fs: clamp(0.8125rem, 0.75rem + 0.25vw, 1rem);
 	--works-h: calc(var(--works-fs) + clamp(0.7rem, 0.6rem + 0.4vw, 1rem) * 2 + 2px);
 }
@@ -386,9 +386,9 @@ html:has(.approach-page) {
 	}
 }
 
-/* на странице фраза поднимается над кнопкой (компьютер; на телефоне и планшете фраза стоит от верха) */
+/* где есть кнопка, фраза поднимается над ней (компьютер; на телефоне и планшете фраза стоит от верха) */
 @media (min-width: 1024px) {
-	.approach-page .sl__text {
+	.sl__pin:has(.sl__works) .sl__text {
 		bottom: calc(clamp(1.25rem, 0.75rem + 2vh, 2.5rem) + max(var(--works-h), 44px) + clamp(2rem, 1rem + 3vh, 3.5rem));
 	}
 }
@@ -458,14 +458,14 @@ html:has(.approach-page) {
 	/* правый край снимков — левее номеров слайдов */
 	.sl__img--a {
 		left: 6%;
-		top: calc(var(--head-b, 30%) + 1.25rem);
+		top: calc(var(--head-b, 30%) + var(--g-top, 1.25rem));
 		width: 46%;
 		height: var(--img-h, 34%);
 	}
 
 	.sl__img--b {
 		left: 36%;
-		top: calc(var(--head-b, 30%) + 4.25rem);
+		top: calc(var(--head-b, 30%) + var(--g-top, 1.25rem) + var(--g-shift, 3rem));
 		width: 46%;
 		height: var(--img-h, 34%);
 	}
@@ -475,7 +475,7 @@ html:has(.approach-page) {
 		width: auto;
 		left: var(--gutter);
 		right: var(--gutter);
-		top: calc(var(--head-b, 30%) + 5.75rem + var(--img-h, 34%));
+		top: calc(var(--head-b, 30%) + var(--g-top, 1.25rem) + var(--g-shift, 3rem) + var(--g-text, 1.5rem) + var(--img-h, 34%));
 		bottom: auto;
 	}
 
@@ -486,13 +486,13 @@ html:has(.approach-page) {
 	/* кнопка идёт сразу за фразой (высоту фразы даёт js/approach.js) — не наедет на текст ни на каком экране */
 	.sl__works {
 		left: var(--gutter);
-		top: calc(var(--head-b, 30%) + 5.75rem + var(--img-h, 34%) + var(--text-h, 6rem) + 1.5rem);
+		top: calc(var(--head-b, 30%) + var(--g-top, 1.25rem) + var(--g-shift, 3rem) + var(--g-text, 1.5rem) + var(--img-h, 34%) + var(--text-h, 6rem) + var(--g-works, 1.5rem));
 		bottom: auto;
 	}
 
 	/* номера — от верха левого снимка */
 	.sl__bullets {
-		top: calc(var(--head-b, 30%) + 1.25rem);
+		top: calc(var(--head-b, 30%) + var(--g-top, 1.25rem));
 		right: calc(var(--gutter) * 0.5);
 		transform: none;
 	}
