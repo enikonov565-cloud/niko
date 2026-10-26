@@ -2,6 +2,7 @@
 // Приём — из cullenwebber/three-html-to-canvas: страница, нарисованная в текстуру, проецируется из неподвижной
 // камеры-проектора на объёмную сцену. Из исходной точки всё совпадает и выглядит плоской страницей,
 // а когда камера уходит в облёт — проявляется сцена со светом и тенями.
+// Облётом управляет переход в зал (нажатие на приглашение), не прокрутка.
 // Сцена своя, на всю страницу и в фирменных цветах: изогнутая киноплёнка с кадрами галереи через весь экран,
 // лепестковая диафрагма, объектив, полароиды и слайд-рамки. На страницу спроецированы заголовок «Добро пожаловать!»
 // и лист бумаги, на котором ручка пишет цитату Эллиотта Эрвитта шрифтом Lemon.
@@ -176,14 +177,17 @@ function init() {
 		const curl = { x: ccx + hw * Math.cos(ca) - hh * Math.sin(ca), y: ccy + hw * Math.sin(ca) + hh * Math.cos(ca), a: ca, fold };
 
 		// рукопись: крупно, шрифтом Lemon; кегль подбирается, чтобы цитата и подпись встали на лист
-		let size = Math.min(m.h2 * 1.8, sheetH / 3);
+		// почерк — заметно, но не давит: кегль чуть больше H2 и с воздухом вокруг
+		let size = Math.min(m.h2 * 1.45, sheetH / 3.3);
 		let lines;
 		let lh;
 		for (;;) {
 			ctx.font = `${size}px ${HAND_FONT}, cursive`;
 			lines = QUOTE.flatMap((s) => wrap(ctx, s, sheetW - pad * 2));
 			lh = size * 1.18;
-			if (lines.length * lh + size * 1.3 <= sheetH - padY * 2 || size < 16) break;
+			// на компьютере первое предложение — целиком в верхней строке (на планшете и телефоне так вышло бы слишком мелко)
+			const firstFits = W < 1024 || ctx.measureText(glue(QUOTE[0])).width <= sheetW - pad * 2;
+			if ((firstFits && lines.length * lh + size * 1.3 <= (sheetH - padY * 2) * 0.9) || size < 14) break;
 			size *= 0.94;
 		}
 		const blockH = lines.length * lh + size * 1.3;
@@ -601,36 +605,38 @@ function init() {
 		drawPage(W, H);
 	}
 
-	// ---------- облёт по прокрутке ----------
-	const KEYS = [
-		{ p: 0.0, x: 0, y: 0, z: 0, roll: 0 },
-		{ p: 0.08, x: 0, y: 0, z: 0, roll: 0 },
-		{ p: 0.38, x: -16, y: 5, z: -6, roll: -0.18 },
-		{ p: 0.66, x: 14, y: -6, z: -8, roll: 0.16 },
-		{ p: 0.9, x: 0, y: 0, z: 0, roll: 0 },
-		{ p: 1.0, x: 0, y: 0, z: 0, roll: 0 },
-	];
+	// ---------- путь камеры ----------
+	// одна плавная кривая через все точки облёта: камера нигде не замирает и не дёргается на поворотах.
+	// Сдвиг камеры (x, y, z) и крен — общей кривой: покой → слева сверху → справа снизу → покой
+	const PATH = new THREE.CatmullRomCurve3([
+		new THREE.Vector3(0, 0, 0),
+		new THREE.Vector3(-9, 3, -3),
+		new THREE.Vector3(-16, 5, -6),
+		new THREE.Vector3(14, -6, -8),
+		new THREE.Vector3(5, -2, -3),
+		new THREE.Vector3(0, 0, 0),
+	], false, 'centripetal');
+	const ROLL = new THREE.CatmullRomCurve3([0, -0.08, -0.18, 0.16, 0.06, 0].map((r) => new THREE.Vector3(r, 0, 0)), false, 'catmullrom');
 	const ease = (t) => t * t * (3 - 2 * t);
 	const span01 = (p, a, b) => Math.min(1, Math.max(0, (p - a) / (b - a)));
+	const camPoint = new THREE.Vector3();
 	function cameraAt(p) {
-		let i = 0;
-		while (i < KEYS.length - 2 && p > KEYS[i + 1].p) i++;
-		const a = KEYS[i];
-		const b = KEYS[i + 1];
-		const t = ease(span01(p, a.p, b.p));
-		return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t, roll: a.roll + (b.roll - a.roll) * t };
+		const u = Math.min(1, Math.max(0, p));
+		PATH.getPoint(u, camPoint);
+		return { x: camPoint.x, y: camPoint.y, z: camPoint.z, roll: ROLL.getPoint(u).x };
 	}
 
-	let target = 0;
-	let shown = 0;
-	if (ST) ST.create({ trigger: root, start: 'top top', end: 'bottom bottom', onUpdate: (self) => { target = self.progress; } });
-
-	// клик по приглашению — та же прокрутка: страница сама въезжает в облёт
-	if (invite) {
+	// полёт камеры по сцене: 0 — покой (плоская страница), дальше — облёт. Его ведёт не прокрутка, а переход
+	// в зал (js/gallery-transition.js): нажатие на приглашение — полёт с переворотом, обратно — тот же путь назад
+	const flight = { p: 0 };
+	window.galleryEntry = { flight, root, pin: stage.parentElement, invite };
+	// отдельная страница без зала: нажатие показывает полёт туда и обратно
+	if (invite && !document.querySelector('.room')) {
 		invite.addEventListener('click', () => {
-			const y = root.getBoundingClientRect().top + window.scrollY + (root.offsetHeight - window.innerHeight) * 0.38;
-			if (window.lenis) window.lenis.scrollTo(y, { duration: 2.6 });
-			else window.scrollTo({ top: y, behavior: 'smooth' });
+			if (gsap.isTweening(flight)) return;
+			gsap.timeline()
+				.to(flight, { p: 0.72, duration: 2.4, ease: 'power2.inOut' })
+				.to(flight, { p: 0, duration: 2.2, ease: 'power2.inOut' }, '+=0.6');
 		});
 	}
 
@@ -639,8 +645,7 @@ function init() {
 
 	function frame() {
 		if (!visible) return;
-		shown += (target - shown) * (reduced ? 1 : 0.08);
-		const p = shown;
+		const p = flight.p;
 		const k = reduced ? { x: 0, y: 0, z: 0, roll: 0 } : cameraAt(p);
 		camera.position.set(REST.x + k.x, REST.y + k.y, REST.z + k.z);
 		camera.lookAt(LOOK);
@@ -683,7 +688,7 @@ function init() {
 		}
 		let tip = null;
 		if (writing && written < layout.total) {
-			written = Math.min(layout.total, written + layout.size * 8 * dt); // скорость — как у неторопливого почерка
+			written = Math.min(layout.total, written + layout.size * 5 * dt); // скорость — как у неторопливого почерка
 			tip = renderPage();
 			if (written >= layout.total) writing = false;
 		}
@@ -691,8 +696,8 @@ function init() {
 		const w = layout.size * 8;
 		if (tip) {
 			if (!pen.on) { pen.x = tip.x; pen.y = tip.y; pen.on = true; }
-			pen.x += (tip.x - pen.x) * 0.35;
-			pen.y += (tip.y + Math.sin(now / 60) * layout.size * 0.05 - pen.y) * 0.35;
+			pen.x += (tip.x - pen.x) * 0.14;
+			pen.y += (tip.y + Math.sin(now / 160) * layout.size * 0.03 - pen.y) * 0.14;
 		}
 		const show = tip && atRest;
 		hand.style.width = `${w}px`;

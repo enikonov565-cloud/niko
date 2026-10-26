@@ -1,89 +1,134 @@
-// Переворот экрана «Вход в галерею» при входе в галерею-комнату и возвращении из неё (главная).
-// Движение — по мотивам codrops/KineticTypePageTransition (MIT): слой поворачивается на −90° и растёт в 2,7 раза.
-// Поворачивается только экран входа: при входе он уходит поворотом, а зал спокойно проступает из темноты —
-// картины не двигаются; при возвращении наверх зал гаснет, экран входа возвращается обратным поворотом.
-// «Мой подход» и прокрутка между залом и ним не затронуты.
+// Вход в галерею-комнату и выход из неё (главная) — как в codrops/KineticTypePageTransition (MIT):
+// нажатие — элементы экрана гаснут, слой поворачивается на −90° и растёт в 2,7 раза, под ним открывается новый экран;
+// «назад» — тот же путь в обратном порядке.
+// Порядок: «Я фотограф» — обычная прокрутка → экран «Добро пожаловать!» с пишущейся цитатой →
+// нажатие на приглашение (или прокрутка вниз) — полёт камеры по сцене с переворотом экрана → зал.
+// Прокрутка из зала вверх — обратный полёт с переворотом к цитате, дальше снова обычная прокрутка.
+// Зал не поворачивается (картины на месте), «Мой подход» не затронут.
 (() => {
 	const gsap = window.gsap;
 	const backdrop = document.querySelector('.gt');
 	const room = document.querySelector('.room');
 	const entry = document.querySelector('.ge');
 	const pin = entry && entry.querySelector('.ge__pin');
+	const invite = entry && entry.querySelector('.ge__invite');
 	if (!gsap || !backdrop || !room || !pin) return;
-	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	const roomTop = () => room.getBoundingClientRect().top + window.scrollY;
-	// граница: зал показался примерно на треть — входим; ушли выше — возвращаемся ко входу
-	const zoneOf = (y) => (y < roomTop() - window.innerHeight * 0.7 ? 'before' : 'room');
-	let zone = zoneOf(window.scrollY);
+	const top = (el) => el.getBoundingClientRect().top + window.scrollY;
+	const vh = () => window.innerHeight;
+	// где мы: выше экрана с цитатой («Я фотограф»), на нём или в зале и ниже
+	const zoneNow = () => {
+		const y = window.scrollY;
+		if (y < top(entry) - vh() * 0.5) return 'pre';
+		return y < top(room) - vh() * 0.5 ? 'entry' : 'room';
+	};
+	let zone = zoneNow();
 	let busy = false;
+	let arrivedAt = 0; // когда страница встала на экран с цитатой — полёт не начнётся тем же жестом прокрутки
 
 	const jump = (y) => {
 		if (window.lenis) window.lenis.scrollTo(y, { immediate: true, force: true });
 		else window.scrollTo(0, y);
 	};
 	const hold = (on) => { if (window.lenis) window.lenis[on ? 'stop' : 'start'](); };
+	const flight = () => (window.galleryEntry && window.galleryEntry.flight) || { p: 0 };
+	const FLY = 0.72; // докуда долетает камера по пути облёта (js/gallery-entry.js)
 
-	// поворот вокруг середины окна, где бы ни стоял закреплённый экран
-	const centerOrigin = () => {
-		const r = pin.getBoundingClientRect();
-		return `50% ${Math.min(Math.max(window.innerHeight / 2 - r.top, 0), r.height)}px`;
-	};
-
-	function start() {
-		busy = true;
-		hold(true);
-		gsap.set(backdrop, { autoAlpha: 0 });
-	}
-	function finish() {
+	function done(next) {
 		entry.classList.remove('is-flipping');
 		gsap.set(pin, { clearProps: 'transform,transformOrigin,opacity,visibility' });
 		gsap.set(backdrop, { autoAlpha: 0 });
-		zone = zoneOf(window.scrollY);
+		zone = next;
+		if (next === 'entry') arrivedAt = performance.now();
 		hold(false);
 		busy = false;
 	}
 
-	// вход: экран с цитатой поворачивается и уходит, зал проступает из темноты на своём месте
+	// вход: приглашение гаснет, камера летит по сцене, экран поворачивается и, увеличиваясь, улетает — открывается зал
 	function enter() {
-		start();
+		if (busy || zone !== 'entry') return;
+		busy = true;
+		hold(true);
+		jump(top(entry)); // экран с цитатой — ровно в кадре
+		if (reduced) { jump(top(room)); done('room'); return; }
+		const f = flight();
 		entry.classList.add('is-flipping');
-		gsap.set(pin, { transformOrigin: centerOrigin() });
-		gsap.timeline({ onComplete: finish })
-			.to(backdrop, { autoAlpha: 1, duration: 0.5, ease: 'power2.inOut' }, 0)
-			.to(pin, { rotate: -90, scale: 2.7, duration: 1.4, ease: 'power2.inOut' }, 0)
-			.to(pin, { autoAlpha: 0, duration: 0.6, ease: 'power1.in' }, 0.8)
+		gsap.set(pin, { transformOrigin: '50% 50%' });
+		gsap.set(backdrop, { autoAlpha: 0 });
+		// медленно и плавно: мягкий разгон и торможение, части движения перетекают одна в другую
+		gsap.timeline({ onComplete: () => done('room') })
+			.to(f, { p: FLY, duration: 4.2, ease: 'sine.inOut' }, 0)
+			.to(backdrop, { autoAlpha: 1, duration: 1.6, ease: 'sine.inOut' }, 2.0)
+			.to(pin, { rotate: -90, scale: 2.7, duration: 2.6, ease: 'sine.inOut' }, 1.8)
+			.to(pin, { autoAlpha: 0, duration: 1.2, ease: 'sine.in' }, 3.2)
 			.add(() => {
 				entry.classList.remove('is-flipping');
 				gsap.set(pin, { clearProps: 'transform,transformOrigin,opacity,visibility' });
-				jump(roomTop());
-			}, 1.4)
-			.to(backdrop, { autoAlpha: 0, duration: 0.9, ease: 'power2.inOut' }, 1.5);
+				f.p = 0;
+				jump(top(room));
+			}, 4.45)
+			.to(backdrop, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 4.5);
 	}
 
-	// возвращение: зал гаснет на месте, экран входа выходит из поворота и встаёт
+	// назад: зал гаснет, экран с цитатой возвращается из поворота, камера летит обратно к плоской странице
 	function back() {
-		start();
-		gsap.timeline({ onComplete: finish })
-			.to(backdrop, { autoAlpha: 1, duration: 0.6, ease: 'power2.inOut' }, 0)
+		if (busy || zone !== 'room') return;
+		busy = true;
+		hold(true);
+		if (reduced) { jump(top(entry)); done('entry'); return; }
+		const f = flight();
+		gsap.set(backdrop, { autoAlpha: 0 });
+		gsap.timeline({ onComplete: () => done('entry') })
+			.to(backdrop, { autoAlpha: 1, duration: 1.4, ease: 'sine.inOut' }, 0)
 			.add(() => {
-				jump(roomTop() - window.innerHeight);
+				jump(top(entry));
+				f.p = FLY;
 				entry.classList.add('is-flipping');
-				gsap.set(pin, { transformOrigin: centerOrigin(), rotate: 90, scale: 2.7, autoAlpha: 0 });
-			}, 0.65)
-			.to(pin, { rotate: 0, scale: 1, duration: 1.4, ease: 'power2.inOut' }, 0.65)
-			.to(pin, { autoAlpha: 1, duration: 0.6, ease: 'power1.out' }, 0.65)
-			.to(backdrop, { autoAlpha: 0, duration: 0.5, ease: 'power2.inOut' }, 1.6);
+				gsap.set(pin, { transformOrigin: '50% 50%', rotate: -90, scale: 2.7, autoAlpha: 0 });
+			}, 1.45)
+			.to(pin, { autoAlpha: 1, duration: 1.2, ease: 'sine.out' }, 1.45)
+			.to(pin, { rotate: 0, scale: 1, duration: 2.6, ease: 'sine.inOut' }, 1.45)
+			.to(backdrop, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 2.2)
+			.to(f, { p: 0, duration: 4.0, ease: 'sine.inOut' }, 1.8);
 	}
 
+	if (invite) invite.addEventListener('click', enter);
+
+	// с «Я фотограф» вниз — страница доезжает до экрана с цитатой и встаёт на нём
+	function arrive() {
+		busy = true;
+		const settle = () => { zone = 'entry'; arrivedAt = performance.now(); busy = false; };
+		if (window.lenis) window.lenis.scrollTo(top(entry), { duration: 1.6, easing: (t) => 1 - Math.pow(1 - t, 3), lock: true, force: true, onComplete: settle });
+		else { jump(top(entry)); settle(); }
+	}
+
+	// прокрутка: на экране цитаты новый жест вниз — тот же вход, что и нажатие; из зала вверх — обратный путь
+	let lastSeen = window.scrollY;
 	const check = () => {
 		if (busy) return;
-		const next = zoneOf(window.scrollY);
-		if (next === zone) return;
-		zone = next;
-		if (next === 'room') enter(); else back();
+		if (performance.now() - resizedAt < 600) { zone = zoneNow(); return; }
+		// скачок прокрутки больше экрана за раз — не жест (браузер вернул прокрутку после перезагрузки, переход по ссылке)
+		const jumpBy = Math.abs(window.scrollY - lastSeen);
+		lastSeen = window.scrollY;
+		if (jumpBy > vh() * 1.2) { zone = zoneNow(); return; }
+		const y = window.scrollY;
+		const et = top(entry);
+		if (zone === 'pre') {
+			if (y > et - vh() * 0.5) arrive();
+		} else if (zone === 'entry') {
+			if (y < et - vh() * 0.5) zone = 'pre';
+			else if (y > et + vh() * 0.12) {
+				if (performance.now() - arrivedAt > 900) enter();
+				else if (window.lenis) window.lenis.scrollTo(et, { duration: 1, easing: (t) => 1 - Math.pow(1 - t, 3), force: true }); // тот же жест, которым приехали, — мягко возвращаем
+			}
+		} else if (zone === 'room' && y < top(room) - vh() * 0.12) back();
 	};
 	if (window.lenis) window.lenis.on('scroll', check);
 	else window.addEventListener('scroll', check, { passive: true });
-	window.addEventListener('resize', () => { if (!busy) zone = zoneOf(window.scrollY); });
+	// изменение размера окна сдвигает прокрутку — это не жест, переход не запускаем
+	let resizedAt = 0;
+	window.addEventListener('resize', () => { resizedAt = performance.now(); if (!busy) zone = zoneNow(); });
+	// после загрузки (браузер мог вернуть прежнюю прокрутку, высоты экранов уже точные) — где мы на самом деле
+	window.addEventListener('load', () => { if (!busy) zone = zoneNow(); });
 })();
