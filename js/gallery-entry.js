@@ -635,8 +635,8 @@ function init() {
 		invite.addEventListener('click', () => {
 			if (gsap.isTweening(flight)) return;
 			gsap.timeline()
-				.to(flight, { p: 0.72, duration: 2.4, ease: 'power2.inOut' })
-				.to(flight, { p: 0, duration: 2.2, ease: 'power2.inOut' }, '+=0.6');
+				.to(flight, { p: 0.72, duration: 9, ease: 'sine.inOut' })
+				.to(flight, { p: 0, duration: 8, ease: 'sine.inOut' }, '+=0.8');
 		});
 	}
 

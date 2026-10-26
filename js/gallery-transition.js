@@ -58,17 +58,18 @@
 		gsap.set(backdrop, { autoAlpha: 0 });
 		// медленно и плавно: мягкий разгон и торможение, части движения перетекают одна в другую
 		gsap.timeline({ onComplete: () => done('room') })
-			.to(f, { p: FLY, duration: 4.2, ease: 'sine.inOut' }, 0)
-			.to(backdrop, { autoAlpha: 1, duration: 1.6, ease: 'sine.inOut' }, 2.0)
-			.to(pin, { rotate: -90, scale: 2.7, duration: 2.6, ease: 'sine.inOut' }, 1.8)
-			.to(pin, { autoAlpha: 0, duration: 1.2, ease: 'sine.in' }, 3.2)
+			// облёт сцены — долго, чтобы её успели рассмотреть; переворот и уход — в самом конце
+			.to(f, { p: FLY, duration: 9, ease: 'sine.inOut' }, 0)
+			.to(pin, { rotate: -90, scale: 2.7, duration: 2.6, ease: 'sine.inOut' }, 7.0)
+			.to(backdrop, { autoAlpha: 1, duration: 1.6, ease: 'sine.inOut' }, 7.4)
+			.to(pin, { autoAlpha: 0, duration: 1.2, ease: 'sine.in' }, 8.4)
 			.add(() => {
 				entry.classList.remove('is-flipping');
 				gsap.set(pin, { clearProps: 'transform,transformOrigin,opacity,visibility' });
 				f.p = 0;
 				jump(top(room));
-			}, 4.45)
-			.to(backdrop, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 4.5);
+			}, 9.65)
+			.to(backdrop, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 9.7);
 	}
 
 	// назад: зал гаснет, экран с цитатой возвращается из поворота, камера летит обратно к плоской странице
@@ -90,7 +91,7 @@
 			.to(pin, { autoAlpha: 1, duration: 1.2, ease: 'sine.out' }, 1.45)
 			.to(pin, { rotate: 0, scale: 1, duration: 2.6, ease: 'sine.inOut' }, 1.45)
 			.to(backdrop, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 2.2)
-			.to(f, { p: 0, duration: 4.0, ease: 'sine.inOut' }, 1.8);
+			.to(f, { p: 0, duration: 8, ease: 'sine.inOut' }, 1.8); // обратный облёт — так же неторопливо
 	}
 
 	if (invite) invite.addEventListener('click', enter);
