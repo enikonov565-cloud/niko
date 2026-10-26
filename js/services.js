@@ -57,18 +57,37 @@
 		name.textContent = s.title;
 		btn.append(line, name);
 		btn.setAttribute('aria-pressed', 'false');
-		btn.addEventListener('click', () => select(i));
+		btn.addEventListener('click', () => choose(i));
 		li.appendChild(btn);
 		menu.appendChild(li);
 		return btn;
 	});
+
+	// номера жанров над меню — как у слайдов на странице «Мой подход»; на компьютере номера и меню в одной колонке
+	const dock = document.createElement('div');
+	dock.className = 'svc__dock';
+	const nums = document.createElement('nav');
+	nums.className = 'svc__nums';
+	nums.setAttribute('aria-label', 'Жанры по номерам');
+	const bullets = data.map((s, i) => {
+		const b = document.createElement('button');
+		b.type = 'button';
+		b.className = 'svc__num';
+		b.setAttribute('aria-label', s.title);
+		b.innerHTML = `<span class="svc__num-text">${String(i + 1).padStart(2, '0')}</span><span class="svc__num-line"></span>`;
+		b.addEventListener('click', () => choose(i));
+		nums.appendChild(b);
+		return b;
+	});
+	menu.before(dock);
+	dock.append(nums, menu);
 
 	menu.addEventListener('keydown', (ev) => {
 		const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[ev.key];
 		if (!step) return;
 		ev.preventDefault();
 		const next = (current + step + tabs.length) % tabs.length;
-		select(next);
+		choose(next);
 		tabs[next].focus();
 	});
 
@@ -168,8 +187,8 @@
 	const moveMenu = () => {
 		if (narrow.matches) {
 			if (menu.parentElement !== infoEl) infoEl.appendChild(menu);
-		} else if (menu.parentElement !== root) {
-			root.insertBefore(menu, status);
+		} else if (menu.parentElement !== dock) {
+			dock.append(nums, menu);
 		}
 	};
 	moveMenu();
@@ -179,12 +198,21 @@
 	const preload = () => data.forEach((s) => s.photos.forEach((p) => { const im = new Image(); im.src = p.src; }));
 
 	let current = -1;
+	let busy = false; // идёт смена жанра — следующая начнётся после неё
+	let want = 0;     // жанр, к которому прокрутили
+	const settle = () => { busy = false; if (want !== current) select(want); };
+
 	function select(i) {
-		if (i === current) return;
+		if (i === current || busy) return;
 		const first = current < 0;
-		if (!first) tabs[current].setAttribute('aria-pressed', 'false');
+		const from = current;
+		if (!first) {
+			tabs[current].setAttribute('aria-pressed', 'false');
+			bullets[current].classList.remove('is-current');
+		}
 		current = i;
 		tabs[i].setAttribute('aria-pressed', 'true');
+		bullets[i].classList.add('is-current');
 		status.textContent = `${data[i].title}: ${data[i].price}`;
 
 		const parts = root.querySelectorAll('.svc__swap');
@@ -194,14 +222,38 @@
 			return;
 		}
 
-		gsap.killTweensOf([parts, frames]);
-		gsap.timeline()
-			.to(parts, { autoAlpha: 0, y: -10, duration: 0.25, ease: 'power2.in', stagger: 0.03 }, 0)
-			// снимки «уносит» в сторону, новые ложатся сверху
-			.to(frames, { autoAlpha: 0, x: 60, y: -30, duration: 0.35, ease: 'power2.in', stagger: 0.05 }, 0)
-			.add(() => { fillInfo(data[i]); fillPhotos(data[i]); })
-			.fromTo(parts, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'expo.out', stagger: 0.05 })
-			.fromTo(frames, { autoAlpha: 0, x: -50, y: 40 }, { autoAlpha: 1, x: 0, y: 0, duration: 0.8, ease: 'expo.out', stagger: 0.08 }, '<');
+		// переход как в блоке «Мой подход»: снимки уходят вверх (назад — вниз), вытягиваясь, новые приходят с другой стороны
+		busy = true;
+		const s = i > from ? 1 : -1;
+		gsap.timeline({ onComplete: settle })
+			.to(parts, { yPercent: -100 * s, autoAlpha: 0, duration: 0.6, ease: 'power4.in', stagger: 0.04 }, 0)
+			.to(frames, { yPercent: -160 * s, scaleY: 1.4, duration: 1, ease: 'expo.inOut', stagger: 0.07 }, 0)
+			.to(frames, { autoAlpha: 0, duration: 0.35, ease: 'power1.in', stagger: 0.07 }, 0.5)
+			.add(() => { fillInfo(data[i]); fillPhotos(data[i]); }, 0.9)
+			.fromTo(frames, { yPercent: 150 * s, scaleY: 1.4, autoAlpha: 0 }, { yPercent: 0, scaleY: 1, autoAlpha: 1, duration: 1.1, ease: 'expo.out', stagger: 0.07 }, 0.9)
+			.fromTo(parts, { yPercent: 100 * s, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.9, ease: 'power4.out', stagger: 0.06 }, 1);
+	}
+
+	// компьютер: экран закреплён, жанр выбирает прокрутка — каждому жанру своя доля высоты блока (как «Мой подход»)
+	root.style.setProperty('--svc-n', data.length);
+	const desk = window.matchMedia('(min-width: 1024px)');
+	const ST = window.ScrollTrigger;
+	const n = data.length;
+	const request = (i) => { want = i; if (!busy) select(want); };
+	if (ST) {
+		ST.create({
+			trigger: root,
+			start: 'top top',
+			end: 'bottom bottom',
+			onUpdate: (self) => { if (desk.matches) request(Math.min(n - 1, Math.floor(self.progress * n))); },
+		});
+	}
+	// клик по жанру или номеру: на компьютере — прокрутка к его доле блока, иначе — сразу смена
+	function choose(i) {
+		if (!desk.matches || !ST) { request(i); return; }
+		const y = root.getBoundingClientRect().top + window.scrollY + ((i + 0.5) / n) * (root.offsetHeight - window.innerHeight);
+		if (window.lenis) window.lenis.scrollTo(y, { duration: 1.2 });
+		else window.scrollTo({ top: y, behavior: 'smooth' });
 	}
 
 	// снимки — под строкой заголовка: её высота зависит от того, в сколько строк лёг подзаголовок

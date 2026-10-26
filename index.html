@@ -20,7 +20,7 @@
 		<link rel="stylesheet" href="css/room.css?v=54" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=20" />
-		<link rel="stylesheet" href="css/services.css?v=51" />
+		<link rel="stylesheet" href="css/services.css?v=60" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -233,6 +233,8 @@
 		<!-- Шестой экран: «Кадр под настроение» — жанры и цены. По макету Figma: бирюзовая панель слева, два снимка-полароида,
 		     меню жанров справа внизу, на фоне 3D-сетка как у второго экрана и две плёнки. Всё строит js/services.js из js/services-data.js -->
 		<section class="svc" id="services" aria-labelledby="services-title">
+			<!-- на компьютере экран закреплён, жанры листает прокрутка — как блок «Мой подход» -->
+			<div class="svc__pin">
 			<!-- 3D-сетка кубиков с волнами от курсора — как фон второго экрана (модуль внизу страницы) -->
 			<div class="svc__waves" data-bg="#0f141b" aria-hidden="true"></div>
 
@@ -271,6 +273,7 @@
 
 			<ul class="svc__menu" aria-label="Жанры съёмки"></ul>
 			<p class="sr-only" aria-live="polite" data-svc="status"></p>
+			</div>
 		</section>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -634,6 +637,6 @@
 		<script src="js/approach-data.js?v=14"></script>
 		<script type="module" src="js/approach.js?v=12"></script>
 		<script src="js/services-data.js?v=3"></script>
-		<script src="js/services.js?v=16"></script>
+		<script src="js/services.js?v=20"></script>
 	</body>
 </html>

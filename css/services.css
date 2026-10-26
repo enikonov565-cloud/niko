@@ -350,21 +350,112 @@
 	width: 29%;
 }
 
-/* ---------- меню жанров справа внизу ---------- */
+/* ---------- закрепление: на компьютере жанры листает прокрутка, как в блоке «Мой подход» ---------- */
 
-.svc__menu {
+@media (min-width: 1024px) {
+	.svc {
+		min-height: 0;
+		height: calc(var(--svc-n, 5) * 100svh); /* на каждый жанр — экран прокрутки */
+		overflow: visible; /* иначе sticky не держится */
+	}
+
+	.svc__pin {
+		position: sticky;
+		top: 0;
+		height: max(100svh, 40rem);
+		overflow: hidden;
+	}
+}
+
+@media (max-width: 1023px) {
+	.svc__pin {
+		display: contents;
+	}
+}
+
+/* ---------- меню жанров справа внизу, над ним — номера жанров ---------- */
+
+/* на компьютере номера и меню — одной колонкой у правого края (js/services.js) */
+.svc__dock {
 	position: absolute;
 	z-index: 4;
 	right: var(--gutter);
 	bottom: clamp(1.75rem, 1rem + 1.5vw, 3rem); /* по нижнему краю — как кнопка в панели */
-	width: max(22rem, 26%); /* компактнее макета — снимкам больше места */
+	/* сверху столбик номеров, под ним на 40 pt — меню */
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 53px;
+}
+
+/* номера — как у слайдов на странице «Мой подход»: столбик у правого края */
+.svc__nums {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(0.5rem, 1.4vh, 1.125rem);
+}
+
+.svc__num {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.9em;
+	min-width: 44px;
+	min-height: clamp(1.75rem, 3.8vh, 2.75rem); /* до 44 px, как на «Моём подходе»; на невысоком экране плотнее */
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #fff;
+	font: inherit;
+	font-size: clamp(0.6875rem, 0.6rem + 0.2vw, 0.8125rem); /* мельче подписей: 11 → 13 */
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	cursor: pointer;
+}
+
+.svc__num-text {
+	opacity: 0.3;
+	transition: opacity 0.4s ease;
+}
+
+.svc__num-line {
+	display: block;
+	width: clamp(1.25rem, 0.8rem + 1.2vw, 2rem);
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: right;
+	transition: transform 0.7s cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+.svc__num:hover .svc__num-text,
+.svc__num:focus-visible .svc__num-text,
+.svc__num.is-current .svc__num-text {
+	opacity: 1;
+}
+
+.svc__num.is-current .svc__num-line {
+	transform: scaleX(1);
+}
+
+.svc__num:focus-visible {
+	outline: 1px solid #fff;
+	outline-offset: 2px;
+}
+
+.svc__menu {
 	margin: 0;
 	/* поля и тень — как у бирюзовой карточки */
-	padding: clamp(1.25rem, 0.75rem + 1.2vw, 2rem) clamp(1rem, 0.6rem + 1vw, 1.75rem);
+	padding: clamp(0.875rem, 0.5rem + 0.7vw, 1.375rem) clamp(0.875rem, 0.5rem + 0.8vw, 1.375rem);
 	border-radius: var(--r-photo);
 	background: var(--card);
 	box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.7);
 	list-style: none;
+}
+
+/* на компьютере карточка по ширине самого длинного названия — без пустого места справа */
+.svc__dock .svc__menu {
+	width: max-content;
 }
 
 /* мелкий приглушённый заголовок прописными — как жанр на бирюзовой карточке */
@@ -397,9 +488,9 @@
 	position: relative;
 	color: rgba(255, 255, 255, 0.3);
 	font: inherit;
-	font-size: var(--fs-sub);
+	font-size: clamp(1rem, 0.8rem + 0.45vw, 1.375rem); /* компактная карточка: 16 → 22 */
 	font-weight: 300; /* тонкий, как текст бирюзовой карточки */
-	line-height: var(--lh-sub);
+	line-height: 1.25;
 	letter-spacing: -0.01em;
 	text-align: left;
 	white-space: nowrap;
@@ -440,6 +531,7 @@
 
 /* ---------- АДАПТИВ ---------- */
 
+/* невысокий ноутбук: без иконки карточка помещается между заголовком (+60 pt) и низом экрана */
 /* невысокий ноутбук: без иконки карточка помещается между заголовком (+60 pt) и низом экрана */
 @media (min-width: 1024px) and (max-height: 820px) {
 	.svc__icon {
@@ -576,6 +668,12 @@
 		width: 2.5rem;
 		height: 2.5rem;
 		margin-bottom: 0.85rem;
+	}
+
+	/* на телефоне и планшете номера не нужны — меню внутри плашки */
+	.svc__dock,
+	.svc__nums {
+		display: none;
 	}
 
 	/* меню — отдельная тёмная карточка справа, той же высоты; пункты под палец */
