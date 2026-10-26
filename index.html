@@ -21,7 +21,7 @@
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=20" />
 		<link rel="stylesheet" href="css/services.css?v=62" />
-		<link rel="stylesheet" href="css/gallery-entry.css?v=7" />
+		<link rel="stylesheet" href="css/gallery-entry.css?v=15" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -183,7 +183,7 @@
 
 				<!-- тот же текст для поиска и экранного диктора: на экране он нарисован в WebGL -->
 				<figure class="sr-only">
-					<h2 id="ge-title">Галерея</h2>
+					<h2 id="ge-title">Добро пожаловать!</h2>
 					<blockquote>
 						<p>«Для меня фотография — это искусство наблюдения. Это умение найти что-то интересное в самом обыкновенном месте…»</p>
 					</blockquote>
@@ -313,6 +313,9 @@
 			<p class="sr-only" aria-live="polite" data-svc="status"></p>
 			</div>
 		</section>
+
+		<!-- тёмный фон под переворотом экрана входа в галерею (js/gallery-transition.js) -->
+		<div class="gt" aria-hidden="true"></div>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -676,6 +679,7 @@
 		<script type="module" src="js/approach.js?v=14"></script>
 		<script src="js/services-data.js?v=3"></script>
 		<script src="js/services.js?v=25"></script>
-		<script type="module" src="js/gallery-entry.js?v=13"></script>
+		<script type="module" src="js/gallery-entry.js?v=21"></script>
+		<script src="js/gallery-transition.js?v=3"></script>
 	</body>
 </html>

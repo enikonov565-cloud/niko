@@ -2,6 +2,13 @@
    Цитата Эллиотта Эрвитта спроецирована на мозаику пластин разной глубины (WebGL, js/gallery-entry.js).
    Блок высотой в несколько экранов, сцена закреплена — её ведёт прокрутка */
 
+/* рукописный шрифт цитаты на листе */
+@font-face {
+	font-family: 'Lemon';
+	src: url('../fonts/ofont.ru_Lemon.ttf') format('truetype');
+	font-display: swap;
+}
+
 .ge-page {
 	background: var(--c-dark);
 }
@@ -41,6 +48,62 @@
 	height: 100%;
 }
 
+/* живой загнутый уголок листа — поверх страницы, вращается вокруг самого угла (js/gallery-entry.js) */
+.ge__curl {
+	position: absolute;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	opacity: 0;
+	pointer-events: none;
+	transform-origin: 100% 100%;
+	transition: opacity 0.4s ease;
+}
+
+/* ручка, которая пишет цитату на листе (js/gallery-entry.js ставит её кончиком к строке) */
+.ge__hand {
+	position: absolute;
+	z-index: 2;
+	top: 0;
+	left: 0;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.6s ease;
+	will-change: transform, opacity;
+}
+
+.ge__hand svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	overflow: visible;
+	filter: drop-shadow(-6px 10px 12px rgba(0, 0, 0, 0.35));
+}
+
+/* ручка — тёмная бирюза с бликом, наконечник светлый */
+.ge__hand-pen {
+	fill: #1c3540;
+	stroke: #0f141b;
+	stroke-width: 3;
+}
+
+.ge__hand-grip {
+	fill: #ebebeb;
+	stroke: #0f141b;
+	stroke-width: 3;
+}
+
+.ge__hand-nib {
+	fill: #0f141b;
+}
+
+.ge__hand-shine {
+	fill: none;
+	stroke: #3a6878;
+	stroke-width: 3;
+	stroke-linecap: round;
+}
+
 /* приглашение — круглый знак внизу по центру: по кругу вращается надпись, внутри диафрагма */
 .ge__invite {
 	position: absolute;
@@ -73,7 +136,7 @@
 .ge__invite-svg {
 	position: relative;
 	display: block;
-	width: clamp(8.5rem, 7rem + 3.5vw, 11rem);
+	width: clamp(7rem, 6rem + 2.5vw, 9.5rem);
 	height: auto;
 	aspect-ratio: 1;
 	overflow: visible;
@@ -103,9 +166,9 @@
 .ge__invite::after {
 	content: '';
 	position: absolute;
-	bottom: calc(clamp(8.5rem, 7rem + 3.5vw, 11rem) * 0.25);
+	bottom: calc(clamp(7rem, 6rem + 2.5vw, 9.5rem) * 0.25);
 	left: 50%;
-	width: calc(clamp(8.5rem, 7rem + 3.5vw, 11rem) * 0.5);
+	width: calc(clamp(7rem, 6rem + 2.5vw, 9.5rem) * 0.5);
 	aspect-ratio: 1;
 	translate: -50% 0;
 	border-radius: 50%;
@@ -165,4 +228,22 @@
 	.ge__invite::after {
 		animation: none;
 	}
+}
+
+/* ---------- переворот при входе в зал и выходе из него (главная, js/gallery-transition.js) ----------
+   движение — по мотивам codrops/KineticTypePageTransition: уходящий экран поворачивается и растёт, новый выходит навстречу.
+   Под ними — тёмный фон сайта на весь экран */
+.gt {
+	position: fixed;
+	z-index: 50;
+	inset: 0;
+	visibility: hidden;
+	opacity: 0;
+	background: var(--c-dark);
+	pointer-events: none;
+}
+
+/* экран, который переворачивается, — поверх тёмного фона */
+.is-flipping {
+	z-index: 60 !important;
 }

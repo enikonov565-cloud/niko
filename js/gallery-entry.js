@@ -3,8 +3,8 @@
 // камеры-проектора на объёмную сцену. Из исходной точки всё совпадает и выглядит плоской страницей,
 // а когда камера уходит в облёт — проявляется сцена со светом и тенями.
 // Сцена своя, на всю страницу и в фирменных цветах: изогнутая киноплёнка с кадрами галереи через весь экран,
-// лепестковая диафрагма, объектив, полароиды и слайд-рамки. На страницу спроецирована цитата Эллиотта Эрвитта —
-// та же, что над залом галереи на главной.
+// лепестковая диафрагма, объектив, полароиды и слайд-рамки. На страницу спроецированы заголовок «Добро пожаловать!»
+// и лист бумаги, на котором ручка пишет цитату Эллиотта Эрвитта шрифтом Lemon.
 import * as THREE from 'three';
 
 const root = document.querySelector('.ge');
@@ -57,10 +57,31 @@ function init() {
 		gutter: px('var(--gutter)'),
 		inset: px('var(--inset)'),
 		top: px('calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1rem + 3.5vw, 6rem))'),
+		h1: px('var(--fs-h1)'),
 		h2: px('var(--fs-h2)'),
 		h3: px('var(--fs-h3)'),
 		small: px('var(--fs-small)'),
+		radius: px('clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem)'),
 	});
+
+	// ручка, которая пишет цитату: кончик на строке, корпус уходит вниз-вправо — к правому плечу пишущего,
+	// как ручка в правой руке, если смотреть на лист сверху.
+	// Кончик пера — в точке HAND_TIP рисунка (viewBox 680 × 480)
+	const HAND_VB = 680;
+	const HAND_TIP = { x: 120, y: 60 };
+	const hand = document.createElement('div');
+	hand.className = 'ge__hand';
+	hand.setAttribute('aria-hidden', 'true');
+	hand.innerHTML = `<svg viewBox="0 0 680 480">
+		<g transform="translate(120 60) rotate(40)">
+			<path class="ge__hand-nib" d="M0 0 L24 -4.5 L24 4.5 Z"/>
+			<rect class="ge__hand-grip" x="24" y="-6.5" width="52" height="13" rx="4"/>
+			<rect class="ge__hand-pen" x="76" y="-8" width="340" height="16" rx="7"/>
+			<rect class="ge__hand-pen" x="300" y="-12.5" width="72" height="4.5" rx="2"/>
+			<path class="ge__hand-shine" d="M92 -3 H404"/>
+		</g>
+	</svg>`;
+	stage.parentElement.appendChild(hand);
 
 	// ---------- страница в текстуре ----------
 	const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -88,42 +109,199 @@ function init() {
 	}
 	const spaced = (ctx, em, size) => { if ('letterSpacing' in ctx) ctx.letterSpacing = `${(em * size).toFixed(2)}px`; };
 
+	// ---------- страница: заголовок, лист бумаги и цитата, которую пишет рука ----------
+	const PAPER_COLOR = '#ebebeb';  // лист — светлый цвет сайта
+	const PEN_INK = '#1c3540';      // чернила — глубокая бирюза
+	const HAND_FONT = 'Lemon';      // рукописный шрифт (fonts/ofont.ru_Lemon.ttf)
+	const baseCanvas = document.createElement('canvas'); // всё, кроме рукописи, — рисуется один раз
+	let layout = null;    // строки рукописи: текст, x, y, ширина
+	let written = 0;      // сколько пикселей рукописи уже написано (по всем строкам подряд)
+
 	function drawPage(W, H) {
 		const m = metrics();
-		pageCanvas.width = Math.round(W * dpr);
-		pageCanvas.height = Math.round(H * dpr);
-		const ctx = pageCanvas.getContext('2d');
+		baseCanvas.width = pageCanvas.width = Math.round(W * dpr);
+		baseCanvas.height = pageCanvas.height = Math.round(H * dpr);
+		const ctx = baseCanvas.getContext('2d');
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 		ctx.clearRect(0, 0, W, H);
 		ctx.textBaseline = 'alphabetic';
-		const left = m.gutter + m.inset;
-		const right = W - m.gutter - m.inset;
-		const top = m.top + (W < 768 ? 24 : 0); // на телефоне логотип в шапке ниже бургера
+		const narrow = W < 768;
+		const top = m.top + (narrow ? 24 : 0); // на телефоне логотип в шапке ниже бургера
 
-		// подпись блока — мелко прописными
-		ctx.fillStyle = 'rgba(235, 235, 235, 0.75)';
-		ctx.font = `400 ${m.small}px Inter, sans-serif`;
-		spaced(ctx, 0.12, m.small);
-		ctx.fillText('ГАЛЕРЕЯ', left, top + m.small);
-
-		// цитата — H2 Light, по предложению с новой строки; блок по центру высоты экрана
+		// заголовок H1 — по линии бургера, как заголовки других экранов
 		ctx.fillStyle = INK;
-		ctx.font = `300 ${m.h2}px Inter, sans-serif`;
-		spaced(ctx, -0.01, m.h2);
-		const lines = QUOTE.flatMap((s) => wrap(ctx, s, right - left));
-		const lh = m.h2 * 1.15;
-		const blockH = lines.length * lh + m.h2 * 0.8 + m.h3 * 1.3;
-		let y = Math.max(top + m.small * 4, (H - blockH) / 2) + m.h2 * 0.9;
-		lines.forEach((l) => { ctx.fillText(l, left, y); y += lh; });
+		ctx.font = `500 ${m.h1}px Inter, sans-serif`;
+		spaced(ctx, -0.01, m.h1);
+		ctx.fillText('ДОБРО ПОЖАЛОВАТЬ!', m.gutter, top + m.h1 * 0.85);
+		spaced(ctx, 0, m.h1);
 
-		// автор — справа, Inter 600, как подпись цитаты над залом
-		ctx.font = `600 ${m.h3}px Inter, sans-serif`;
-		spaced(ctx, 0.02, m.h3);
-		ctx.textAlign = 'right';
-		ctx.fillText(AUTHOR, right, y - lh + m.h2 * 0.8 + m.h3);
-		ctx.textAlign = 'left';
-		spaced(ctx, 0, m.h3);
+		// лист — между заголовком и приглашением, по полям сайта; чуть повёрнут, как положенный на стол
+		const inviteTop = invite ? invite.getBoundingClientRect().top - stage.getBoundingClientRect().top : H * 0.72;
+		const sheetTop = top + m.h1 * 1.35;
+		const sheetBottom = Math.max(sheetTop + 180, inviteTop - m.h3);
+		const sheetW = narrow ? W - 2 * m.gutter : Math.min(W - 2 * m.gutter, m.h2 * 24);
+		const sheetH = sheetBottom - sheetTop;
+		const sheetX = (W - sheetW) / 2;
+		const pad = m.inset * 1.1;     // поля листа по бокам
+		const padY = m.inset * 0.7;   // сверху и снизу
+		ctx.save();
+		ctx.translate(sheetX + sheetW / 2, sheetTop + sheetH / 2);
+		ctx.rotate(-0.012);
+		ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+		ctx.shadowBlur = 30;
+		ctx.shadowOffsetY = 12;
+		ctx.fillStyle = PAPER_COLOR;
+		ctx.beginPath();
+		if (ctx.roundRect) ctx.roundRect(-sheetW / 2, -sheetH / 2, sheetW, sheetH, m.radius * 0.5); else ctx.rect(-sheetW / 2, -sheetH / 2, sheetW, sheetH);
+		ctx.fill();
+		// правый нижний уголок загнут: срезаем его и кладём сверху отворот — так он виден и в облёте
+		const fold = Math.min(pad * 0.95, sheetH * 0.18);
+		const hw = sheetW / 2;
+		const hh = sheetH / 2;
+		ctx.shadowColor = 'transparent';
+		ctx.globalCompositeOperation = 'destination-out';
+		ctx.beginPath();
+		ctx.moveTo(hw - fold, hh + 2);
+		ctx.lineTo(hw + 2, hh - fold);
+		ctx.lineTo(hw + 2, hh + 2);
+		ctx.closePath();
+		ctx.fill();
+		ctx.globalCompositeOperation = 'source-over';
+		drawFlap(ctx, hw, hh, fold, 0);
+		ctx.restore();
+		// где уголок на экране — для живого слоя поверх (js: curlFrame)
+		const ca = -0.012;
+		const ccx = sheetX + hw;
+		const ccy = sheetTop + hh;
+		const curl = { x: ccx + hw * Math.cos(ca) - hh * Math.sin(ca), y: ccy + hw * Math.sin(ca) + hh * Math.cos(ca), a: ca, fold };
+
+		// рукопись: крупно, шрифтом Lemon; кегль подбирается, чтобы цитата и подпись встали на лист
+		let size = Math.min(m.h2 * 1.8, sheetH / 3);
+		let lines;
+		let lh;
+		for (;;) {
+			ctx.font = `${size}px ${HAND_FONT}, cursive`;
+			lines = QUOTE.flatMap((s) => wrap(ctx, s, sheetW - pad * 2));
+			lh = size * 1.18;
+			if (lines.length * lh + size * 1.3 <= sheetH - padY * 2 || size < 16) break;
+			size *= 0.94;
+		}
+		const blockH = lines.length * lh + size * 1.3;
+		let y = sheetTop + (sheetH - blockH) / 2 + size * 0.95;
+		layout = { size, lines: [], W, H, curl };
+		lines.forEach((t) => {
+			layout.lines.push({ t, x: sheetX + pad, y, w: ctx.measureText(t).width, size });
+			y += lh;
+		});
+		// подпись — рукой же, мельче, справа
+		const aSize = size * 0.62;
+		ctx.font = `${aSize}px ${HAND_FONT}, cursive`;
+		const aw = ctx.measureText(AUTHOR).width;
+		// подпись не заходит под загнутый уголок
+		layout.lines.push({ t: AUTHOR, x: sheetX + sheetW - pad - fold * 0.6 - aw, y: y - lh + size * 1.25, w: aw, size: aSize });
+		layout.total = layout.lines.reduce((s, l) => s + l.w, 0);
+		renderPage();
+	}
+
+	// отворот уголка: треугольник с выгнутыми краями, чуть темнее листа, с тенью на лист.
+	// (cx, cy) — угол листа, f — насколько загнут, lift — насколько приподнят (0…1)
+	function flapPath(cx, cy, f, lift) {
+		const k = 1 + lift * 0.25;
+		return [
+			[cx - f, cy],
+			[cx - f * (1.05 + lift * 0.1), cy - f * 0.5 * k, cx - f * (0.94 + lift * 0.08), cy - f * (0.94 + lift * 0.08)],
+			[cx - f * 0.5 * k, cy - f * (1.05 + lift * 0.1), cx, cy - f],
+		];
+	}
+	function drawFlap(ctx, cx, cy, f, lift) {
+		const [a, q1, q2] = flapPath(cx, cy, f, lift);
+		ctx.save();
+		ctx.shadowColor = 'rgba(15, 20, 27, 0.28)';
+		ctx.shadowBlur = f * 0.25;
+		ctx.shadowOffsetX = -f * 0.06;
+		ctx.shadowOffsetY = -f * 0.06;
+		ctx.fillStyle = '#d4d0c8';
+		ctx.beginPath();
+		ctx.moveTo(a[0], a[1]);
+		ctx.quadraticCurveTo(q1[0], q1[1], q1[2], q1[3]);
+		ctx.quadraticCurveTo(q2[0], q2[1], q2[2], q2[3]);
+		ctx.closePath();
+		ctx.fill();
+		ctx.restore();
+	}
+
+	// живой уголок поверх страницы: в покое отворот чуть приподнимается и опускается, как от сквозняка.
+	// Под ним в текстуре — неподвижный загиб, его слой закрывает; в облёте слой гаснет и остаётся загиб
+	const curlEl = document.createElement('canvas');
+	curlEl.className = 'ge__curl';
+	curlEl.setAttribute('aria-hidden', 'true');
+	stage.parentElement.appendChild(curlEl);
+	function curlFrame(p, now) {
+		const c = layout && layout.curl;
+		if (!c) return;
+		const show = p < 0.01 && !reduced;
+		curlEl.style.opacity = show ? '1' : '0';
+		if (!show) return;
+		const S = Math.ceil(c.fold * 2.2);
+		if (curlEl.width !== Math.round(S * dpr)) {
+			curlEl.width = curlEl.height = Math.round(S * dpr);
+			curlEl.style.width = curlEl.style.height = `${S}px`;
+		}
+		curlEl.style.transform = `translate(${(c.x - S).toFixed(1)}px, ${(c.y - S).toFixed(1)}px) rotate(${c.a}rad)`;
+		const ctx = curlEl.getContext('2d');
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx.clearRect(0, 0, S, S);
+		const lift = 0.5 + 0.5 * Math.sin(now / 900) * Math.sin(now / 2300 + 1);
+		const f = c.fold * (1 + lift * 0.28);
+		// 1) прячем неподвижный отворот из текстуры — закрашиваем его листом
+		const [a0, s1, s2] = flapPath(S, S, c.fold, 0);
+		ctx.fillStyle = PAPER_COLOR;
+		ctx.beginPath();
+		ctx.moveTo(a0[0] - 2, a0[1]);
+		ctx.quadraticCurveTo(s1[0] - 2, s1[1], s1[2] - 2, s1[3] - 2);
+		ctx.quadraticCurveTo(s2[0], s2[1] - 2, s2[2], s2[3] - 2);
+		ctx.lineTo(S, S);
+		ctx.closePath();
+		ctx.fill();
+		// 2) срез уголка — фоном страницы, на величину нынешнего загиба
+		ctx.fillStyle = '#0b0f15';
+		ctx.beginPath();
+		ctx.moveTo(S - f, S + 1);
+		ctx.lineTo(S + 1, S - f);
+		ctx.lineTo(S + 1, S + 1);
+		ctx.closePath();
+		ctx.fill();
+		// 3) отворот
+		drawFlap(ctx, S, S, f, lift);
+	}
+
+	// кадр страницы: основа + написанная часть рукописи; возвращает, где сейчас кончик ручки
+	function renderPage() {
+		if (!layout) return null;
+		const ctx = pageCanvas.getContext('2d');
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+		ctx.drawImage(baseCanvas, 0, 0);
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx.fillStyle = PEN_INK;
+		ctx.textBaseline = 'alphabetic';
+		let left = written;
+		let tip = null;
+		for (const l of layout.lines) {
+			if (left <= 0) break;
+			const show = Math.min(l.w, left);
+			ctx.save();
+			ctx.beginPath();
+			ctx.rect(l.x - l.size * 0.3, l.y - l.size * 1.2, show + l.size * 0.3, l.size * 1.8);
+			ctx.clip();
+			ctx.font = `${l.size}px ${HAND_FONT}, cursive`;
+			ctx.fillText(l.t, l.x, l.y);
+			ctx.restore();
+			tip = { x: l.x + show, y: l.y - l.size * 0.12 };
+			left -= l.w;
+		}
 		pageTex.needsUpdate = true;
+		return tip;
 	}
 
 	// ---------- рендер ----------
@@ -481,15 +659,55 @@ function init() {
 			invite.style.visibility = o > 0.01 ? 'visible' : 'hidden';
 			invite.style.transform = `translateX(-50%) scale(${(1 + ease(go) * 0.12).toFixed(3)})`;
 		}
+		writeFrame(p);
+		curlFrame(p, performance.now());
 		renderer.render(scene, camera);
+	}
+
+	// ---------- рукопись: ручка пишет цитату, когда экран встал перед зрителем ----------
+	let fontsReady = false;
+	let writing = false;
+	let lastT = 0;
+	const pen = { x: 0, y: 0, on: false };
+	function writeFrame(p) {
+		if (!layout || !fontsReady) return;
+		const now = performance.now();
+		const dt = Math.min(0.05, (now - (lastT || now)) / 1000);
+		lastT = now;
+		const atRest = p < 0.01;
+		if (reduced || p > 0.02) {
+			// без анимации или уже в облёте — цитата дописана целиком
+			if (written < layout.total) { written = layout.total; renderPage(); }
+		} else if (!writing && written < layout.total && atRest && root.getBoundingClientRect().top < window.innerHeight * 0.35) {
+			writing = true;
+		}
+		let tip = null;
+		if (writing && written < layout.total) {
+			written = Math.min(layout.total, written + layout.size * 8 * dt); // скорость — как у неторопливого почерка
+			tip = renderPage();
+			if (written >= layout.total) writing = false;
+		}
+		// ручка идёт за строкой, чуть покачиваясь; дописала — уходит вниз-вправо
+		const w = layout.size * 8;
+		if (tip) {
+			if (!pen.on) { pen.x = tip.x; pen.y = tip.y; pen.on = true; }
+			pen.x += (tip.x - pen.x) * 0.35;
+			pen.y += (tip.y + Math.sin(now / 60) * layout.size * 0.05 - pen.y) * 0.35;
+		}
+		const show = tip && atRest;
+		hand.style.width = `${w}px`;
+		hand.style.opacity = show ? '1' : '0';
+		const s = w / HAND_VB;
+		const away = show ? 0 : layout.size * 2;
+		hand.style.transform = `translate(${(pen.x - HAND_TIP.x * s + away).toFixed(1)}px, ${(pen.y - HAND_TIP.y * s + away).toFixed(1)}px)`;
 	}
 
 	// ---------- запуск ----------
 	resize();
 	if (document.fonts) {
-		Promise.all(['300 40px Inter', '400 16px Inter', '600 20px Inter'].map((f) => document.fonts.load(f)))
-			.then(() => drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight));
-	}
+		Promise.all(['500 40px Inter', '40px Lemon'].map((f) => document.fonts.load(f)))
+			.then(() => { drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); fontsReady = true; });
+	} else fontsReady = true;
 	let resizeTimer = 0;
 	window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
 
