@@ -20,7 +20,7 @@
 		<link rel="stylesheet" href="css/room.css?v=54" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=20" />
-		<link rel="stylesheet" href="css/services.css?v=39" />
+		<link rel="stylesheet" href="css/services.css?v=40" />
 	</head>
 	<body>
 		<!-- плёночное зерно (css/art.css) -->
@@ -230,10 +230,13 @@
 			</div>
 		</section>
 
-		<!-- Шестой экран: «Что снимаем» — жанры и цены. По макету Figma: бирюзовая панель слева, два снимка-полароида,
-		     меню жанров справа внизу, приглушённая плёнка на фоне. Всё строит js/services.js из списка js/services-data.js -->
+		<!-- Шестой экран: «Кадр под настроение» — жанры и цены. По макету Figma: бирюзовая панель слева, два снимка-полароида,
+		     меню жанров справа внизу, на фоне 3D-сетка как у второго экрана и две плёнки. Всё строит js/services.js из js/services-data.js -->
 		<section class="svc" id="services" aria-labelledby="services-title">
-			<!-- две плёнки на фоне — крест-накрест, едут навстречу друг другу -->
+			<!-- 3D-сетка кубиков с волнами от курсора — как фон второго экрана (модуль внизу страницы) -->
+			<div class="svc__waves" data-bg="#0f141b" aria-hidden="true"></div>
+
+			<!-- две плёнки на фоне — параллельно, едут навстречу друг другу -->
 			<div class="svc__film" aria-hidden="true"><div class="svc__film-track"></div></div>
 			<div class="svc__film svc__film--b" aria-hidden="true"><div class="svc__film-track"></div></div>
 
@@ -282,7 +285,8 @@
 			}
 		</script>
 		<script type="module">
-			// 3D-сетка кубиков с волнами от курсора — фон экрана галереи (под заголовком и плёнками).
+			// 3D-сетка кубиков с волнами от курсора — фон второго экрана (под заголовком и плёнками)
+			// и шестого «Кадр под настроение» (под снимками, плёнками и панелью).
 			// Основа: franky-adl/3d-wave-grid (MIT, https://github.com/franky-adl/3d-wave-grid),
 			// переписано в один модуль без сборщика и перекрашено в фирменные цвета сайта — без белого.
 			// Рисуется только пока экран виден (остальное время пауза).
@@ -292,14 +296,14 @@
 			import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 			import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-			const host = document.querySelector('.showreel__waves');
-			if (host) init(host);
+			// у каждого экрана своя сетка; цвет фона — из data-bg (по умолчанию фон сайта)
+			document.querySelectorAll('.showreel__waves, .svc__waves').forEach(init);
 
 			function init(host) {
 			    // ---------- фирменная палитра (без белого) ----------
 			    const COLORS = {
 			        // гамма главного экрана — цвета взяты из фото леса (img/parallax/bg.jpg), без белого
-			        background: '#0b0f15', // фон сайта — чёрный с синевой
+			        background: host.dataset.bg || '#0b0f15', // фон экрана; по умолчанию фон сайта — чёрный с синевой
 			        cubeBase: '#142a35',   // кубики в покое — глубокий сине-бирюзовый, как тени леса
 			        cubeHigh: '#5d7d84',   // гребень волны — приглушённый серо-бирюзовый, без яркого свечения
 			        ambient: '#3e5c68',
