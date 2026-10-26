@@ -8,7 +8,7 @@
 	--bg: #0f141b;                        /* основной фон экрана — задан заказчиком */
 	--panel: #284c58;                     /* бирюза леса с первого экрана */
 	--card: #10121c;                      /* карточка меню — из макета */
-	--rule: rgba(255, 255, 255, 0.3);      /* линии в меню жанров (--line занято: толщина подчёркивания ссылок) */
+	--rule: rgba(255, 255, 255, 0.2);      /* линии в меню жанров — как в списке бирюзовой карточки (--line занято: толщина подчёркивания ссылок) */
 	--r-photo: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление, как у всех фото сайта: 10 → 15 */
 	--top: calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1rem + 3.5vw, 6rem));
 	--panel-w: max(26%, 21rem);           /* узкая панель: в ней только описание выбранного жанра */
@@ -106,7 +106,8 @@
 	to { transform: translateX(calc(-100% / 3)); } /* сдвиг ровно на два набора из шести */
 }
 
-/* ---------- панель слева: заголовок сверху, описание жанра снизу ---------- */
+/* ---------- слева внизу — бирюзовая карточка с описанием жанра и кнопкой ----------
+   панель — только колонка-раскладка, сама карточка — .svc__info; низ — на одной линии с карточкой разделов */
 
 .svc__panel {
 	position: absolute;
@@ -118,10 +119,20 @@
 	flex-direction: column;
 	justify-content: flex-end;
 	width: var(--panel-w);
-	/* слева — по линии бургера, как заголовок */
-	padding: var(--top) var(--inset) clamp(1.75rem, 1rem + 1.5vw, 3rem) var(--gutter);
-	border-radius: 0 var(--r-photo) var(--r-photo) 0;
+	/* слева — по линии бургера, как заголовок; сверху — на 60 pt (80 px) ниже строки заголовка */
+	padding: calc(var(--head-b, calc(var(--top) + var(--fs-h1) * var(--lh-h1))) + 80px) 0 clamp(1.75rem, 1rem + 1.5vw, 3rem) var(--gutter);
+}
+
+/* раскладка текста — как у плашки «Гарантия свежести» (Флорис, «Хиты сезона»):
+   иконка в круге, мелкий заголовок прописными, крупная цифра-акцент, пояснение, внизу за линией — список с галочками */
+.svc__info {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	padding: clamp(1.25rem, 0.75rem + 1.2vw, 2rem);
+	border-radius: var(--r-photo);
 	background: var(--panel);
+	box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.7);
 }
 
 /* заголовок и подзаголовок — одной линией над всем экраном: заголовок слева, подзаголовок справа, по нижнему краю */
@@ -157,60 +168,126 @@
 	white-space: nowrap;
 }
 
+/* порядок как у образца: иконка, жанр, цена, пояснение, список, кнопка */
+.svc__icon { order: 0; }
+.svc__name { order: 1; }
+.svc__price { order: 2; }
+.svc__text { order: 3; }
+.svc__list { order: 4; }
+.svc__cta { order: 5; }
+
+.svc__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: clamp(2.75rem, 2.4rem + 0.8vw, 3.25rem);
+	height: clamp(2.75rem, 2.4rem + 0.8vw, 3.25rem);
+	margin-bottom: clamp(1rem, 0.75rem + 0.8vw, 1.5rem);
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.svc__icon svg {
+	width: 46%;
+	height: 46%;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linejoin: round;
+}
+
+/* жанр — мелкий заголовок прописными, приглушённый */
 .svc__name {
 	margin: 0;
-	font-size: var(--fs-sub);
+	font-size: var(--fs-small);
 	font-weight: 400;
-	line-height: var(--lh-sub);
-	letter-spacing: 0.02em;
+	line-height: 1.3;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.72);
+}
+
+/* цена — крупная цифра-акцент; «от» и «₽» мельче */
+.svc__price {
+	margin: 0.35em 0 0;
+	font-size: clamp(2.25rem, 1.5rem + 2vw, 4rem);
+	font-weight: 400;
+	line-height: 0.95;
+	letter-spacing: -0.02em;
+	white-space: nowrap;
+}
+
+.svc__price-pre,
+.svc__price-unit {
+	font-size: 0.45em;
+	font-weight: 300;
+	letter-spacing: 0;
+}
+
+.svc__price-pre {
+	margin-right: 0.35em;
+}
+
+.svc__price-unit {
+	margin-left: 0.2em;
 }
 
 .svc__text {
-	margin: 0.5em 0 0;
+	max-width: 24ch;
+	/* снизу — минимальный зазор до линии над списком */
+	margin: clamp(0.75rem, 0.5rem + 0.8vw, 1.25rem) 0 clamp(1rem, 0.75rem + 0.6vw, 1.5rem);
 	font-size: var(--fs-small);
-	line-height: 1.5;
+	line-height: 1.45;
+	color: rgba(255, 255, 255, 0.82);
 }
 
-.svc__price {
-	margin: clamp(0.75rem, 0.5rem + 1vw, 1.75rem) 0 0;
-	font-size: var(--fs-h2);
-	font-weight: 300;
-	line-height: var(--lh-h2);
-	letter-spacing: -0.01em;
-}
-
+/* состав съёмки — внизу, за тонкой линией, с круглыми галочками */
 .svc__list {
-	margin: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem) 0 0;
-	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7em;
+	margin: auto 0 0;
+	padding: clamp(1rem, 0.75rem + 0.6vw, 1.25rem) 0 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.2);
 	list-style: none;
 	font-size: var(--fs-small);
 }
 
-/* маркер — короткая черта линией, а не знаком */
 .svc__list li {
 	position: relative;
-	padding-left: 1.4em;
-	line-height: 1.5;
-}
-
-.svc__list li + li {
-	margin-top: 0.35em;
+	padding-left: 1.75em;
+	line-height: 1.4;
 }
 
 .svc__list li::before {
 	content: "";
 	position: absolute;
-	top: 0.75em;
+	top: 0.7em;
 	left: 0;
-	width: 0.75em;
-	height: 1px;
-	background: currentColor;
+	width: 1em;
+	height: 1em;
+	border-radius: 50%;
+	background: #fff;
+	transform: translateY(-50%);
+}
+
+.svc__list li::after {
+	content: "";
+	position: absolute;
+	top: 0.62em;
+	left: 0.3em;
+	width: 0.42em;
+	height: 0.22em;
+	border-left: 1.5px solid var(--panel);
+	border-bottom: 1.5px solid var(--panel);
+	transform: translateY(-50%) rotate(-45deg);
 }
 
 /* запись — как «связаться со мной» в шапке: текст с подчёркиванием (стиль .topbar__contact из css/hero.css) */
 .svc__cta {
-	margin-top: clamp(1rem, 0.5rem + 1vw, 2rem);
+	align-self: flex-start;
+	margin-top: clamp(1rem, 0.6rem + 1vw, 1.75rem);
 }
 
 /* части описания сменяются мягко (js/services.js) */
@@ -280,29 +357,48 @@
 	z-index: 4;
 	right: var(--gutter);
 	bottom: clamp(1.75rem, 1rem + 1.5vw, 3rem); /* по нижнему краю — как кнопка в панели */
-	width: max(17.5rem, 22%); /* компактнее макета — снимкам больше места */
+	width: max(22rem, 26%); /* компактнее макета — снимкам больше места */
 	margin: 0;
-	padding: clamp(0.5rem, 0.35rem + 0.4vw, 0.875rem);
+	/* поля и тень — как у бирюзовой карточки */
+	padding: clamp(1.25rem, 0.75rem + 1.2vw, 2rem) clamp(1rem, 0.6rem + 1vw, 1.75rem);
 	border-radius: var(--r-photo);
 	background: var(--card);
+	box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.7);
 	list-style: none;
+}
+
+/* мелкий приглушённый заголовок прописными — как жанр на бирюзовой карточке */
+.svc__menu::before {
+	content: "Выберите жанр";
+	display: block;
+	margin-bottom: clamp(0.5rem, 0.35rem + 0.5vw, 0.9rem);
+	font-size: var(--fs-small);
+	font-weight: 400;
+	line-height: 1.3;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.55);
 }
 
 .svc__menu li + li {
 	border-top: 1px solid var(--rule);
 }
 
+/* обозначение как у слайдов «Моего подхода»: у выбранного жанра — линия перед названием */
 .svc__tab {
-	display: block;
+	display: flex;
+	align-items: center;
+	gap: 0.6em;
 	width: 100%;
-	padding: 0.3em 0.55em;
+	padding: 0.3em 0;
 	border: 0;
 	border-radius: calc(var(--r-photo) * 0.6);
 	background: none;
+	position: relative;
 	color: rgba(255, 255, 255, 0.3);
 	font: inherit;
 	font-size: var(--fs-sub);
-	font-weight: 500;
+	font-weight: 300; /* тонкий, как текст бирюзовой карточки */
 	line-height: var(--lh-sub);
 	letter-spacing: -0.01em;
 	text-align: left;
@@ -317,9 +413,24 @@
 }
 
 /* выбранный жанр — белый на 100%, остальные — на 30% */
+/* выбранный — только ярче, толщина та же: как на «Моём подходе», и название не шире карточки */
 .svc__tab[aria-pressed="true"] {
 	color: #fff;
-	font-weight: 600;
+}
+
+/* у выбранного — круглая галочка, как в списке на бирюзовой карточке */
+.svc__tab-line {
+	flex: none;
+	width: clamp(0.875rem, 0.5rem + 0.7vw, 1.25rem);
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 0.7s cubic-bezier(0.87, 0, 0.13, 1); /* expo.inOut, как на «Моём подходе» */
+}
+
+.svc__tab[aria-pressed="true"] .svc__tab-line {
+	transform: scaleX(1);
 }
 
 .svc__tab:focus-visible {
@@ -328,6 +439,13 @@
 }
 
 /* ---------- АДАПТИВ ---------- */
+
+/* невысокий ноутбук: без иконки карточка помещается между заголовком (+60 pt) и низом экрана */
+@media (min-width: 1024px) and (max-height: 820px) {
+	.svc__icon {
+		display: none;
+	}
+}
 
 /* небольшой ноутбук: рядом с заголовком две строки подзаголовка не помещаются — подзаголовок под ним */
 @media (min-width: 1024px) and (max-width: 1279px) {
@@ -407,20 +525,38 @@
 		width: 44%;
 	}
 
-	/* бирюзовая плашка внизу экрана: слева описание жанра и кнопка, справа на той же высоте — меню
-	   (js/services.js переносит меню внутрь плашки) */
+	/* внизу две отдельные карточки с зазором: слева бирюзовая — описание жанра и кнопка (главная),
+	   справа тёмная — разделы. js/services.js переносит меню внутрь .svc__info; бирюзовая карточка — ::before */
 	.svc__info {
+		--card-gap: clamp(0.5rem, 0.3rem + 1vw, 1rem);
+		--card-pad: clamp(1rem, 0.75rem + 1.5vw, 1.75rem);
 		order: 4;
 		position: relative;
 		z-index: 2;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* слева описание, справа — меню на половину плашки */
-		column-gap: clamp(0.75rem, 0.5rem + 1.5vw, 1.5rem);
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		/* правый край текста — с полем внутри бирюзовой карточки */
+		column-gap: calc(var(--card-gap) + var(--card-pad) * 3);
 		align-items: start;
-		margin-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
-		padding: clamp(1.75rem, 1.25rem + 2vw, 2.75rem) var(--gutter) var(--info-pad-b);
-		border-radius: var(--r-photo) var(--r-photo) 0 0;
+		margin: clamp(1.5rem, 1rem + 2vw, 2.5rem) var(--gutter) var(--gutter);
+		padding: var(--card-pad) 0 var(--card-pad) var(--card-pad);
+		/* карточка здесь — ::before на левой половине, сам блок прозрачный */
+		border-radius: 0;
+		background: none;
+		box-shadow: none;
+	}
+
+	.svc__info::before {
+		content: "";
+		position: absolute;
+		z-index: -1;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: calc((100% - var(--card-gap)) / 2);
+		border-radius: var(--r-photo);
 		background: var(--panel);
+		box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.6);
 	}
 
 	.svc__info > :not(.svc__menu) {
@@ -431,7 +567,18 @@
 		justify-self: start;
 	}
 
-	/* меню — вся правая половина плашки, тёмная до самых краёв; пункты под палец */
+	/* в узкой карточке цена мельче, иконка меньше */
+	.svc__price {
+		font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+	}
+
+	.svc__icon {
+		width: 2.5rem;
+		height: 2.5rem;
+		margin-bottom: 0.85rem;
+	}
+
+	/* меню — отдельная тёмная карточка справа, той же высоты; пункты под палец */
 	.svc__menu {
 		position: absolute;
 		top: 0;
@@ -439,16 +586,18 @@
 		bottom: 0;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-evenly;
-		width: 50%;
-		padding: clamp(0.75rem, 0.5rem + 1vw, 1.5rem) var(--gutter) clamp(0.75rem, 0.5rem + 1vw, 1.5rem) clamp(0.75rem, 0.5rem + 1.5vw, 1.5rem);
-		border-radius: 0 var(--r-photo) 0 0;
+		justify-content: space-between;
+		width: calc((100% - var(--card-gap)) / 2);
+		padding: var(--card-pad) clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
+		border-radius: var(--r-photo);
 	}
 
 	.svc__tab {
-		padding: 0.55em 0.6em;
-		font-size: clamp(1rem, 0.8rem + 0.9vw, 1.25rem);
+		gap: 0.5em;
+		padding: 0.5em 0;
+		font-size: clamp(0.9375rem, 0.75rem + 0.9vw, 1.25rem);
 		line-height: 1.3;
+		white-space: normal; /* в узкой карточке длинное название может уйти на вторую строку */
 	}
 
 	.svc__film {

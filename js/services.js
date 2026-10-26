@@ -49,7 +49,13 @@
 		const btn = document.createElement('button');
 		btn.type = 'button';
 		btn.className = 'svc__tab';
-		btn.textContent = s.title;
+		// линия у выбранного — как у слайдов на странице «Мой подход»
+		const line = document.createElement('span');
+		line.className = 'svc__tab-line';
+		line.setAttribute('aria-hidden', 'true');
+		const name = document.createElement('span');
+		name.textContent = s.title;
+		btn.append(line, name);
 		btn.setAttribute('aria-pressed', 'false');
 		btn.addEventListener('click', () => select(i));
 		li.appendChild(btn);
@@ -76,7 +82,20 @@
 		}
 		info.name.textContent = s.title;
 		info.text.textContent = glue(s.text);
-		info.price.textContent = s.price;
+		// цена — крупная цифра, «от» и «₽» мельче (css: .svc__price-pre / -unit)
+		const m = s.price.match(/^(от)\s+(.+?)\s*(₽)$/);
+		info.price.textContent = '';
+		if (m) {
+			const pre = document.createElement('span');
+			pre.className = 'svc__price-pre';
+			pre.textContent = m[1];
+			const unit = document.createElement('span');
+			unit.className = 'svc__price-unit';
+			unit.textContent = m[3];
+			info.price.append(pre, m[2], unit);
+		} else {
+			info.price.textContent = s.price;
+		}
 		info.list.textContent = '';
 		s.includes.forEach((t) => {
 			const li = document.createElement('li');
@@ -191,6 +210,9 @@
 		if (head) root.style.setProperty('--head-b', `${head.offsetTop + head.offsetHeight}px`);
 	};
 	measureHead();
+	// высота строки заголовка зависит от шрифта — пересчёт, когда он загрузится
+	if (document.fonts) document.fonts.ready.then(() => { measureHead(); placePhotos(); });
+	window.addEventListener('resize', measureHead);
 	if (head && window.ResizeObserver) new ResizeObserver(measureHead).observe(head);
 
 	select(0);
