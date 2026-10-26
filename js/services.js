@@ -123,8 +123,8 @@
 		});
 	}
 
-	function fillPhotos(s) {
-		frames.forEach((fig, k) => {
+	function fillPhotos(s, set = sets[shown]) {
+		set.forEach((fig, k) => {
 			const p = s.photos[k];
 			const img = fig.querySelector('img');
 			fig.classList.toggle('is-tall', p.h > p.w);
@@ -133,7 +133,7 @@
 			img.src = p.src;
 			img.alt = p.alt || '';
 		});
-		placePhotos(s);
+		placePhotos(s, set);
 	}
 
 	// раскладка двух снимков: верхний слева, нижний правее и ниже — заходит только на угол верхнего,
@@ -142,7 +142,11 @@
 	const panel = root.querySelector('.svc__panel');
 	const OVERLAP = 0.2;  // нижний снимок заходит на 20% ширины верхнего — на край, не на середину
 	const DROP = 0.32;    // и начинается на 32% его высоты
-	function placePhotos(s = data[current]) {
+	// два комплекта полароидов: при смене жанра старые уходят, а новые уже приходят — как слайды «Моего подхода»
+	const sets = [frames, frames.map((fig) => photosBox.appendChild(fig.cloneNode(true)))];
+	let shown = 0;
+	if (gsap) gsap.set(sets[1], { autoAlpha: 0 });
+	function placePhotos(s = data[current], set = sets[shown]) {
 		if (!s || !photosBox) return;
 		const box = photosBox.getBoundingClientRect();
 		const W = box.width;
@@ -175,8 +179,8 @@
 		const used = wA * (1 - OVERLAP) + wB;
 		const x0 = left + Math.max(0, (right - left - used) / 2);
 		const place = (fig, x, y, w) => Object.assign(fig.style, { left: `${x}px`, top: `${y}px`, width: `${w}px` });
-		place(frames[0], x0, top, wA);
-		place(frames[1], x0 + wA * (1 - OVERLAP), top + (h + padY) * DROP, wB);
+		place(set[0], x0, top, wA);
+		place(set[1], x0 + wA * (1 - OVERLAP), top + (h + padY) * DROP, wB);
 	}
 	if (window.ResizeObserver) new ResizeObserver(() => placePhotos()).observe(root);
 
@@ -215,23 +219,58 @@
 		bullets[i].classList.add('is-current');
 		status.textContent = `${data[i].title}: ${data[i].price}`;
 
-		const parts = root.querySelectorAll('.svc__swap');
 		if (first || !gsap || reduced) {
 			fillInfo(data[i]);
 			fillPhotos(data[i]);
 			return;
 		}
 
-		// переход как в блоке «Мой подход»: снимки уходят вверх (назад — вниз), вытягиваясь, новые приходят с другой стороны
+		// переход — тот же, что у слайдов блока «Мой подход» (js/approach.js): снимки уходят вверх (назад — вниз),
+		// вытягиваясь, новые приходят с другой стороны; строки текста уезжают под маску и выплывают из-под неё по очереди
 		busy = true;
 		const s = i > from ? 1 : -1;
-		gsap.timeline({ onComplete: settle })
-			.to(parts, { yPercent: -100 * s, autoAlpha: 0, duration: 0.6, ease: 'power4.in', stagger: 0.04 }, 0)
-			.to(frames, { yPercent: -160 * s, scaleY: 1.4, duration: 1, ease: 'expo.inOut', stagger: 0.07 }, 0)
-			.to(frames, { autoAlpha: 0, duration: 0.35, ease: 'power1.in', stagger: 0.07 }, 0.5)
-			.add(() => { fillInfo(data[i]); fillPhotos(data[i]); }, 0.9)
-			.fromTo(frames, { yPercent: 150 * s, scaleY: 1.4, autoAlpha: 0 }, { yPercent: 0, scaleY: 1, autoAlpha: 1, duration: 1.1, ease: 'expo.out', stagger: 0.07 }, 0.9)
-			.fromTo(parts, { yPercent: 100 * s, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.9, ease: 'power4.out', stagger: 0.06 }, 1);
+		const out = sets[shown];
+		shown = 1 - shown;
+		const inc = sets[shown];
+		// новый комплект скрыт, пока не придёт его время, — иначе он висел бы у края экрана
+		gsap.set(inc, { autoAlpha: 0, zIndex: 2 });
+		gsap.set(out, { zIndex: 1 });
+		fillPhotos(data[i], inc);
+		// переход начинается, когда новые снимки готовы, — иначе на миг мелькнули бы кадры прошлого жанра
+		const ready = inc.map((fig) => {
+			const img = fig.querySelector('img');
+			return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+		});
+		Promise.race([Promise.all(ready), new Promise((r) => setTimeout(r, 700))]).then(() => play(i, s, out, inc));
+	}
+
+	function play(i, s, out, inc) {
+		// строки описания: жанр, цена, текст и каждый пункт списка отдельно
+		const lines = () => [info.name, info.price, info.text, ...info.list.children];
+		const before = lines();
+		// маска — clip-path на самой строке: видна только часть, что осталась в её прежней рамке
+		const clip = (top, bottom) => `inset(${top}% 0% ${bottom}% 0%)`;
+		const tl = gsap.timeline({
+			onComplete: () => {
+				gsap.set(out, { autoAlpha: 0 });
+				gsap.set(lines(), { clearProps: 'clipPath,transform' });
+				settle();
+			},
+		})
+			// уходящие снимки — вверх (или вниз), вытягиваясь
+			.to(out, { yPercent: -185 * s, scaleY: 1.5, duration: 1.2, ease: 'expo.inOut', stagger: 0.07 }, 0)
+			// и гаснут на ходу — к приходу новых от прошлых снимков ничего не остаётся
+			.to(out, { autoAlpha: 0, duration: 0.35, ease: 'power2.in', stagger: 0.05 }, 0.2)
+			.fromTo(before, { yPercent: 0, clipPath: clip(0, 0) },
+				{ yPercent: -105 * s, clipPath: s > 0 ? clip(100, 0) : clip(0, 100), duration: 1, ease: 'power4.inOut', stagger: 0.05 }, 0)
+			// новые снимки приходят с другой стороны; до своего начала не показываются
+			.fromTo(inc, { yPercent: 150 * s, scaleY: 1.5, autoAlpha: 1 },
+				{ yPercent: 0, scaleY: 1, duration: 1.3, ease: 'expo.out', stagger: 0.07, immediateRender: false }, 0.9)
+			.add(() => {
+				fillInfo(data[i]);
+				tl.fromTo(lines(), { yPercent: 105 * s, clipPath: s > 0 ? clip(0, 100) : clip(100, 0) },
+					{ yPercent: 0, clipPath: clip(0, 0), duration: 1.2, ease: 'power4.out', stagger: 0.07 }, 1.1);
+			}, 1.1);
 	}
 
 	// компьютер: экран закреплён, жанр выбирает прокрутка — каждому жанру своя доля высоты блока (как «Мой подход»)
@@ -240,20 +279,38 @@
 	const ST = window.ScrollTrigger;
 	const n = data.length;
 	const request = (i) => { want = i; if (!busy) select(want); };
+	// у каждого жанра своя точка прокрутки: первый — в начале блока, последний — в конце
+	const startY = () => root.getBoundingClientRect().top + window.scrollY;
+	const span = () => root.offsetHeight - window.innerHeight;
+	const pointY = (i) => startY() + (i / (n - 1)) * span();
 	if (ST) {
 		ST.create({
 			trigger: root,
 			start: 'top top',
 			end: 'bottom bottom',
-			onUpdate: (self) => { if (desk.matches) request(Math.min(n - 1, Math.floor(self.progress * n))); },
+			onUpdate: (self) => { if (desk.matches) request(Math.round(self.progress * (n - 1))); },
 		});
 	}
-	// клик по жанру или номеру: на компьютере — прокрутка к его доле блока, иначе — сразу смена
+	// прокрутка остановилась между жанрами — страница плавно доезжает до ближайшего, ничего не застревает на полпути
+	if (window.lenis) {
+		let snapTimer = 0;
+		window.lenis.on('scroll', () => {
+			clearTimeout(snapTimer);
+			snapTimer = setTimeout(() => {
+				if (!desk.matches) return;
+				const y = window.scrollY;
+				const p = (y - startY()) / span();
+				if (p <= 0 || p >= 1) return;
+				const target = pointY(Math.round(p * (n - 1)));
+				if (Math.abs(target - y) > 2) window.lenis.scrollTo(target, { duration: 0.7, easing: (t) => 1 - Math.pow(1 - t, 3) });
+			}, 180);
+		});
+	}
+	// клик по жанру или номеру: на компьютере — прокрутка к его точке, иначе — сразу смена
 	function choose(i) {
 		if (!desk.matches || !ST) { request(i); return; }
-		const y = root.getBoundingClientRect().top + window.scrollY + ((i + 0.5) / n) * (root.offsetHeight - window.innerHeight);
-		if (window.lenis) window.lenis.scrollTo(y, { duration: 1.2 });
-		else window.scrollTo({ top: y, behavior: 'smooth' });
+		if (window.lenis) window.lenis.scrollTo(pointY(i), { duration: 1.2 });
+		else window.scrollTo({ top: pointY(i), behavior: 'smooth' });
 	}
 
 	// снимки — под строкой заголовка: её высота зависит от того, в сколько строк лёг подзаголовок

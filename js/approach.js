@@ -181,6 +181,7 @@ function init() {
         const n = els.length;
         to = (to + n) % n;
         if (to === current) return;
+        want = to; // иначе на странице после перехода settle вернул бы прежний слайд
         busy = true;
         // на странице слайды идут по кругу, в блоке главной — только вперёд и назад по прокрутке
         const down = section ? to > current
@@ -216,13 +217,14 @@ function init() {
 
     // ---------- управление ----------
     if (section) {
-        // блок главной: слайд выбирает прокрутка — каждому слайду своя доля высоты блока
+        // блок главной: слайд выбирает прокрутка — у каждого слайда своя точка: первый в начале блока, последний в конце
         const n = els.length;
         const ST = window.ScrollTrigger;
-        const pick = (p) => Math.min(n - 1, Math.max(0, Math.floor(p * n)));
+        const pick = (p) => Math.min(n - 1, Math.max(0, Math.round(p * (n - 1))));
         const request = (i) => { want = i; if (!busy) go(want); };
         const scrollSpan = () => root.offsetHeight - window.innerHeight;
         const startY = () => root.getBoundingClientRect().top + window.scrollY;
+        const pointY = (i) => startY() + (i / (n - 1)) * scrollSpan();
 
         if (ST) {
             ST.create({ trigger: root, start: 'top top', end: 'bottom bottom', onUpdate: (self) => request(pick(self.progress)) });
@@ -230,11 +232,27 @@ function init() {
             window.addEventListener('scroll', () => request(pick((window.scrollY - startY()) / scrollSpan())), { passive: true });
         }
 
-        // номер слайда — прокрутка к его доле блока
+        // прокрутка остановилась между слайдами — страница плавно доезжает до ближайшего (на компьютере)
+        const desk = window.matchMedia('(min-width: 1024px)');
+        if (window.lenis) {
+            let snapTimer = 0;
+            window.lenis.on('scroll', () => {
+                clearTimeout(snapTimer);
+                snapTimer = setTimeout(() => {
+                    if (!desk.matches) return;
+                    const y = window.scrollY;
+                    const p = (y - startY()) / scrollSpan();
+                    if (p <= 0 || p >= 1) return;
+                    const target = pointY(pick(p));
+                    if (Math.abs(target - y) > 2) window.lenis.scrollTo(target, { duration: 0.7, easing: (t) => 1 - Math.pow(1 - t, 3) });
+                }, 180);
+            });
+        }
+
+        // номер слайда — прокрутка к его точке
         els.forEach((e, i) => e.bullet.addEventListener('click', () => {
-            const y = startY() + ((i + 0.5) / n) * scrollSpan();
-            if (window.lenis) window.lenis.scrollTo(y, { duration: 1.2 });
-            else window.scrollTo({ top: y, behavior: 'smooth' });
+            if (window.lenis) window.lenis.scrollTo(pointY(i), { duration: 1.2 });
+            else window.scrollTo({ top: pointY(i), behavior: 'smooth' });
         }));
     } else {
         els.forEach((e, i) => e.bullet.addEventListener('click', () => go(i)));
