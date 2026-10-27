@@ -1,0 +1,648 @@
+/* ---------- «МОИ РАБОТЫ» (works.html) ----------
+   Разделы ступеньками; нажатие на карточку — просмотр снимков раздела (по мотивам codrops GridViewSwitch, MIT),
+   под ними уже открыты снимки. Цвета, шрифт и шапка — как на остальном сайте. Логика — js/works.js */
+
+/* Lenis — плавная прокрутка, как на главной */
+html.lenis,
+html.lenis body {
+	height: auto;
+}
+
+.lenis.lenis-smooth {
+	scroll-behavior: auto !important;
+}
+
+.works-page,
+.wk,
+.wa {
+	/* фон — из макета Figma: от глубокого синего слева сверху к почти чёрному (#0f141b) */
+	--c-slate: #0f141b;
+	--bg-works: linear-gradient(152.26deg, #0e3855 3.3%, #0f141b 62.68%);
+	--r-photo: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление снимков — как у всех фото сайта: 10 → 15 */
+	--ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.works-page {
+	background: var(--c-slate);
+}
+
+/* блок на главной: высота — по содержимому (без пустоты под кнопкой); края сведены с соседями:
+   сверху — мягкий переход из тёмного «Моего подхода», снизу — ровно в тёмный фон «Кадра под настроение» */
+.wk.wk--section {
+	z-index: 3;
+	min-height: 0;
+	padding-top: calc(var(--wk-top) + clamp(1.5rem, 1rem + 2vw, 3.5rem));
+	padding-bottom: clamp(4rem, 3rem + 4vw, 8rem);
+	background:
+		linear-gradient(to bottom, #0b0f15 0%, rgba(11, 15, 21, 0) clamp(6rem, 4rem + 6vw, 12rem)),
+		linear-gradient(to top, #030406 0%, rgba(3, 4, 6, 0) 40%), /* низ — в цвет, каким сетка «Кадра под настроение» видна у верхнего края */
+		var(--bg-works);
+}
+
+html:has(.works-page) {
+	background: var(--c-slate);
+}
+
+/* подложка под шапкой — тёмный вариант, как над тёмными экранами главной */
+.works-page .topbar-scrim::before {
+	opacity: 0;
+}
+
+.works-page .topbar-scrim::after {
+	opacity: 1;
+}
+
+/* ---------- кнопка-«пилюля» (как «мои работы» на странице «Мой подход») ---------- */
+.wk-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px; /* палец попадает и на телефоне */
+	padding: clamp(0.7rem, 0.6rem + 0.4vw, 1rem) clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+	overflow: hidden;
+	isolation: isolate;
+	font: inherit;
+	font-size: clamp(0.8125rem, 0.75rem + 0.25vw, 1rem);
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.06em;
+	text-transform: lowercase;
+	color: #fff;
+	text-decoration: none;
+	border: 1px solid rgba(235, 235, 235, 0.55);
+	border-radius: 999px;
+	background: transparent;
+	cursor: pointer;
+	transition: border-color 0.9s var(--ease);
+}
+
+/* заливка — светлая фирменная, наплывает слева; текст под ней сам становится тёмным */
+.wk-btn::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--c-light);
+	border-radius: inherit;
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	transition: transform 0.9s var(--ease);
+}
+
+.wk-btn__label {
+	color: #fff;
+	mix-blend-mode: difference;
+}
+
+@media (hover: hover) {
+	.wk-btn:hover {
+		border-color: var(--c-light);
+	}
+
+	.wk-btn:hover::before {
+		transform: scaleX(1);
+	}
+}
+
+.wk-btn:active::before,
+.wk-btn[aria-pressed="true"]::before {
+	transform: scaleX(1);
+}
+
+.wk-btn[aria-pressed="true"] {
+	border-color: var(--c-light);
+}
+
+.wk-btn:focus-visible,
+.wk-card__link:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 4px;
+}
+
+/* ---------- экран с разделами ----------
+   Компьютер: всё на одном экране — заголовок слева, пояснение справа, ступеньки, кнопка внизу по центру.
+   Высоту снимков считаем от высоты экрана: ступеньки помещаются целиком, ничего не уходит вниз */
+.wk {
+	--wk-top: calc(var(--topbar-y) + var(--burger-h) + clamp(1.5rem, 1rem + 1.5vw, 3rem));
+	--wk-bot: clamp(1.25rem, 0.75rem + 2vh, 2.5rem);
+	--gap-y: clamp(1.25rem, 0.75rem + 2vh, 2.5rem);
+	--gap-x: clamp(0.75rem, 0.4rem + 1vw, 2rem);
+	/* из макета Figma (кадр 1920): подпись под снимком — Inter Light 32, кнопка 557 × 100, скругление 20 */
+	--name-fs: clamp(1rem, 0.6rem + 1.2vw, 2rem);
+	--btn-h: clamp(2.75rem, 1.6rem + 2.2vw, 4.25rem);
+	--name-h: calc(var(--name-fs) * 1.05 + clamp(0.75rem, 0.4rem + 0.6vw, 1.25rem));
+	/* место под ступеньки: экран минус шапка, заголовок, кнопка и отступы */
+	--wk-h: calc(100svh - var(--wk-top) - var(--wk-bot) - var(--fs-h1) * var(--lh-h1) - var(--btn-h) - var(--gap-y) * 2);
+	--step: calc(var(--wk-h) * 0.05);
+
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-height: 100svh;
+	padding: var(--wk-top) var(--gutter) var(--wk-bot);
+	background: var(--bg-works);
+}
+
+.wk__head {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: end;
+	gap: clamp(1rem, 0.5rem + 1.5vw, 2rem) clamp(1.5rem, 1rem + 2vw, 4rem);
+}
+
+.wk__title {
+	margin: 0;
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+
+/* пояснение — как подзаголовок второго экрана главной (.t-h3): две строки, справа;
+   правый край длинной строки — по линии «связаться со мной» */
+.wk__lead {
+	justify-self: end;
+	max-width: none;
+	margin: 0;
+	color: var(--c-light);
+}
+
+.wk__lead span {
+	display: block;
+	white-space: nowrap;
+}
+
+/* «все работы» — кнопка в стиле сайта (как «мои работы» на «Моём подходе»): та же смена цвета
+   с подстройкой текста; скругление — из макета. Цвет — светлый из макета (#d9d9d9), длина как в макете (557 на 1920), высота ниже.
+   Наведение: тёмная заливка медленно наплывает слева, текст под ней сам становится светлым */
+.wk__all {
+	align-self: center;
+	justify-content: center;
+	width: clamp(14rem, 5rem + 24vw, 34.8rem);
+	min-height: var(--btn-h);
+	margin-top: var(--gap-y);
+	padding: 0 1.5rem;
+	font-size: clamp(0.9375rem, 0.8rem + 0.45vw, 1.375rem);
+	font-weight: 400;
+	letter-spacing: -0.015em;
+	word-spacing: -0.04em; /* слова не расходятся */
+	border: 1px solid #d9d9d9;
+	border-radius: clamp(0.75rem, 0.3rem + 0.9vw, 1.25rem); /* скругление из макета: 20 на 1920 */
+	background: #d9d9d9;
+}
+
+/* заливка — тёмная фирменная, наплывает слева */
+.wk__all::before {
+	background: var(--c-dark);
+}
+
+/* текст инвертирует то, что под ним: на светлом — тёмный, на тёмной заливке — светлый */
+.wk__all .wk-btn__label {
+	color: #fff;
+	letter-spacing: inherit;
+	mix-blend-mode: difference;
+}
+
+/* ступеньки: первый раздел ниже всех, каждый следующий — на ступень выше */
+.wk__stairs {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin: var(--gap-y) 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* по макету: снимок 300 × 400, между карточками 75 (четверть карточки) — пять карточек ровно на ширину поля;
+   на невысоком экране карточка уже, чтобы ступеньки и кнопка поместились */
+.wk-card {
+	flex: none;
+	width: min(calc(100% / 6), max(7rem, calc((var(--wk-h) - var(--step) * 4 - var(--name-h)) * 0.75)));
+	margin-top: calc(var(--step) * (4 - var(--i)));
+}
+
+.wk-card__link {
+	display: block;
+	color: inherit;
+	text-decoration: none;
+	border-radius: var(--r-photo);
+}
+
+/* все снимки — одного портретного формата 3:4, кадр заполняет рамку; точка кадра чуть выше середины — лица не срезаются */
+.wk-card__media {
+	position: relative;
+	overflow: hidden;
+	aspect-ratio: 3 / 4;
+	border-radius: var(--r-photo);
+	background: rgba(11, 15, 21, 0.35);
+}
+
+.wk-card__media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 35%;
+	transform: scale(1.001);
+	transition: transform 1.4s var(--ease), filter 1.4s var(--ease);
+	filter: grayscale(0.35);
+}
+
+/* подпись — по макету: по центру под снимком, Inter Light 32, светлая */
+.wk-card__name {
+	display: block;
+	margin-top: clamp(0.75rem, 0.4rem + 0.6vw, 1.25rem);
+	font-size: var(--name-fs);
+	font-weight: 300;
+	line-height: 1.05;
+	letter-spacing: -0.01em;
+	text-align: center;
+	text-wrap: balance;
+	color: #fffbfb;
+}
+
+/* широкий экран: подписи одной строкой, как в макете; на узком «Уличный портрет» переносится,
+   а не наезжает на соседнюю карточку */
+@media (min-width: 1280px) {
+	.wk-card__name {
+		white-space: nowrap;
+	}
+}
+
+@media (hover: hover) {
+	.wk-card__link:hover .wk-card__media img {
+		transform: scale(1.04);
+		filter: grayscale(0);
+	}
+}
+
+/* телефон: обычные карточки одна под другой, без ступенек; экран — по содержимому (шире 600 px — ступеньки, как на компьютере) */
+@media (max-width: 599px) {
+	/* подпись-логотип в шапке свисает ниже бургера — заголовку отступ побольше, как на «Моём подходе» */
+	.wk {
+		min-height: 0;
+		padding-top: calc(var(--topbar-y) + var(--burger-h) + clamp(4.5rem, 3.75rem + 2vw, 6rem));
+		padding-bottom: clamp(3rem, 2rem + 4vw, 5rem);
+	}
+
+	.wk__head {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.wk__lead {
+		justify-self: start;
+	}
+
+	.wk__stairs {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: clamp(2rem, 1.5rem + 2vw, 3rem);
+		margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+	}
+
+	.wk-card {
+		width: auto;
+		margin-top: 0;
+	}
+
+	.wk__all {
+		margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+	}
+}
+
+/* планшет: подпись-логотип в шапке свисает ниже бургера — заголовку отступ побольше */
+@media (min-width: 600px) and (max-width: 1023px) {
+	.wk {
+		--wk-top: calc(var(--topbar-y) + var(--burger-h) + clamp(3rem, 2rem + 2vw, 4rem));
+	}
+}
+
+/* на телефоне строки пояснения переносятся по ширине */
+@media (max-width: 599px) {
+	.wk__lead span {
+		display: inline;
+		white-space: normal;
+	}
+}
+
+/* ---------- «Мои работы» на главной: все снимки в шахматном порядке ----------
+   Колонки через одну опущены на полкадра — ряды идут шахматкой; кадры целиком, в своих пропорциях, без подписей.
+   Фон — тёмный, как низ «Кадра под настроение»: стыка не видно */
+.wa {
+	position: relative;
+	z-index: 3;
+	/* сверху — место под шапку (подпись-логотип свисает ниже бургера), как у остальных экранов */
+	padding: calc(var(--topbar-y) + var(--burger-h) + clamp(3rem, 2rem + 3vw, 6rem)) var(--gutter) clamp(5rem, 4rem + 5vw, 10rem);
+	background: #010203; /* с плёночным зерном — тот же тон, что низ «Кадра под настроение» */
+	color: var(--c-light);
+}
+
+.wa__title {
+	margin: 0 0 clamp(2rem, 1.5rem + 2.5vw, 4.5rem);
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+
+.wa__grid {
+	--g: clamp(0.75rem, 0.4rem + 1.2vw, 2rem);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--g);
+}
+
+.wa__col {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	gap: var(--g);
+	min-width: 0;
+}
+
+/* шахматка: каждая вторая колонка опущена */
+.wa__col:nth-child(even) {
+	padding-top: clamp(4rem, 2rem + 10vw, 14rem);
+}
+
+.wa__item {
+	margin: 0;
+	overflow: hidden;
+	border-radius: var(--r-photo);
+	background: rgba(235, 235, 235, 0.04);
+	opacity: 0;
+	transform: translateY(2.5rem);
+	transition: opacity 1.4s var(--ease), transform 1.6s var(--ease);
+}
+
+.wa__item.is-in {
+	opacity: 1;
+	transform: none;
+}
+
+.wa__item img {
+	display: block;
+	width: 100%;
+	height: auto;
+	transition: transform 1.4s var(--ease);
+}
+
+@media (hover: hover) {
+	.wa__item:hover img {
+		transform: scale(1.03);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wa__item {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}
+
+/* ---------- просмотр раздела — по мотивам codrops GridViewSwitch (MIT) ----------
+   Слой на весь экран поверх страницы: сетка 6 × 5 снимков раздела, уменьшенная до 0,4;
+   «один кадр» — главный снимок на весь экран, миниатюры внизу. Логика — js/works.js */
+html.wv-open {
+	overflow: hidden;
+}
+
+.wv {
+	--gi-w: 50vw;
+	--gi-h: 100vh;
+	position: fixed;
+	inset: 0;
+	z-index: 80; /* над шапкой и зерном */
+	overflow: hidden;
+	visibility: hidden;
+	background: var(--c-dark);
+	color: var(--c-light);
+}
+
+.wv.is-open {
+	visibility: visible;
+}
+
+.wv__columns {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100vh;
+	transform: scale(0.4);
+}
+
+.wv__col {
+	position: relative;
+	display: grid;
+}
+
+.wv__inner {
+	position: relative;
+	will-change: transform;
+}
+
+.wv__item {
+	position: relative;
+	z-index: 1;
+	width: var(--gi-w);
+	height: var(--gi-h);
+	margin: 0;
+}
+
+/* поля между снимками и скругление — как у всех фото сайта (сетка уменьшена до 0,4 — значения ×2,5) */
+.wv__wrap {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	padding: 1.5vw;
+	background-clip: content-box;
+}
+
+.wv__img {
+	width: 100%;
+	height: 100%;
+	border-radius: calc(var(--r-photo) * 2.5);
+	background-size: cover;
+	background-position: 50% 20%;
+	backface-visibility: hidden;
+}
+
+/* главный кадр — точка кадра чуть выше середины: на весь экран лица и вершины не срезаются */
+.wv__wrap--flip .wv__img {
+	background-position: 50% 30%;
+}
+
+/* раскрытый на весь экран — без полей и скругления */
+.wv__main .wv__wrap {
+	padding: 0;
+}
+
+.wv__main .wv__img {
+	border-radius: 0;
+}
+
+.wv__content {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	grid-template-rows: 1fr auto;
+	pointer-events: none;
+}
+
+.wv__content.is-current {
+	pointer-events: auto;
+}
+
+.wv__main {
+	position: absolute;
+	inset: 0;
+}
+
+/* миниатюры — внизу справа; на телефоне три и по центру */
+.wv__nav {
+	position: relative;
+	grid-row: 2; /* нижняя строка экрана */
+	display: flex;
+	align-items: flex-end;
+	justify-self: end;
+	gap: 1rem;
+	max-width: min(100%, 64rem);
+	padding: 1.5rem var(--gutter);
+	overflow-x: auto;
+	scrollbar-width: none; /* все снимки раздела — лента листается вбок */
+	opacity: 0;
+}
+
+.wv__nav::-webkit-scrollbar {
+	display: none;
+}
+
+.wv__thumb {
+	display: block;
+	flex: none;
+	width: 7vw;
+	max-width: 7.5rem;
+	aspect-ratio: 1.3;
+	padding: 0;
+	border: 2px solid transparent;
+	border-radius: var(--r-photo);
+	background-color: rgba(235, 235, 235, 0.08);
+	background-size: cover;
+	background-position: 50% 30%;
+	cursor: pointer;
+	transition: border-color 0.6s var(--ease);
+}
+
+.wv__thumb.is-current {
+	border-color: #d9d9d9;
+}
+
+.wv__thumb:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 3px;
+}
+
+/* переключатель вида — светлая плашка сверху по центру, в цвет кнопки «все работы» */
+.wv__switch {
+	position: fixed;
+	z-index: 10;
+	top: var(--topbar-y);
+	left: 50%;
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+	padding: 0.85rem 1.75rem;
+	transform: translateX(-50%);
+	border-radius: clamp(0.75rem, 0.3rem + 0.9vw, 1.25rem); /* скругление из макета */
+	background: #d9d9d9;
+	color: #0b0c11;
+}
+
+.wv__switch-text {
+	font-size: clamp(0.875rem, 0.8rem + 0.25vw, 1.125rem);
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.wv__switch-btn {
+	display: grid;
+	place-items: center;
+	padding: 0.25rem;
+	border: 0;
+	background: none;
+	fill: #0b0c11;
+	cursor: pointer;
+	transition: fill 0.6s var(--ease);
+}
+
+.wv__switch-btn.is-current {
+	fill: rgba(11, 12, 17, 0.3);
+	pointer-events: none;
+	cursor: default;
+}
+
+.wv__switch-btn svg {
+	pointer-events: none;
+}
+
+/* «закрыть» — справа сверху, как «связаться со мной» в шапке */
+.wv__close {
+	position: fixed;
+	z-index: 10;
+	top: var(--topbar-y);
+	right: var(--gutter);
+	min-height: 44px;
+	padding: 0 0 5px;
+	border: 0;
+	border-bottom: var(--line) solid currentColor;
+	background: none;
+	font: inherit;
+	font-size: var(--contact-size);
+	font-weight: 300;
+	line-height: normal;
+	color: #fff;
+	cursor: pointer;
+	text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+.wv__switch-btn:focus-visible,
+.wv__close:focus-visible {
+	outline: 1px solid currentColor;
+	outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+	.wv__switch {
+		top: auto;
+		bottom: 1rem;
+		padding: 0.75rem 1.25rem;
+	}
+
+	.wv__switch-text {
+		display: none;
+	}
+
+	.wv__nav {
+		justify-self: stretch;
+		gap: 0.5rem;
+		padding-bottom: 5.5rem;
+	}
+
+	.wv__thumb {
+		width: 64px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wk-btn,
+	.wk-btn::before,
+	.wk-card__media img {
+		transition: none;
+	}
+}

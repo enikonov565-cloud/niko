@@ -19,7 +19,8 @@
 		<link rel="stylesheet" href="css/about.css?v=54" />
 		<link rel="stylesheet" href="css/room.css?v=55" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
-		<link rel="stylesheet" href="css/approach.css?v=27" />
+		<link rel="stylesheet" href="css/approach.css?v=30" />
+		<link rel="stylesheet" href="css/works.css?v=41" />
 		<link rel="stylesheet" href="css/services.css?v=62" />
 		<link rel="stylesheet" href="css/gallery-entry.css?v=19" />
 	</head>
@@ -261,13 +262,26 @@
 				<div class="sl__slides"></div>
 
 				<nav class="sl__bullets" aria-label="Слайды"></nav>
-				<!-- «мои работы» — к входу в галерею выше на этой же странице (css/approach.css) -->
-				<a class="sl__works" href="#gallery-entry"><span class="sl__works-label">мои работы</span></a>
+				<!-- «мои работы» — кнопка на страницу работ works.html (css/approach.css) -->
+				<a class="sl__works" href="works.html"><span class="sl__works-label">мои работы</span></a>
 				<div class="sl__hint" aria-hidden="true">
 					<svg viewBox="0 0 22 52"><path d="M11 1v49M2 41l9 9 9-9"/></svg>
 				</div>
 				<p class="sr-only" aria-live="polite" data-sl="status"></p>
 			</div>
+		</section>
+
+		<!-- «Выбор за вами»: пять разделов ступеньками (тот же блок, что на works.html, css/works.css, js/works.js).
+		     Карточка ведёт на works.html к снимкам раздела, кнопка — ко всем снимкам -->
+		<section class="wk wk--section" id="works" aria-labelledby="wk-title">
+			<header class="wk__head">
+				<h2 class="wk__title" id="wk-title">Выбор за&nbsp;вами</h2>
+				<p class="wk__lead t-h3"><span>Пять разделов&nbsp;— выберите, с&nbsp;чего начать,</span> <span>или&nbsp;смотрите всё подряд.</span></p>
+			</header>
+
+			<ol class="wk__stairs" aria-label="Разделы"></ol>
+
+			<a class="wk-btn wk__all" href="#all-works"><span class="wk-btn__label">все работы</span></a>
 		</section>
 
 		<!-- Шестой экран: «Кадр под настроение» — жанры и цены. По макету Figma: бирюзовая панель слева, два снимка-полароида,
@@ -314,6 +328,13 @@
 			<ul class="svc__menu" aria-label="Жанры съёмки"></ul>
 			<p class="sr-only" aria-live="polite" data-svc="status"></p>
 			</div>
+		</section>
+
+		<!-- «Мои работы»: все снимки в шахматном порядке — колонки через одну опущены; кадры целиком, без подписей.
+		     Сюда ведёт кнопка «все работы»; колонки собирает js/works.js из js/gallery-photos.js -->
+		<section class="wa" id="all-works" aria-labelledby="wa-title">
+			<h2 class="wa__title" id="wa-title">Мои работы</h2>
+			<div class="wa__grid"></div>
 		</section>
 
 		<!-- тёмный фон под переворотом экрана входа в галерею (js/gallery-transition.js) -->
@@ -678,9 +699,10 @@
 		<script src="js/room.js?v=54"></script>
 		<script src="js/art.js?v=54"></script>
 		<script src="js/approach-data.js?v=14"></script>
-		<script type="module" src="js/approach.js?v=17"></script>
+		<script type="module" src="js/approach.js?v=18"></script>
 		<script src="js/services-data.js?v=3"></script>
 		<script src="js/services.js?v=25"></script>
+		<script src="js/works.js?v=23"></script>
 		<script type="module" src="js/gallery-entry.js?v=32"></script>
 		<script src="js/gallery-transition.js?v=10"></script>
 	</body>

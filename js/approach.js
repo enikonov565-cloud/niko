@@ -142,8 +142,8 @@ function init() {
         const works = pin.querySelector('.sl__works');
         const worksH = works ? works.offsetHeight : 0;
         const fit = (g) => pinH - headB - textH - worksH - rem * (g.top + g.shift + g.text + (works ? g.works : 0) + g.bottom);
-        const roomy = { top: 1.25, shift: 3, text: 1.5, works: 1.5, bottom: 2 };
-        const tight = { top: 0.75, shift: 1.75, text: 1, works: 1, bottom: 1 };
+        const roomy = { top: 1.25, shift: 3, text: 1.5, works: 1.5, bottom: 3.5 };
+        const tight = { top: 0.75, shift: 1.75, text: 1, works: 1, bottom: 2 };
         const g = fit(roomy) >= rem * 9 ? roomy : tight;
         const imgH = Math.max(rem * 5, fit(g));
         pin.style.setProperty('--g-top', `${g.top}rem`);
