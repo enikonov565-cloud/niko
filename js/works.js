@@ -119,15 +119,23 @@
 		};
 		buildAll();
 		window.addEventListener('resize', buildAll);
-		// «все работы» на главной — плавно к этому блоку
+		// «все работы» — сразу к этому блоку, без долгой прокрутки через «Кадр под настроение»
+		const toAll = () => {
+			const y = document.querySelector('#all-works').getBoundingClientRect().top + window.scrollY;
+			if (window.lenis) window.lenis.scrollTo(y, { immediate: true, force: true });
+			else window.scrollTo(0, y);
+		};
 		document.addEventListener('click', (e) => {
 			const a = e.target.closest('a[href="#all-works"]');
 			if (!a) return;
 			e.preventDefault();
-			const target = document.querySelector('#all-works');
-			if (window.lenis) window.lenis.scrollTo(target, { duration: 1.8, easing: (t) => 1 - Math.pow(1 - t, 3) });
-			else target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+			toAll();
 		});
+		// пришли со страницы работ (index.html#all-works) — сразу к блоку, когда страница догрузилась
+		if (location.hash === '#all-works') {
+			toAll();
+			window.addEventListener('load', () => requestAnimationFrame(toAll), { once: true });
+		}
 	}
 
 	// на главной — только ступеньки, ссылки ведут на works.html
