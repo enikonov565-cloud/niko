@@ -105,9 +105,9 @@ html:has(.approach-page) {
 	z-index: 3;
 	/* отступ от шапки — как у третьего экрана «Я фотограф» */
 	top: calc(var(--topbar-y) + var(--burger-h) + clamp(2rem, 1rem + 3.5vw, 6rem));
-	left: calc(var(--gutter) + var(--inset));
+	left: var(--gutter); /* по левой линии бургера в шапке */
 	/* на компьютере — левее левого снимка (left: 35%) */
-	width: calc(35% - var(--gutter) - var(--inset) - 2rem);
+	width: calc(35% - var(--gutter) - 2rem);
 	margin: 0;
 	text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 }
@@ -215,7 +215,7 @@ html:has(.approach-page) {
 .sl__text {
 	position: absolute;
 	z-index: 3;
-	left: calc(var(--gutter) + var(--inset));
+	left: var(--gutter); /* по левой линии бургера в шапке */
 	bottom: clamp(2.5rem, 1.5rem + 5vh, 6rem);
 	width: min(62vw, 18em);
 	margin: 0;
@@ -242,7 +242,7 @@ html:has(.approach-page) {
 /* гарантия под фразой — мелким шрифтом */
 .sl__line--note {
 	/* на компьютере — левее левого снимка (left: 35%): мелкий текст поверх фото не читается */
-	max-width: min(26em, calc(35vw - var(--gutter) - var(--inset) - 2rem));
+	max-width: min(26em, calc(35vw - var(--gutter) - 2rem));
 	margin-top: clamp(0.75rem, 0.5rem + 0.6vw, 1.25rem);
 	font-size: var(--fs-small);
 	font-weight: 400;
@@ -320,7 +320,7 @@ html:has(.approach-page) {
 .sl__works {
 	position: absolute;
 	z-index: 4;
-	left: calc(var(--gutter) + var(--inset));
+	left: var(--gutter); /* по левой линии бургера в шапке */
 	bottom: var(--works-b);
 	display: inline-flex;
 	align-items: center;
@@ -433,7 +433,7 @@ html:has(.approach-page) {
 /* небольшой ноутбук: цитате в две строки нужно чуть больше места — снимки правее */
 @media (min-width: 1024px) and (max-width: 1199px) {
 	.sl__head {
-		width: calc(40% - var(--gutter) - var(--inset) - 1.5rem);
+		width: calc(40% - var(--gutter) - 1.5rem);
 	}
 
 	.sl__img--a {
@@ -447,7 +447,7 @@ html:has(.approach-page) {
 	}
 
 	.sl__line--note {
-		max-width: min(26em, calc(40vw - var(--gutter) - var(--inset) - 2rem));
+		max-width: min(26em, calc(40vw - var(--gutter) - 2rem));
 	}
 }
 
