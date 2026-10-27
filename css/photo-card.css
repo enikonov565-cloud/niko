@@ -163,6 +163,49 @@ html.pc-open {
 	overflow: hidden;
 }
 
+/* «связаться с автором» — как «связаться со мной» в шапке (тонкий текст, подчёркивание бежит при наведении),
+   только тёмная на светлой карточке и мельче */
+.pc__contact-mask {
+	margin-top: clamp(1rem, 0.8rem + 0.6vw, 1.5rem);
+	padding-bottom: 4px; /* под подчёркивание */
+}
+
+.pc__contact {
+	position: relative;
+	display: inline-flex;
+	align-items: flex-end;
+	min-height: 44px;
+	padding-bottom: 5px;
+	font-size: clamp(1rem, 0.85rem + 0.5vw, 1.375rem);
+	font-weight: 300;
+	line-height: normal;
+	text-transform: lowercase;
+	color: #0b0c11;
+	text-decoration: none;
+}
+
+.pc__contact::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 2px;
+	background: currentColor;
+	transform-origin: 100% 50%;
+}
+
+@media (hover: hover) {
+	.pc__contact:hover::after {
+		animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+}
+
+.pc__contact:focus-visible::after {
+	animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.pc__contact:focus-visible,
 .pc__close:focus-visible {
 	outline: 1px solid currentColor;
 	outline-offset: 4px;

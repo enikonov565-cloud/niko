@@ -23,6 +23,8 @@
 				<p class="pc__genre"><span class="pc__mask"><span class="pc__line" data-pc="genre"></span></span></p>
 				<h2 class="pc__title" id="pc-title" data-pc="title"></h2>
 				<p class="pc__desc"><span class="pc__mask"><span class="pc__line" data-pc="desc"></span></span></p>
+				<!-- как «связаться со мной» в шапке: Telegram с готовым сообщением про этот снимок -->
+				<span class="pc__mask pc__contact-mask"><a class="pc__contact pc__line" data-pc="contact" href="https://t.me/nikonovphoto" target="_blank" rel="noopener">связаться с&nbsp;автором</a></span>
 			</div>
 		</aside>`;
 	document.body.appendChild(root);
@@ -69,6 +71,8 @@
 		$('genre').textContent = p.genre || 'Снимок';
 		const chars = setTitle(p.label || p.alt || 'Без названия');
 		$('desc').textContent = nb(p.alt ? `${p.alt.replace(/[.\s]+$/, '')}.` : '');
+		const what = p.label ? `«${p.label}»` : '';
+		$('contact').href = `https://t.me/nikonovphoto?text=${encodeURIComponent(`Здравствуйте! На сайте понравился снимок ${what}${p.genre ? ` (${p.genre.toLowerCase()})` : ''} — хочу обсудить съёмку.`)}`;
 		img.src = p.src;
 		img.alt = p.alt || '';
 		root.classList.add('is-open');
