@@ -1,4 +1,4 @@
-// Вход в галерею — четвёртый экран главной и отдельная страница gallery-entry.html.
+// Вход в галерею — четвёртый экран главной.
 // Приём — из cullenwebber/three-html-to-canvas: страница, нарисованная в текстуру, проецируется из неподвижной
 // камеры-проектора на объёмную сцену. Из исходной точки всё совпадает и выглядит плоской страницей,
 // а когда камера уходит в облёт — проявляется сцена со светом и тенями.
@@ -13,7 +13,6 @@ const stage = root && root.querySelector('.ge__stage');
 const invite = root && root.querySelector('.ge__invite');
 const blades = invite ? [...invite.querySelectorAll('.ge__blade')] : [];
 const gsap = window.gsap;
-const ST = window.ScrollTrigger;
 
 if (stage && gsap) init();
 
@@ -639,16 +638,6 @@ function init() {
 	// в зал (js/gallery-transition.js): нажатие на приглашение — полёт с переворотом, обратно — тот же путь назад
 	const flight = { p: 0 };
 	window.galleryEntry = { flight, root, pin: stage.parentElement, invite };
-	// отдельная страница без зала: нажатие показывает полёт туда и обратно
-	if (invite && !document.querySelector('.room')) {
-		invite.addEventListener('click', () => {
-			if (gsap.isTweening(flight)) return;
-			gsap.timeline()
-				.to(flight, { p: 0.72, duration: 9, ease: 'sine.inOut' })
-				.to(flight, { p: 0, duration: 8, ease: 'sine.inOut' }, '+=0.8');
-		});
-	}
-
 	let visible = true;
 	if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(root);
 
@@ -746,13 +735,5 @@ function init() {
 	// шрифт рукописи догрузился позже — перерисовать лист, но не сбрасывать уже написанное
 	if (document.fonts) document.fonts.addEventListener('loadingdone', () => { if (fontsReady) drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); });
 
-	// плавный скролл: на главной Lenis уже запущен (js/parallax.js), на отдельной странице — свой
-	if (window.Lenis && !reduced && !window.lenis) {
-		const lenis = new window.Lenis({ lerp: 0.08 });
-		window.lenis = lenis;
-		if (ST) lenis.on('scroll', ST.update);
-		gsap.ticker.add((time) => lenis.raf(time * 1000));
-		gsap.ticker.lagSmoothing(0);
-	}
 	gsap.ticker.add(frame);
 }

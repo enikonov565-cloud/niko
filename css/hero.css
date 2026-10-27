@@ -127,15 +127,6 @@ h3 {
 	text-wrap: balance;
 }
 
-/* кнопки и ссылки-кнопки */
-.t-btn {
-	font-family: var(--font-text);
-	font-size: var(--fs-btn);
-	font-weight: 300;
-	line-height: normal;
-	text-transform: lowercase;
-}
-
 /* ---------- ШАПКА ПЕРВОГО ЭКРАНА ---------- */
 
 /* внутри полей 80/60, поверх слоёв параллакса */
