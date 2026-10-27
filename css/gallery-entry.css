@@ -247,3 +247,9 @@
 .is-flipping {
 	z-index: 60 !important;
 }
+
+/* экран с цитатой стоит: страница не прокручивается (жесты ловит js/gallery-transition.js) */
+html.ge-hold,
+html.ge-hold body {
+	overscroll-behavior: none;
+}

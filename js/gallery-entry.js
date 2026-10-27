@@ -120,8 +120,12 @@ function init() {
 
 	function drawPage(W, H) {
 		const m = metrics();
-		baseCanvas.width = pageCanvas.width = Math.round(W * dpr);
-		baseCanvas.height = pageCanvas.height = Math.round(H * dpr);
+		const cw = Math.round(W * dpr), ch = Math.round(H * dpr);
+		// холст другого размера — текстуру в сцене создаём заново: старую WebGL дальше не обновляет,
+		// и цитата переставала бы появляться (ручка пишет, а текста нет), а уголок съезжал бы с места
+		if (pageCanvas.width !== cw || pageCanvas.height !== ch) pageTex.dispose();
+		baseCanvas.width = pageCanvas.width = cw;
+		baseCanvas.height = pageCanvas.height = ch;
 		const ctx = baseCanvas.getContext('2d');
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 		ctx.clearRect(0, 0, W, H);
@@ -243,7 +247,7 @@ function init() {
 	function curlFrame(p, now) {
 		const c = layout && layout.curl;
 		if (!c) return;
-		const show = p < 0.01 && !reduced;
+		const show = p < 0.01 && !reduced && fontsReady;
 		curlEl.style.opacity = show ? '1' : '0';
 		if (!show) return;
 		const S = Math.ceil(c.fold * 2.2);
@@ -734,6 +738,8 @@ function init() {
 	} else fontsReady = true;
 	let resizeTimer = 0;
 	window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
+	// шрифт рукописи догрузился позже — перерисовать лист, но не сбрасывать уже написанное
+	if (document.fonts) document.fonts.addEventListener('loadingdone', () => { if (fontsReady) drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); });
 
 	// плавный скролл: на главной Lenis уже запущен (js/parallax.js), на отдельной странице — свой
 	if (window.Lenis && !reduced && !window.lenis) {
