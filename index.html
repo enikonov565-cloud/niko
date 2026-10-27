@@ -20,7 +20,7 @@
 		<link rel="stylesheet" href="css/room.css?v=55" />
 		<link rel="stylesheet" href="css/art.css?v=54" />
 		<link rel="stylesheet" href="css/approach.css?v=30" />
-		<link rel="stylesheet" href="css/works.css?v=41" />
+		<link rel="stylesheet" href="css/works.css?v=50" />
 		<link rel="stylesheet" href="css/photo-card.css?v=5" />
 		<link rel="stylesheet" href="css/services.css?v=62" />
 		<link rel="stylesheet" href="css/gallery-entry.css?v=19" />
@@ -334,7 +334,14 @@
 		<!-- «Мои работы»: все снимки в шахматном порядке — колонки через одну опущены; кадры целиком, без подписей.
 		     Сюда ведёт кнопка «все работы»; колонки собирает js/works.js из js/gallery-photos.js -->
 		<section class="wa" id="all-works" aria-labelledby="wa-title">
-			<h2 class="wa__title" id="wa-title">Мои работы</h2>
+			<header class="wa__head">
+				<h2 class="wa__title" id="wa-title">Мои работы</h2>
+				<!-- подзаголовок — цитата, оформление как у цитаты на «Моём подходе» -->
+				<figure class="wa__quote t-h3">
+					<blockquote class="wa__quote-text"><p>«Сфотографировать&nbsp;— это задержать чьё&#8209;то дыхание...»</p></blockquote>
+					<figcaption class="wa__quote-author">Имоджен Каннингем</figcaption>
+				</figure>
+			</header>
 			<div class="wa__grid"></div>
 		</section>
 
@@ -703,7 +710,7 @@
 		<script type="module" src="js/approach.js?v=18"></script>
 		<script src="js/services-data.js?v=3"></script>
 		<script src="js/services.js?v=25"></script>
-		<script src="js/works.js?v=24"></script>
+		<script src="js/works.js?v=28"></script>
 		<script src="js/photo-card.js?v=7"></script>
 		<script type="module" src="js/gallery-entry.js?v=32"></script>
 		<script src="js/gallery-transition.js?v=10"></script>

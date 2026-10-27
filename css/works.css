@@ -338,8 +338,105 @@ html:has(.works-page) {
 	color: var(--c-light);
 }
 
-.wa__title {
+/* заголовок слева, цитата справа — как на остальных экранах */
+.wa__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1.25rem 2rem;
 	margin: 0 0 clamp(2rem, 1.5rem + 2.5vw, 4.5rem);
+}
+
+.wa__quote {
+	width: fit-content;
+	margin: 0;
+	color: var(--c-light);
+}
+
+.wa__quote-text,
+.wa__quote-text p {
+	margin: 0;
+}
+
+/* две строки: цитата — одной строкой, автор — под ней справа */
+.wa__quote-text p {
+	white-space: nowrap;
+}
+
+.wa__quote-author {
+	margin-top: 0.3em;
+	font-size: 0.82em;
+	font-weight: 600;
+	text-align: right;
+}
+
+.wa__quote-author::before {
+	content: "— ";
+}
+
+/* на телефоне цитата переносится по ширине */
+@media (max-width: 767px) {
+	.wa__quote-text p {
+		white-space: normal;
+	}
+}
+
+/* пустые места над опущенными колонками — фотоаппарат или плёнка */
+.wa__spot {
+	display: grid;
+	pointer-events: none;
+}
+
+.wa__spot--top {
+	margin-top: calc(-1 * clamp(4rem, 2rem + 10vw, 14rem)); /* в отступ опущенной колонки */
+	height: clamp(4rem, 2rem + 10vw, 14rem);
+	margin-bottom: calc(-1 * var(--g));
+}
+
+.wa__sketch {
+	width: min(78%, 15rem);
+	height: auto;
+	color: rgba(235, 235, 235, 0.62);
+	opacity: 0;
+	transform: translateY(1rem) rotate(var(--tilt, 0deg));
+	transition: opacity 2.4s var(--ease), transform 2.4s var(--ease);
+}
+
+/* несимметрично: каждый рисунок — со своим сдвигом от центра, наклоном и размером */
+.wa__sketch--camera {
+	--tilt: -9deg;
+	width: min(78%, 15rem);
+	justify-self: start;
+	margin-left: 8%;
+	align-self: start;
+	margin-top: 8%;
+}
+
+.wa__sketch--film {
+	--tilt: 7deg;
+	width: min(70%, 13rem);
+	justify-self: end;
+	margin-right: 4%;
+	align-self: end;
+	margin-bottom: 14%;
+}
+
+.wa__sketch.is-in {
+	opacity: 1;
+	transform: rotate(var(--tilt, 0deg));
+}
+
+.wa__sketch * {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.wa__title {
+	margin: 0;
 	font-size: var(--fs-h1);
 	font-weight: 500;
 	line-height: var(--lh-h1);

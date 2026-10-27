@@ -54,8 +54,36 @@
 		stairs.appendChild(li);
 	});
 
+	// ---------- схематичные рисунки: фотоаппарат и плёнка — тонкие линии в стиле сайта ----------
+	const svg = (cls, vb, parts) => `<svg class="wa__sketch wa__sketch--${cls}" viewBox="${vb}" aria-hidden="true">${parts.join('')}</svg>`;
+	// фотоаппарат-дальномер: корпус, выступ, видоискатель, кнопка спуска, объектив
+	const camera = svg('camera', '0 0 160 100', [
+		'<rect x="8" y="28" width="144" height="62" rx="9"/>',
+		'<path d="M8 44 H152"/>',
+		'<path d="M26 28 V20 H58 V28"/>',
+		'<rect x="40" y="12" width="12" height="8" rx="2"/>',
+		'<rect x="114" y="34" width="26" height="14" rx="3"/>',
+		'<circle cx="78" cy="62" r="24"/>',
+		'<circle cx="78" cy="62" r="16"/>',
+		'<circle cx="78" cy="62" r="6"/>',
+		'<path d="M69 54 A12 12 0 0 1 84 51"/>',
+	]);
+	// плёнка: кассета и лента с перфорацией и кадрами
+	const holes = [];
+	for (let x = 50; x <= 130; x += 10) holes.push(`<rect x="${x}" y="30" width="5" height="4" rx="1"/>`, `<rect x="${x}" y="66" width="5" height="4" rx="1"/>`);
+	const film = svg('film', '0 0 140 100', [
+		'<rect x="6" y="20" width="34" height="60" rx="7"/>',
+		'<path d="M6 30 H40 M6 70 H40"/>',
+		'<rect x="17" y="10" width="12" height="10" rx="2"/>',
+		'<path d="M40 26 H136 M40 74 H136"/>',
+		...holes,
+		'<rect x="52" y="38" width="34" height="24" rx="2"/>',
+		'<rect x="94" y="38" width="34" height="24" rx="2"/>',
+	]);
+
 	// ---------- «Мои работы» на главной: все снимки в шахматном порядке ----------
-	// колонки через одну опущены (CSS); каждый кадр — в самую короткую колонку, в своих пропорциях, без обрезки
+	// колонки через одну опущены (CSS); каждый кадр — в самую короткую колонку, в своих пропорциях, без обрезки.
+	// Рисунки — на пустых местах над опущенными колонками
 	const allGrid = document.querySelector('.wa__grid');
 	if (allGrid) {
 		const colsAll = () => (window.innerWidth >= 1024 ? 4 : window.innerWidth >= 600 ? 3 : 2);
@@ -72,14 +100,22 @@
 				cols[c].h += r;
 				cols[c].html += `<figure class="wa__item"><img src="${p.src}" alt="${p.alt}" ${p.w ? `width="${p.w}" height="${p.h}"` : ''} loading="lazy" decoding="async"></figure>`;
 			});
-			allGrid.innerHTML = cols.map((c) => `<div class="wa__col">${c.html}</div>`).join('');
-			// кадры проявляются при прокрутке — медленно и плавно
+			// над опущенными колонками — фотоаппарат и плёнка по очереди
+			const tops = [camera, film];
+			let k = 0;
+			const html = cols.map((c, i) => {
+				const top = i % 2 ? `<div class="wa__spot wa__spot--top">${tops[k++ % tops.length]}</div>` : '';
+				return `<div class="wa__col">${top}${c.html}</div>`;
+			});
+			allGrid.innerHTML = html.join('');
+			// кадры и рисунки проявляются при прокрутке — медленно и плавно
+			const items = allGrid.querySelectorAll('.wa__item, .wa__sketch');
 			if ('IntersectionObserver' in window && !reduced) {
 				const io = new IntersectionObserver((entries) => entries.forEach((e) => {
 					if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
 				}), { rootMargin: '0px 0px -8% 0px' });
-				allGrid.querySelectorAll('.wa__item').forEach((el) => io.observe(el));
-			} else allGrid.querySelectorAll('.wa__item').forEach((el) => el.classList.add('is-in'));
+				items.forEach((el) => io.observe(el));
+			} else items.forEach((el) => el.classList.add('is-in'));
 		};
 		buildAll();
 		window.addEventListener('resize', buildAll);
