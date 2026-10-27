@@ -145,7 +145,7 @@
 			let items = '';
 			for (let r = 0; r < ROWS; r++) {
 				const { p, cls } = cell(c, r);
-				items += `<figure class="wv__item"><div class="wv__wrap${cls}"><div class="wv__img" style="${bg(p)}" role="img" aria-label="${esc(p.alt)}"></div></div></figure>`;
+				items += `<figure class="wv__item"><div class="wv__wrap${cls}"><div class="wv__img" style="${bg(p)}" data-src="${p.src}" role="img" aria-label="${esc(p.alt)}"></div></div></figure>`;
 			}
 			cols += `<div class="wv__col wv__col--${c % 2 ? 'down' : 'up'}"><div class="wv__inner">${items}</div></div>`;
 		}
@@ -238,6 +238,7 @@
 			opacity: 0, duration: reduced ? 0 : 0.6, ease: 'sine.in',
 			onComplete: () => {
 				s.flipImg.style.backgroundImage = `url('${p.src}')`;
+				s.flipImg.dataset.src = p.src;
 				s.flipImg.setAttribute('aria-label', p.alt);
 				gsap.to(s.flipImg, { opacity: 1, duration: reduced ? 0 : 0.8, ease: 'sine.out' });
 			},
@@ -282,6 +283,9 @@
 		const a = e.target.closest('.wk-card__link');
 		if (a) { e.preventDefault(); open(a.dataset.genre); return; }
 		if (!state) return;
+		// снимок — карточкой с описанием (js/photo-card.js)
+		const ph = !busy && e.target.closest('.wv__main .wv__img, .wv__columns .wv__img');
+		if (ph && window.photoCard) { window.photoCard.open(ph.dataset.src, ph); return; }
 		if (e.target.closest('.wv__switch-btn--grid')) toggle('grid');
 		else if (e.target.closest('.wv__switch-btn--list')) toggle('list');
 		else if (e.target.closest('.wv__close')) close();
@@ -291,7 +295,7 @@
 		}
 	});
 	document.addEventListener('keydown', (e) => {
-		if (!state) return;
+		if (!state || (window.photoCard && window.photoCard.isOpen)) return;
 		if (e.key === 'Escape') close();
 		else if (state.mode === 'list' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
 			const n = state.thumbs.length;

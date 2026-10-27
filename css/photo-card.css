@@ -1,0 +1,205 @@
+/* ---------- карточка снимка (js/photo-card.js) ----------
+   По мотивам joffreysp/draggable-grid (Codrops, MIT): справа выезжает светлая панель, снимок перелетает в неё
+   крупно и целиком; подпись — мелко внизу слева (раздел, название, описание в две строки) и не отвлекает от снимка.
+   Цвета и шрифт — как на остальном сайте */
+html.pc-open {
+	overflow: hidden;
+}
+
+.pc {
+	--pc-ease: cubic-bezier(0.65, 0, 0.35, 1);
+	--pc-r: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление, как у всех фото сайта */
+	position: fixed;
+	inset: 0;
+	z-index: 95; /* над шапкой, зерном и просмотром раздела */
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.pc.is-open {
+	visibility: visible;
+	pointer-events: auto;
+}
+
+/* затемнение страницы под панелью; нажатие по нему закрывает карточку */
+.pc__backdrop {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	background: rgba(11, 15, 21, 0.72);
+	cursor: pointer;
+}
+
+/* панель на весь экран: слева — «закрыть» и подпись внизу, справа — снимок */
+.pc__panel {
+	position: absolute;
+	top: 0;
+	right: 0;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-rows: auto minmax(0, 1fr);
+	gap: 0 clamp(1.5rem, 1rem + 2vw, 3.5rem);
+	width: 100%; /* карточка — на весь экран */
+	height: 100%;
+	padding: clamp(1.25rem, 0.75rem + 1.5vw, 2.5rem);
+	overflow-y: auto;
+	background: var(--c-light, #ebebeb);
+	color: #0b0c11;
+	transform: translateX(100%); /* до запуска скрипта; дальше сдвиг ведёт js/photo-card.js */
+}
+
+.pc.is-ready .pc__panel {
+	transform: none;
+}
+
+.pc__close {
+	grid-column: 1;
+	grid-row: 1;
+	justify-self: start;
+	align-self: start;
+	min-height: 44px;
+	padding: 0 0 4px;
+	border: 0;
+	border-bottom: 1px solid currentColor;
+	background: none;
+	font: inherit;
+	font-size: clamp(0.875rem, 0.8rem + 0.25vw, 1rem);
+	font-weight: 400;
+	line-height: normal;
+	color: inherit;
+	cursor: pointer;
+}
+
+/* снимок — крупно и целиком, в своих пропорциях (размер считает js/photo-card.js) */
+.pc__thumb {
+	grid-column: 2;
+	grid-row: 1 / -1;
+	align-self: center;
+	position: relative;
+	max-width: 100%;
+	overflow: hidden;
+	border-radius: var(--pc-r);
+	background: rgba(11, 12, 17, 0.06);
+}
+
+.pc__thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* копия снимка в полёте со страницы в панель */
+.pc__fly {
+	position: fixed;
+	z-index: 2;
+	display: block;
+	object-fit: cover;
+	border-radius: var(--pc-r);
+	pointer-events: none;
+}
+
+/* подпись — мелко, внизу слева */
+.pc__caption {
+	grid-column: 1;
+	grid-row: 2;
+	align-self: end;
+	max-width: 22rem;
+}
+
+.pc__genre {
+	margin: 0 0 0.6rem;
+	font-size: clamp(0.6875rem, 0.65rem + 0.12vw, 0.8125rem);
+	font-weight: 500;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: rgba(11, 12, 17, 0.6);
+}
+
+.pc__title {
+	margin: 0 0 0.5rem;
+	font-size: clamp(1rem, 0.9rem + 0.35vw, 1.25rem);
+	font-weight: 500;
+	line-height: 1.3;
+	letter-spacing: -0.005em;
+}
+
+.pc__word {
+	display: inline-block;
+	overflow: hidden;
+	padding-top: 0.15em; /* место под кратку «Й» */
+	margin-top: -0.15em;
+	vertical-align: top;
+}
+
+.pc__ch {
+	display: inline-block;
+	will-change: transform;
+}
+
+.pc__mask {
+	display: block;
+	overflow: hidden;
+}
+
+.pc__line {
+	display: block;
+	will-change: transform;
+}
+
+/* описание — не больше двух строк */
+.pc__desc {
+	margin: 0;
+	font-size: clamp(0.8125rem, 0.78rem + 0.15vw, 0.9375rem);
+	font-weight: 300;
+	line-height: 1.45;
+	color: rgba(11, 12, 17, 0.75);
+}
+
+.pc__desc .pc__line {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+}
+
+.pc__close:focus-visible {
+	outline: 1px solid currentColor;
+	outline-offset: 4px;
+}
+
+/* на снимках, которые открываются карточкой, — указатель; полароиды лежат в слое без нажатий — им нажатия возвращаем */
+.wa__item img,
+.film__frame img,
+.svc__polaroid,
+.svc__polaroid img,
+.wv__main .wv__img,
+.wv__columns .wv__img,
+[data-card] {
+	cursor: zoom-in;
+}
+
+.svc__polaroid {
+	pointer-events: auto;
+}
+
+/* телефон: панель почти во всю ширину — «закрыть», снимок, подпись под ним */
+@media (max-width: 767px) {
+	.pc__panel {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+
+	.pc__close {
+		align-self: flex-end;
+	}
+
+	.pc__thumb {
+		align-self: auto;
+	}
+
+	.pc__caption {
+		max-width: none;
+	}
+}
