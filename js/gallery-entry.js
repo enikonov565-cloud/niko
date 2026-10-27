@@ -321,8 +321,24 @@ function init() {
 
 	// видеокарта сбросила 3D-холст (много WebGL на странице, сон компьютера) — прячем его, чтобы вместо
 	// белого пятна был обычный тёмный фон экрана; вернулся — снова показываем
-	renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); renderer.domElement.style.visibility = 'hidden'; });
-	renderer.domElement.addEventListener('webglcontextrestored', () => { renderer.domElement.style.visibility = ''; });
+	// вместо 3D-сцены показываем плоский лист (тот же холст, что сцена берёт как картинку страницы):
+	// заголовок, лист и пишущаяся цитата видны, ручка пишет дальше. Вернулась сцена — лист снова в ней
+	let glLost = false;
+	pageCanvas.className = 'ge__flat';
+	pageCanvas.setAttribute('aria-hidden', 'true');
+	renderer.domElement.addEventListener('webglcontextlost', (e) => {
+		e.preventDefault();
+		glLost = true;
+		renderer.domElement.style.visibility = 'hidden';
+		if (!pageCanvas.parentNode) stage.appendChild(pageCanvas);
+	});
+	renderer.domElement.addEventListener('webglcontextrestored', () => {
+		glLost = false;
+		pageCanvas.remove();
+		renderer.domElement.style.visibility = '';
+		pageTex.needsUpdate = true;
+		resize(); // тени, размеры и картинка листа — заново
+	});
 
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(PAGE);
@@ -664,7 +680,7 @@ function init() {
 		}
 		writeFrame(p);
 		curlFrame(p, performance.now());
-		renderer.render(scene, camera);
+		if (!glLost) renderer.render(scene, camera);
 	}
 
 	// ---------- рукопись: ручка пишет цитату, когда экран встал перед зрителем ----------

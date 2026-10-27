@@ -1,0 +1,440 @@
+/* ---------- меню и футер — общие для всех страниц (js/menu.js) ----------
+   Меню — всплывающее окно у бургера: тёмная карточка как меню жанров «Кадра под настроение»,
+   номера разделов — как у слайдов «Моего подхода». Футер — тёмный, ссылки в стиле «связаться со мной» */
+
+/* ---------- бургер ↔ крестик ---------- */
+.topbar__burger-icon {
+	transition: background-size 0.6s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.4s ease;
+}
+
+.topbar__burger {
+	position: relative;
+}
+
+.topbar__burger::before,
+.topbar__burger::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	bottom: calc(var(--burger-h) / 2 - var(--line) / 2);
+	width: var(--burger-h);
+	height: var(--line);
+	margin-left: calc((var(--burger-w) - var(--burger-h)) / 2);
+	background: currentColor;
+	opacity: 0;
+	transform: rotate(0deg) scaleX(0.4);
+	transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.4s ease;
+}
+
+html.mn-open .topbar__burger-icon {
+	opacity: 0;
+}
+
+html.mn-open .topbar__burger::before {
+	opacity: 1;
+	transform: rotate(45deg) scaleX(1.25);
+}
+
+html.mn-open .topbar__burger::after {
+	opacity: 1;
+	transform: rotate(-45deg) scaleX(1.25);
+}
+
+/* шапка — над окном меню: бургер-крестик и «связаться со мной» доступны */
+html.mn-open .topbar {
+	z-index: 92;
+}
+
+html.mn-open {
+	overflow: hidden;
+}
+
+/* ---------- окно меню ---------- */
+.mn {
+	--mn-ease: cubic-bezier(0.65, 0, 0.35, 1);
+	position: fixed;
+	inset: 0;
+	z-index: 91; /* над экранами и зерном, под карточкой снимка */
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.mn.is-open {
+	visibility: visible;
+	pointer-events: auto;
+}
+
+.mn__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(11, 15, 21, 0.6);
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+	opacity: 0;
+}
+
+/* карточка — под бургером, по его левой линии */
+.mn__card {
+	position: absolute;
+	top: calc(var(--topbar-y) + var(--burger-h) + clamp(1rem, 0.75rem + 1vw, 1.75rem));
+	left: var(--gutter);
+	width: min(26rem, calc(100% - 2 * var(--gutter)));
+	max-height: calc(100% - var(--topbar-y) - var(--burger-h) - 2.5rem);
+	overflow-y: auto;
+	padding: clamp(1.25rem, 0.9rem + 1vw, 2rem) clamp(1.25rem, 0.9rem + 1.2vw, 2.25rem);
+	border-radius: clamp(0.75rem, 0.3rem + 0.9vw, 1.25rem); /* скругление из макета */
+	background: #10121c;
+	color: #fff;
+	box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.75);
+	transform-origin: 0 0;
+	opacity: 0;
+}
+
+/* без анимации — окно сразу видно */
+.mn.is-shown .mn__backdrop,
+.mn.is-shown .mn__card {
+	opacity: 1;
+}
+
+.mn__label {
+	margin: 0 0 clamp(0.5rem, 0.35rem + 0.5vw, 0.9rem);
+	font-size: var(--fs-small);
+	font-weight: 400;
+	line-height: 1.3;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.55);
+}
+
+.mn__list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.mn__list .mn__item + .mn__item {
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* пункт: номер, линия (у текущего и при наведении) и название */
+.mn__link {
+	display: flex;
+	align-items: center;
+	gap: 0.75em;
+	min-height: 44px;
+	padding: 0.35em 0;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: clamp(1.0625rem, 0.9rem + 0.5vw, 1.5rem);
+	font-weight: 300;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	text-decoration: none;
+	transition: color 0.5s var(--mn-ease);
+}
+
+.mn__num {
+	flex: none;
+	width: 1.4rem;
+	font-size: clamp(0.6875rem, 0.6rem + 0.2vw, 0.8125rem);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	color: rgba(255, 255, 255, 0.4);
+	transition: color 0.5s var(--mn-ease);
+}
+
+.mn__line {
+	flex: none;
+	width: clamp(0.875rem, 0.5rem + 0.7vw, 1.25rem);
+	height: 1px;
+	margin-right: -0.4em;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 0.7s var(--mn-ease);
+}
+
+@media (hover: hover) {
+	.mn__link:hover {
+		color: #fff;
+	}
+
+	.mn__link:hover .mn__num {
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	.mn__link:hover .mn__line {
+		transform: scaleX(1);
+	}
+}
+
+.mn__link.is-current {
+	color: #fff;
+}
+
+.mn__link.is-current .mn__line {
+	transform: scaleX(1);
+}
+
+.mn__link:focus-visible,
+.mn__contact:focus-visible,
+.mn__social a:focus-visible {
+	outline: 1px solid #fff;
+	outline-offset: 3px;
+}
+
+/* низ окна: «связаться со мной» и соцсети */
+.mn__foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 0.75rem 1.5rem;
+	margin-top: clamp(1rem, 0.75rem + 1vw, 1.75rem);
+	padding-top: clamp(1rem, 0.75rem + 1vw, 1.5rem);
+	border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mn__contact {
+	position: relative;
+	display: inline-flex;
+	align-items: flex-end;
+	min-height: 44px;
+	padding-bottom: 5px;
+	font-size: clamp(1rem, 0.85rem + 0.5vw, 1.375rem);
+	font-weight: 300;
+	line-height: normal;
+	color: #fff;
+	text-decoration: none;
+}
+
+.mn__contact::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: var(--line);
+	background: currentColor;
+	transform-origin: 100% 50%;
+}
+
+@media (hover: hover) {
+	.mn__contact:hover::after {
+		animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+}
+
+.mn__social {
+	display: flex;
+	gap: 1rem;
+	margin: 0;
+	font-size: var(--fs-small);
+}
+
+.mn__social a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: rgba(255, 255, 255, 0.6);
+	text-decoration: none;
+	transition: color 0.5s var(--mn-ease);
+}
+
+@media (hover: hover) {
+	.mn__social a:hover {
+		color: #fff;
+	}
+}
+
+/* ---------- футер ---------- */
+.ft {
+	position: relative;
+	z-index: 3;
+	padding: clamp(4rem, 3rem + 4vw, 8rem) var(--gutter) clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+	border-top: 1px solid rgba(235, 235, 235, 0.12);
+	background: #010203; /* продолжение тёмного фона «Моих работ» */
+	color: var(--c-light);
+}
+
+.ft__top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1.5rem 3rem;
+	padding-bottom: clamp(2.5rem, 2rem + 3vw, 5rem);
+	border-bottom: 1px solid rgba(235, 235, 235, 0.12);
+}
+
+.ft__title {
+	margin: 0;
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+
+.ft__grid {
+	display: grid;
+	/* логотип с цитатой — слева, «Связь» и «Разделы» — справа */
+	grid-template-columns: 1fr auto auto;
+	gap: 2.5rem clamp(2rem, 1rem + 4vw, 6rem);
+	align-items: start;
+	padding: clamp(2.5rem, 2rem + 3vw, 4.5rem) 0;
+}
+
+.ft__label {
+	margin: 0 0 1rem;
+	font-size: var(--fs-small);
+	font-weight: 400;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(235, 235, 235, 0.55);
+}
+
+.ft__list {
+	display: grid;
+	white-space: nowrap;
+	gap: 0.15rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: var(--fs-text);
+	font-weight: 300;
+	line-height: 1.5;
+}
+
+.ft__list a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
+	color: var(--c-light);
+	text-decoration: none;
+	transition: color 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.ft__note {
+	font-size: var(--fs-small);
+	color: rgba(235, 235, 235, 0.55);
+}
+
+@media (hover: hover) {
+	.ft__list a:hover {
+		color: #fff;
+		text-decoration: underline;
+		text-underline-offset: 0.25em;
+		text-decoration-thickness: 1px;
+	}
+}
+
+/* логотип и цитата под ним — слева, по линии бургера */
+.ft__brand {
+	grid-column: 1;
+	grid-row: 1;
+	justify-self: start;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: clamp(1rem, 0.75rem + 1vw, 1.75rem);
+}
+
+/* «Разделы» — крайняя справа */
+.ft__grid > nav.ft__col {
+	grid-column: 3;
+	grid-row: 1;
+}
+
+.ft__logo {
+	display: block;
+	width: clamp(9rem, 6rem + 8vw, 15rem);
+}
+
+.ft__quote {
+	margin: 0;
+	font-size: var(--fs-text);
+	font-weight: 300;
+	line-height: 1.5;
+}
+
+.ft__quote blockquote,
+.ft__quote p {
+	margin: 0;
+}
+
+.ft__quote figcaption {
+	margin-top: 0.4em;
+	text-align: right;
+	font-size: 0.85em;
+	font-weight: 600;
+}
+
+.ft__quote figcaption::before {
+	content: "— ";
+}
+
+.ft__logo img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.ft__bottom {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-top: clamp(1.25rem, 1rem + 1vw, 2rem);
+	border-top: 1px solid rgba(235, 235, 235, 0.12);
+	font-size: var(--fs-small);
+	color: rgba(235, 235, 235, 0.6);
+}
+
+.ft__up {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: var(--c-light);
+	text-decoration: none;
+}
+
+.ft a:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 3px;
+}
+
+/* телефон и планшет: подпись-логотип в шапке свисает ниже бургера — окно меню ниже */
+@media (max-width: 1023px) {
+	.mn__card {
+		top: calc(var(--topbar-y) + var(--burger-h) + clamp(3rem, 2.25rem + 2vw, 4.5rem));
+		max-height: calc(100% - var(--topbar-y) - var(--burger-h) - 4.5rem);
+	}
+}
+
+@media (max-width: 767px) {
+	.ft__list {
+		white-space: normal;
+	}
+
+	.ft__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.ft__brand {
+		grid-column: 1 / -1;
+	}
+
+	.ft__grid > nav.ft__col {
+		grid-column: 2;
+		grid-row: 2;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.topbar__burger::before,
+	.topbar__burger::after,
+	.topbar__burger-icon {
+		transition: none;
+	}
+}
