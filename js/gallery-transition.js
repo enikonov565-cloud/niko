@@ -43,9 +43,10 @@
 	const FLY = 0.72; // докуда долетает камера по пути облёта (js/gallery-entry.js)
 
 	// ---------- жесты на экране с цитатой ----------
-	// колесо: новый жест — первое событие после паузы 260 мс (инерция тачпада и мыши идёт без пауз);
+	// колесо: новый жест — первое событие после паузы 300 мс (инерция тачпада и мыши идёт без пауз);
 	// касание: направление — по сдвигу пальца больше 40 px; клавиши — стрелки, PageUp/PageDown, пробел
 	let lastWheel = 0;
+	let stoodAt = 0; // когда встали на цитату: первые 1,2 с жесты не считаются — страница только что доехала
 	let touchY = null;
 	const act = (dir) => { if (zone !== 'entry' || busy) return; if (dir > 0) enter(); else leaveUp(); };
 	window.addEventListener('wheel', (e) => {
@@ -54,7 +55,7 @@
 		const now = performance.now();
 		const gap = now - lastWheel;
 		lastWheel = now;
-		if (gap >= 260 && Math.abs(e.deltaY) >= 4) act(Math.sign(e.deltaY));
+		if (gap >= 300 && now - stoodAt > 1200 && Math.abs(e.deltaY) >= 4) act(Math.sign(e.deltaY));
 	}, { passive: false, capture: true });
 	window.addEventListener('touchstart', (e) => { if (zone === 'entry') touchY = e.touches[0].clientY; }, { passive: true });
 	window.addEventListener('touchmove', (e) => {
@@ -76,7 +77,7 @@
 		zone = 'entry';
 		jump(top(entry));
 		hold(true);
-		lastWheel = performance.now(); // хвост инерции прошлого жеста не считается
+		lastWheel = stoodAt = performance.now(); // хвост инерции прошлого жеста не считается
 		touchY = null;
 	}
 

@@ -85,7 +85,7 @@ function init() {
 	stage.parentElement.appendChild(hand);
 
 	// ---------- страница в текстуре ----------
-	const dpr = Math.min(window.devicePixelRatio || 1, 2);
+	const dpr = Math.min(window.devicePixelRatio || 1, 1.5); // выше видеокарта тяжелее держит сцену и чаще её сбрасывает
 	const pageCanvas = document.createElement('canvas');
 	const pageTex = new THREE.CanvasTexture(pageCanvas);
 	pageTex.colorSpace = THREE.SRGBColorSpace;
@@ -313,12 +313,17 @@ function init() {
 	}
 
 	// ---------- рендер ----------
-	const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+	const renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setPixelRatio(dpr);
 	renderer.outputColorSpace = THREE.SRGBColorSpace;
 	renderer.shadowMap.enabled = true;
-	renderer.shadowMap.type = THREE.VSMShadowMap;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap; // мягкие тени без лишних проходов (VSM нагружал видеокарту)
 	stage.appendChild(renderer.domElement);
+
+	// видеокарта сбросила 3D-холст (много WebGL на странице, сон компьютера) — прячем его, чтобы вместо
+	// белого пятна был обычный тёмный фон экрана; вернулся — снова показываем
+	renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); renderer.domElement.style.visibility = 'hidden'; });
+	renderer.domElement.addEventListener('webglcontextrestored', () => { renderer.domElement.style.visibility = ''; });
 
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(PAGE);
@@ -334,7 +339,7 @@ function init() {
 	const key = new THREE.DirectionalLight(0xdcecf0, 2.4);
 	key.position.set(8, 10, 12);
 	key.castShadow = true;
-	key.shadow.mapSize.set(2048, 2048);
+	key.shadow.mapSize.set(1024, 1024);
 	Object.assign(key.shadow.camera, { near: 1, far: 60, left: -22, right: 22, top: 16, bottom: -16 });
 	key.shadow.bias = -0.0002;
 	key.shadow.normalBias = 0.03;

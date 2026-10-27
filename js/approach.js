@@ -349,6 +349,11 @@ function init() {
         renderer.setSize(bgEl.clientWidth, bgEl.clientHeight, false);
         bgEl.prepend(renderer.domElement);
 
+        // видеокарта сбросила 3D-холст (много WebGL на странице, сон компьютера) — прячем его, чтобы вместо
+        // белого пятна был обычный тёмный фон экрана; вернулся — снова показываем
+        renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); renderer.domElement.style.visibility = 'hidden'; });
+        renderer.domElement.addEventListener('webglcontextrestored', () => { renderer.domElement.style.visibility = ''; });
+
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 

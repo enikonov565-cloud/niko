@@ -399,11 +399,16 @@
 
 			    let renderer;
 			    try {
-			        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+			        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 			    } catch (e) {
 			        canvas.remove(); // нет WebGL — остаётся градиентный фон экрана
 			        return;
 			    }
+
+			    // видеокарта сбросила 3D-холст (много WebGL на странице, сон компьютера) — прячем его, чтобы вместо
+			    // белого пятна был обычный тёмный фон экрана; вернулся — снова показываем
+			    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); canvas.style.visibility = 'hidden'; });
+			    canvas.addEventListener('webglcontextrestored', () => { canvas.style.visibility = ''; });
 
 			    const size = { w: host.clientWidth, h: host.clientHeight, dpr: Math.min(window.devicePixelRatio, 1.5) };
 
@@ -707,12 +712,12 @@
 		<script src="js/room.js?v=54"></script>
 		<script src="js/art.js?v=54"></script>
 		<script src="js/approach-data.js?v=14"></script>
-		<script type="module" src="js/approach.js?v=18"></script>
+		<script type="module" src="js/approach.js?v=19"></script>
 		<script src="js/services-data.js?v=3"></script>
 		<script src="js/services.js?v=25"></script>
 		<script src="js/works.js?v=28"></script>
 		<script src="js/photo-card.js?v=9"></script>
-		<script type="module" src="js/gallery-entry.js?v=33"></script>
-		<script src="js/gallery-transition.js?v=12"></script>
+		<script type="module" src="js/gallery-entry.js?v=35"></script>
+		<script src="js/gallery-transition.js?v=13"></script>
 	</body>
 </html>
