@@ -410,7 +410,7 @@ html:has(.works-page) {
 	justify-self: start;
 	margin-left: 8%;
 	align-self: start;
-	margin-top: 8%;
+	margin-top: -10%; /* выше — с воздухом до снимка под ним */
 }
 
 .wa__sketch--film {
