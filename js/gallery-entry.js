@@ -312,33 +312,36 @@ function init() {
 	}
 
 	// ---------- рендер ----------
-	const renderer = new THREE.WebGLRenderer({ antialias: true });
-	renderer.setPixelRatio(dpr);
-	renderer.outputColorSpace = THREE.SRGBColorSpace;
-	renderer.shadowMap.enabled = true;
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap; // мягкие тени без лишних проходов (VSM нагружал видеокарту)
-	stage.appendChild(renderer.domElement);
-
-	// видеокарта сбросила 3D-холст (много WebGL на странице, сон компьютера) — прячем его, чтобы вместо
-	// белого пятна был обычный тёмный фон экрана; вернулся — снова показываем
-	// вместо 3D-сцены показываем плоский лист (тот же холст, что сцена берёт как картинку страницы):
-	// заголовок, лист и пишущаяся цитата видны, ручка пишет дальше. Вернулась сцена — лист снова в ней
+	// Плоский лист — тот же холст, что сцена берёт как картинку страницы: заголовок, лист и пишущаяся цитата.
+	// Он показывается вместо 3D, когда браузер не дал видеокарту (после нескольких сбоев Chrome отключает WebGL
+	// до перезапуска) или видеокарта сбросила сцену. Ручка пишет дальше; вернулась сцена — лист снова в ней
 	let glLost = false;
 	pageCanvas.className = 'ge__flat';
 	pageCanvas.setAttribute('aria-hidden', 'true');
-	renderer.domElement.addEventListener('webglcontextlost', (e) => {
-		e.preventDefault();
-		glLost = true;
-		renderer.domElement.style.visibility = 'hidden';
-		if (!pageCanvas.parentNode) stage.appendChild(pageCanvas);
-	});
-	renderer.domElement.addEventListener('webglcontextrestored', () => {
-		glLost = false;
-		pageCanvas.remove();
-		renderer.domElement.style.visibility = '';
-		pageTex.needsUpdate = true;
-		resize(); // тени, размеры и картинка листа — заново
-	});
+	const showFlat = (on) => {
+		glLost = on;
+		if (renderer) renderer.domElement.style.visibility = on ? 'hidden' : '';
+		if (on && !pageCanvas.parentNode) stage.appendChild(pageCanvas);
+		if (!on) pageCanvas.remove();
+	};
+	let renderer = null;
+	try {
+		renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setPixelRatio(dpr);
+		renderer.outputColorSpace = THREE.SRGBColorSpace;
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.type = THREE.PCFSoftShadowMap; // мягкие тени без лишних проходов (VSM нагружал видеокарту)
+		stage.appendChild(renderer.domElement);
+		renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showFlat(true); });
+		renderer.domElement.addEventListener('webglcontextrestored', () => {
+			showFlat(false);
+			pageTex.needsUpdate = true;
+			resize(); // тени, размеры и картинка листа — заново
+		});
+	} catch (err) {
+		renderer = null;
+		showFlat(true);
+	}
 
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(PAGE);
@@ -615,7 +618,9 @@ function init() {
 	function resize() {
 		const W = stage.clientWidth || window.innerWidth;
 		const H = stage.clientHeight || window.innerHeight;
-		renderer.setSize(W, H, false);
+		if (renderer) renderer.setSize(W, H, false);
+		pageCanvas.style.width = `${W}px`;
+		pageCanvas.style.height = `${H}px`;
 		const aspect = W / H;
 		// на узком экране камера отходит дальше — сцена остаётся в кадре
 		REST.set(0, 0, aspect < 1 ? 15 + (1 - aspect) * 18 : 15);
@@ -680,7 +685,7 @@ function init() {
 		}
 		writeFrame(p);
 		curlFrame(p, performance.now());
-		if (!glLost) renderer.render(scene, camera);
+		if (renderer && !glLost) renderer.render(scene, camera);
 	}
 
 	// ---------- рукопись: ручка пишет цитату, когда экран встал перед зрителем ----------

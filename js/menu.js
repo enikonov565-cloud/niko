@@ -23,6 +23,10 @@
 		{ title: 'Telegram', href: 'https://t.me/nikonovphoto', note: '@nikonovphoto' },
 		{ title: 'ВКонтакте', href: 'https://vk.com/nikonovphoto' },
 	];
+	const DOCS = [
+		{ title: 'Политика конфиденциальности', href: 'privacy.html' },
+		{ title: 'Публичная оферта', href: 'offer.html' },
+	];
 	const hrefOf = (s) => (onHome ? `#${s.id}` : `index.html#${s.id}`);
 	const isCurrent = (s) => !onHome && s.page && s.page.replace(/\.html$/, '') === page;
 	const pad = (i) => String(i + 1).padStart(2, '0');
@@ -129,30 +133,45 @@
 				<a class="topbar__contact ft__cta" href="https://t.me/nikonovphoto" ${ext}>заказать съёмку</a>
 			</div>
 			<div class="ft__grid">
-				<nav class="ft__col" aria-label="Разделы">
-					<p class="ft__label">Разделы</p>
-					<ul class="ft__list">${SECTIONS.map((s) => `<li><a href="${hrefOf(s)}" data-id="${s.id}">${s.title}</a></li>`).join('')}</ul>
-				</nav>
-				<div class="ft__col">
-					<p class="ft__label">Связь</p>
-					<ul class="ft__list">${CONTACTS.map((c) => `<li><a href="${c.href}" ${ext}>${c.title}</a>${c.note ? ` <span class="ft__note">${c.note}</span>` : ''}</li>`).join('')}</ul>
-				</div>
+				<!-- слева: логотип, под ним цитата в две строки, автор — в строку после неё -->
 				<div class="ft__brand">
 					<a class="ft__logo" href="${onHome ? '#top' : 'index.html'}" aria-label="nikonovphoto — ${onHome ? 'наверх' : 'на главную'}"><img src="img/hero/logo.png" alt="" width="628" height="353" loading="lazy"></a>
 					<figure class="ft__quote">
-						<blockquote><p>«Фотография помогает людям увидеть»</p></blockquote>
-						<figcaption>Энн Геддес</figcaption>
+						<blockquote><p><span>«Фотография помогает</span> <span>людям увидеть» <cite class="ft__author">— Энн Геддес</cite></span></p></blockquote>
 					</figure>
 				</div>
+				<!-- разделы -->
+				<nav class="ft__col ft__col--nav" aria-label="Разделы">
+					<p class="ft__label">Разделы</p>
+					<ul class="ft__list">${SECTIONS.map((s) => `<li><a href="${hrefOf(s)}" data-id="${s.id}">${s.title}</a></li>`).join('')}</ul>
+				</nav>
+				<!-- документы -->
+				<div class="ft__col">
+					<p class="ft__label">Документы</p>
+					<ul class="ft__list">${DOCS.map((d) => `<li><a href="${d.href}"${page === d.href.replace(/.html$/, '') ? ' aria-current="page"' : ''}>${d.title}</a></li>`).join('')}</ul>
+				</div>
+				<!-- контакты — как «связаться со мной», друг под другом -->
+				<div class="ft__col">
+					<p class="ft__label">Контакты</p>
+					<div class="ft__btns">${CONTACTS.map((c) => `<a class="ft__btn" href="${c.href}" ${ext}>${c.title}</a>`).join('')}</div>
+				</div>
+			</div>
+			<!-- логотип — контуром шрифтом Tupik, в правом нижнем углу (макет Figma 947:90) -->
+			<div class="ft__markrow">
+				<a class="ft__mark" href="${onHome ? '#top' : 'index.html'}" aria-label="nikonovphoto — ${onHome ? 'наверх' : 'на главную'}">NIKONOPHOTO</a>
 			</div>
 			<div class="ft__bottom">
-				<span>© ${new Date().getFullYear()} nikonovphoto</span>
-				<a class="ft__up" href="#top">наверх&nbsp;↑</a>
+				<span>© ${new Date().getFullYear()} nikonovphoto. Все права защищены.</span>
+				<div class="ft__end">
+				<p class="ft__social">${CONTACTS.map((c) => `<a href="${c.href}" ${ext}>${c.title === 'ВКонтакте' ? 'VK' : c.title}</a>`).join('')}</p>
+				<!-- наверх — круглой кнопкой со стрелкой -->
+				<a class="ft__up" href="#top" aria-label="Наверх"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></a>
+				</div>
 			</div>`;
 		footer.addEventListener('click', (e) => {
-			const a = e.target.closest('a[data-id], .ft__up, .ft__logo');
+			const a = e.target.closest('a[data-id], .ft__up, .ft__mark, .ft__logo');
 			if (!a) return;
-			const id = a.dataset.id || (a.classList.contains('ft__up') || (onHome && a.classList.contains('ft__logo')) ? 'top' : null);
+			const id = a.dataset.id || (a.classList.contains('ft__up') || (onHome && (a.classList.contains('ft__mark') || a.classList.contains('ft__logo'))) ? 'top' : null);
 			if (!id) return;
 			if (a.classList.contains('ft__up') && !onHome) {
 				e.preventDefault();

@@ -275,22 +275,26 @@ html.mn-open {
 	text-transform: uppercase;
 }
 
+/* три колонки: логотип с цитатой — разделы в середине — документы и контакты */
 .ft__grid {
 	display: grid;
-	/* логотип с цитатой — слева, «Связь» и «Разделы» — справа */
-	grid-template-columns: 1fr auto auto;
-	gap: 2.5rem clamp(2rem, 1rem + 4vw, 6rem);
+	/* как в референсе: о сайте шире, затем разделы, документы, контакты */
+	grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+	justify-content: space-between;
+	gap: 3rem clamp(2rem, 0.5rem + 4vw, 7rem);
 	align-items: start;
 	padding: clamp(2.5rem, 2rem + 3vw, 4.5rem) 0;
 }
 
+
+
 .ft__label {
-	margin: 0 0 1rem;
-	font-size: var(--fs-small);
-	font-weight: 400;
-	letter-spacing: 0.08em;
+	margin: 0 0 1.1rem;
+	font-size: clamp(0.9375rem, 0.85rem + 0.3vw, 1.125rem);
+	font-weight: 500;
+	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: rgba(235, 235, 235, 0.55);
+	color: rgba(235, 235, 235, 0.6);
 }
 
 .ft__list {
@@ -328,49 +332,71 @@ html.mn-open {
 	}
 }
 
-/* логотип и цитата под ним — слева, по линии бургера */
+
+
+.ft__label.ft__label--gap {
+	margin-top: clamp(1.75rem, 1.25rem + 1.5vw, 2.5rem);
+}
+
+/* контакты — как «связаться со мной» в шапке: тонкий текст с подчёркиванием, друг под другом */
+.ft__btns {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+
+.ft__btn {
+	position: relative;
+	display: inline-flex;
+	align-items: flex-end;
+	min-height: 44px;
+	padding-bottom: 5px;
+	font-size: clamp(1rem, 0.85rem + 0.5vw, 1.375rem);
+	font-weight: 300;
+	line-height: normal;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: #fff;
+	text-decoration: none;
+}
+
+.ft__btn::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: var(--line);
+	background: currentColor;
+	transform-origin: 100% 50%;
+}
+
+@media (hover: hover) {
+	.ft__btn:hover::after {
+		animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+}
+
+.ft__btn:focus-visible::after {
+	animation: underline-run 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* логотип и под ним цитата — слева, по линии бургера */
 .ft__brand {
-	grid-column: 1;
-	grid-row: 1;
 	justify-self: start;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: clamp(1rem, 0.75rem + 1vw, 1.75rem);
+	gap: clamp(0.75rem, 0.5rem + 0.8vw, 1.5rem);
+	text-align: left;
 }
 
-/* «Разделы» — крайняя справа */
-.ft__grid > nav.ft__col {
-	grid-column: 3;
-	grid-row: 1;
-}
-
+/* подпись-логотип — крупно, над цитатой; у картинки большие прозрачные поля — сдвиг влево по линии текста */
 .ft__logo {
 	display: block;
-	width: clamp(9rem, 6rem + 8vw, 15rem);
-}
-
-.ft__quote {
-	margin: 0;
-	font-size: var(--fs-text);
-	font-weight: 300;
-	line-height: 1.5;
-}
-
-.ft__quote blockquote,
-.ft__quote p {
-	margin: 0;
-}
-
-.ft__quote figcaption {
-	margin-top: 0.4em;
-	text-align: right;
-	font-size: 0.85em;
-	font-weight: 600;
-}
-
-.ft__quote figcaption::before {
-	content: "— ";
+	width: clamp(13rem, 7rem + 14vw, 24rem);
+	margin-left: -4%;
 }
 
 .ft__logo img {
@@ -379,24 +405,168 @@ html.mn-open {
 	height: auto;
 }
 
+/* цитата — размером подзаголовка (H2), две строки; автор — справа под ней */
+.ft__quote {
+	width: fit-content;
+	margin: 0;
+	/* две строки помещаются в колонку: на компьютере — чуть мельче H2 */
+	font-size: clamp(1.375rem, 0.45rem + 1.6vw, 2.25rem);
+	font-weight: 300;
+	line-height: var(--lh-h2);
+	letter-spacing: -0.01em;
+}
+
+.ft__quote blockquote,
+.ft__quote p {
+	margin: 0;
+}
+
+.ft__quote span {
+	display: block;
+	white-space: nowrap;
+}
+
+
+/* автор — в строку после цитаты, мельче и жирно */
+.ft__author {
+	font-size: var(--fs-text);
+	font-style: normal;
+	font-weight: 600;
+	letter-spacing: 0;
+	white-space: nowrap;
+}
+
+/* крупный логотип — своей строкой над чертой, справа */
+.ft__markrow {
+	display: flex;
+	justify-content: flex-end;
+	padding-bottom: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+}
+
+.ft__mark {
+	font-family: var(--font-logo);
+	font-size: clamp(3.25rem, 0.8rem + 8.2vw, 10.625rem);
+	line-height: 1;
+	letter-spacing: 0.04em;
+	color: transparent;
+	-webkit-text-stroke: 1px #cdcbc7;
+	text-decoration: none;
+	opacity: 0.35; /* фоном, не спорит с текстом */
+	transition: color 1.2s cubic-bezier(0.65, 0, 0.35, 1), opacity 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (hover: hover) {
+	.ft__mark:hover {
+		opacity: 0.6;
+	}
+}
+
+/* низ: © слева, соцсети и «наверх» справа — мелко, заглавными */
 .ft__bottom {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 1rem;
+	gap: 0.5rem 2rem;
 	padding-top: clamp(1.25rem, 1rem + 1vw, 2rem);
 	border-top: 1px solid rgba(235, 235, 235, 0.12);
 	font-size: var(--fs-small);
 	color: rgba(235, 235, 235, 0.6);
 }
 
-.ft__up {
+.ft__social {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 clamp(1.25rem, 1rem + 1vw, 2.25rem);
+	margin: 0;
+}
+
+.ft__end {
+	display: flex;
+	align-items: center;
+	gap: clamp(1.25rem, 1rem + 1vw, 2.25rem);
+	margin-left: auto;
+}
+
+/* TELEGRAM, VK — ссылки: подчёркивание проявляется слева при наведении */
+.ft__social a {
+	position: relative;
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;
-	color: var(--c-light);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(235, 235, 235, 0.85);
 	text-decoration: none;
+	transition: color 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.ft__social a::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 10px;
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (hover: hover) {
+	.ft__social a:hover {
+		color: #fff;
+	}
+
+	.ft__social a:hover::after {
+		transform: scaleX(1);
+	}
+}
+
+/* наверх — круглая кнопка со стрелкой; при наведении светлая заливка наплывает снизу */
+.ft__up {
+	position: relative;
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 48px;
+	height: 48px;
+	overflow: hidden;
+	isolation: isolate;
+	border: 1px solid rgba(235, 235, 235, 0.55);
+	border-radius: 50%;
+	color: var(--c-light);
+	transition: color 0.8s cubic-bezier(0.65, 0, 0.35, 1), border-color 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.ft__up::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--c-light);
+	transform: translateY(100%);
+	transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.ft__up svg {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+@media (hover: hover) {
+	.ft__up:hover {
+		color: #0b0c11;
+		border-color: var(--c-light);
+	}
+
+	.ft__up:hover::before {
+		transform: none;
+	}
 }
 
 .ft a:focus-visible {
@@ -418,16 +588,32 @@ html.mn-open {
 	}
 
 	.ft__grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.ft__brand {
+		justify-self: stretch;
+	}
+
+	.ft__markrow {
+		justify-content: flex-start;
+	}
+}
+
+/* планшет: логотип с цитатой — сверху, ниже три колонки */
+@media (min-width: 768px) and (max-width: 1023px) {
+	.ft__grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 2.5rem 2rem;
 	}
 
 	.ft__brand {
 		grid-column: 1 / -1;
 	}
 
-	.ft__grid > nav.ft__col {
-		grid-column: 2;
-		grid-row: 2;
+	/* две строки и здесь — цитата чуть мельче */
+	.ft__quote {
+		font-size: clamp(1rem, 0.2rem + 1.6vw, 1.25rem);
 	}
 }
 

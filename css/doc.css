@@ -1,0 +1,85 @@
+/* ---------- страницы документов (privacy.html, offer.html) ----------
+   Тёмный фон сайта, текст — узкой колонкой по линии бургера; шрифт и цвета — как на остальных страницах */
+html:has(.doc-page) {
+	background: var(--c-dark);
+}
+
+.doc-page {
+	background: var(--c-dark);
+}
+
+/* подложка под шапкой — тёмный вариант, как над тёмными экранами главной */
+.doc-page .topbar-scrim::before {
+	opacity: 0;
+}
+
+.doc-page .topbar-scrim::after {
+	opacity: 1;
+}
+
+.doc {
+	padding: calc(var(--topbar-y) + var(--burger-h) + clamp(3rem, 2rem + 3vw, 6rem)) var(--gutter) clamp(4rem, 3rem + 4vw, 8rem);
+	color: var(--c-light);
+}
+
+.doc__title {
+	max-width: 18em;
+	margin: 0;
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+}
+
+.doc__date {
+	margin: clamp(1rem, 0.75rem + 0.8vw, 1.5rem) 0 0;
+	font-size: var(--fs-small);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(235, 235, 235, 0.6);
+}
+
+.doc__body {
+	max-width: 46rem;
+	margin-top: clamp(2.5rem, 2rem + 2vw, 4rem);
+	font-size: var(--fs-text);
+	font-weight: 300;
+	line-height: var(--lh-text);
+	color: rgba(235, 235, 235, 0.88);
+}
+
+.doc__body h2 {
+	margin: 2.2em 0 0.7em;
+	font-size: var(--fs-h3);
+	font-weight: 500;
+	line-height: 1.35;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--c-light);
+}
+
+.doc__body p,
+.doc__body ul {
+	max-width: none;
+	margin: 0 0 1em;
+}
+
+.doc__body ul {
+	padding-left: 1.2em;
+}
+
+.doc__body li + li {
+	margin-top: 0.4em;
+}
+
+.doc__body a {
+	color: var(--c-light);
+	text-underline-offset: 0.2em;
+	text-decoration-thickness: 1px;
+}
+
+.doc__body strong {
+	font-weight: 500;
+	color: var(--c-light);
+}
