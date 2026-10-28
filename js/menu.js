@@ -132,26 +132,17 @@
 	}
 
 	// ---------- футер ----------
-	// снимки для колонок приглашения: из списка работ (js/gallery-photos.js), если он есть на странице
-	const INV_FALLBACK = ['img/gallery/sunbeams-forest.jpg', 'img/genres/portrait/DSC04053.jpg', 'img/gallery/cat-window.jpg', 'img/gallery/bench.jpg', 'img/genres/architecture/kremlin-towers.jpg', 'img/gallery/foggy-tree.jpg', 'img/gallery/swing-couple.jpg', 'img/gallery/highrise-storm.jpg', 'img/gallery/pigeon-cafe.jpg', 'img/gallery/tram-greenery.jpg'];
-	const INV_PHOTOS = (side) => {
-		const all = (window.GALLERY_PHOTOS || []).map((p) => p.src);
-		const list = all.length >= 10 ? all : INV_FALLBACK;
-		return list.filter((_, i) => i % 2 === side).slice(0, 6);
-	};
 	const footer = document.querySelector('[data-footer]');
 	if (footer) {
 		footer.innerHTML = `
-			<!-- приглашение на съёмку: фотограф в центре из темноты, по бокам медленно плывут колонки снимков -->
+			<!-- приглашение на съёмку: фотограф в центре из темноты, фон — коридор со снимками (js/invite-tunnel.js) -->
 			<section class="inv" aria-labelledby="inv-title">
-				<div class="inv__cols" aria-hidden="true">${[0, 1].map((side) => `<div class="inv__col inv__col--${side ? 'r' : 'l'}"><div class="inv__track">${[...INV_PHOTOS(side), ...INV_PHOTOS(side)].map((src) => `<figure class="inv__frame"><img src="${src}" alt="" loading="lazy" decoding="async"></figure>`).join('')}</div></div>`).join('')}</div>
 				<img class="inv__hero" src="img/about/photographer.png" alt="" width="640" height="640" loading="lazy" aria-hidden="true">
 				<div class="inv__body">
-					<p class="inv__kicker">съёмки открыты</p>
 					<h2 class="inv__title" id="inv-title"><span>Ваш кадр —</span> <span>следующий</span></h2>
 					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить, —</span> <span>подберу место, свет и&nbsp;время.</span></p>
 					<button class="inv__how" type="button" aria-haspopup="dialog" aria-controls="inv-steps">как проходит съёмка <span class="inv__plus" aria-hidden="true">+</span></button>
-					<a class="inv__btn" href="https://t.me/nikonovphoto" ${ext}><span class="inv__btn-label">связаться со мной</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+					<a class="inv__btn" href="https://t.me/nikonovphoto" ${ext}><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
 			</section>
 			<div class="inv-dlg" id="inv-steps" role="dialog" aria-modal="true" aria-labelledby="inv-steps-title" aria-hidden="true">
@@ -222,6 +213,26 @@
 		fitMark();
 		if (document.fonts) document.fonts.ready.then(fitMark);
 		window.addEventListener('resize', fitMark);
+		// приглашение — ровно в кадре: если прокрутка остановилась, когда оно почти целиком на экране,
+		// страница плавно доезжает и встаёт ровно по нему — без полосок соседних блоков сверху и снизу
+		const inv = footer.querySelector('.inv');
+		if (inv) {
+			let snapT = 0, snapping = false;
+			const snap = () => {
+				if (snapping || document.documentElement.classList.contains('mn-open')) return;
+				const top = inv.getBoundingClientRect().top;
+				const off = Math.abs(top);
+				if (off < 2 || off > window.innerHeight * 0.3) return;
+				snapping = true;
+				const y = top + window.scrollY;
+				const done = () => { snapping = false; };
+				if (window.lenis) window.lenis.scrollTo(y, { duration: 0.9, easing: (t) => 1 - Math.pow(1 - t, 3), onComplete: done });
+				else { window.scrollTo({ top: y, behavior: 'smooth' }); setTimeout(done, 900); }
+			};
+			const onScroll = () => { clearTimeout(snapT); if (!snapping) snapT = setTimeout(snap, 160); };
+			if (window.lenis) window.lenis.on('scroll', onScroll);
+			else window.addEventListener('scroll', onScroll, { passive: true });
+		}
 		// окно «как проходит съёмка»
 		const dlg = footer.querySelector('.inv-dlg');
 		const how = footer.querySelector('.inv__how');
