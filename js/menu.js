@@ -158,7 +158,7 @@
 			</div>
 			<!-- логотип — контуром шрифтом Tupik, в правом нижнем углу (макет Figma 947:90) -->
 			<div class="ft__markrow">
-				<a class="ft__mark" href="${onHome ? '#top' : 'index.html'}" aria-label="nikonovphoto — ${onHome ? 'наверх' : 'на главную'}">NIKONOPHOTO</a>
+				<a class="ft__mark" href="${onHome ? '#top' : 'index.html'}" aria-label="nikonovphoto — ${onHome ? 'наверх' : 'на главную'}">NIKONOVPHOTO</a>
 			</div>
 			<div class="ft__bottom">
 				<span>© ${new Date().getFullYear()} nikonovphoto. Все права защищены.</span>
