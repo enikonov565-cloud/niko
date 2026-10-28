@@ -54,19 +54,37 @@
 		root.setAttribute('aria-hidden', 'true');
 		root.innerHTML = `
 			<div class="mn__backdrop"></div>
-			<nav class="mn__card" aria-label="Меню сайта">
-				<p class="mn__label">Меню</p>
-				<ol class="mn__list">${SECTIONS.map((s, i) => s.soon ? `
-					<li class="mn__item"><span class="mn__link is-soon" aria-disabled="true">
-						<span class="mn__num">${pad(i)}</span><span class="mn__line" aria-hidden="true"></span><span class="mn__title">${s.title}</span>
-					</span></li>` : `
-					<li class="mn__item"><a class="mn__link${isCurrent(s) ? ' is-current' : ''}" href="${hrefOf(s)}"${s.href ? '' : ` data-id="${s.id}"`}${isCurrent(s) ? ' aria-current="page"' : ''}>
-						<span class="mn__num">${pad(i)}</span><span class="mn__line" aria-hidden="true"></span><span class="mn__title">${s.title}</span>
-					</a></li>`).join('')}
-				</ol>
+			<nav class="mn__card" aria-label="Меню сайта" data-lenis-prevent>
+				<!-- на широком экране — две колонки: разделы | услуги и контакты; на телефоне — друг под другом -->
+				<div class="mn__cols">
+					<div class="mn__col">
+						<p class="mn__label">Меню</p>
+						<ol class="mn__list">${SECTIONS.map((s, i) => s.soon ? `
+							<li class="mn__item"><span class="mn__link is-soon" aria-disabled="true">
+								<span class="mn__num">${pad(i)}</span><span class="mn__line" aria-hidden="true"></span><span class="mn__title">${s.title}</span>
+							</span></li>` : `
+							<li class="mn__item"><a class="mn__link${isCurrent(s) ? ' is-current' : ''}" href="${hrefOf(s)}"${s.href ? '' : ` data-id="${s.id}"`}${isCurrent(s) ? ' aria-current="page"' : ''}>
+								<span class="mn__num">${pad(i)}</span><span class="mn__line" aria-hidden="true"></span><span class="mn__title">${s.title}</span>
+							</a>${s.id === 'services' ? `
+								<!-- на телефоне услуги — строкой под «Кадром под настроение» (отдельный блок «Услуги» там скрыт) -->
+								<p class="mn__sub"><span class="mn__num" aria-hidden="true"></span><span class="mn__line" aria-hidden="true"></span><span class="mn__subtext">${SERVICES.map((t, k) => `<span class="mn__svc"><a class="mn__sublink" href="${onHome ? '#services' : 'index.html#services'}" data-service="${k}">${t}</a>${k < SERVICES.length - 1 ? '<span class="mn__dot" aria-hidden="true">·</span>' : ''}</span>`).join(' ')}</span></p>` : ''}</li>`).join('')}
+						</ol>
+					</div>
+					<div class="mn__col">
+						<p class="mn__label">Услуги</p>
+						<ul class="mn__list">${SERVICES.map((t, i) => `
+							<li class="mn__item"><a class="mn__link" href="${onHome ? '#services' : 'index.html#services'}" data-service="${i}">
+								<span class="mn__line" aria-hidden="true"></span><span class="mn__title">${t}</span>
+							</a></li>`).join('')}
+						</ul>
+						<div class="mn__item mn__contacts">
+							<p class="mn__label">Контакты</p>
+							<p class="mn__social">${CONTACTS.map((c) => `<a class="mn__btn" href="${c.href}" ${ext}>${c.title}</a>`).join('')}</p>
+						</div>
+					</div>
+				</div>
 				<div class="mn__foot mn__item">
-					<a class="mn__contact" href="https://t.me/nikonovphoto" ${ext}>связаться со&nbsp;мной</a>
-					<p class="mn__social">${CONTACTS.map((c) => `<a href="${c.href}" ${ext}>${c.title}</a>`).join('')}</p>
+					<a class="mn__contact" href="https://t.me/nikonovphoto" ${ext}>заказать съёмку</a>
 				</div>
 			</nav>`;
 		document.body.appendChild(root);
@@ -123,10 +141,19 @@
 		backdrop.addEventListener('click', () => hide());
 		document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) hide(); });
 		root.addEventListener('click', (e) => {
-			const a = e.target.closest('.mn__link');
+			const a = e.target.closest('.mn__link, .mn__sublink');
 			if (!a) return;
 			if (!onHome) { hide(); return; } // переход на другую страницу — браузер сам
 			e.preventDefault();
+			// услуга — к «Кадру под настроение» и сразу нужный жанр
+			if (a.dataset.service) {
+				hide(() => {
+					go('services');
+					const tab = document.querySelectorAll('.svc__tab')[+a.dataset.service];
+					if (tab) setTimeout(() => tab.click(), 60);
+				});
+				return;
+			}
 			hide(() => go(a.dataset.id));
 		});
 	}
