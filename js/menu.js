@@ -176,7 +176,7 @@
 				<!-- услуги -->
 				<div class="ft__col">
 					<p class="ft__label">Услуги</p>
-					<ul class="ft__list">${SERVICES.map((t, i) => `<li><a href="${onHome ? '#services' : 'index.html#services'}" data-service="${i}">${t.toLowerCase()}</a></li>`).join('')}</ul>
+					<ul class="ft__list">${SERVICES.map((t, i) => `<li><a href="${onHome ? '#services' : 'index.html#services'}" data-service="${i}">${t}</a></li>`).join('')}</ul>
 				</div>
 				<!-- документы и контакты — одной колонкой -->
 				<div class="ft__col ft__col--docs">
