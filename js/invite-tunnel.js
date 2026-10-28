@@ -41,7 +41,7 @@ function init(host) {
 
 	const scene = new THREE.Scene();
 	scene.background = new THREE.Color(BG);
-	scene.fog = new THREE.FogExp2(BG, 0.045);
+	scene.fog = new THREE.FogExp2(BG, 0.038);
 	const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 200);
 
 	// текстуры — одна на снимок, кадр подгоняется под ячейку «по обрезке» (как object-fit: cover)
@@ -65,14 +65,17 @@ function init(host) {
 		const src = nextSrc();
 		const tex = texture(src).clone();
 		tex.needsUpdate = true;
-		const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, side: THREE.DoubleSide, color: 0xb8b8b8 });
+		const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0, side: THREE.DoubleSide, color: 0xffffff });
 		const fit = () => {
 			const img = tex.image;
 			if (!img || !img.width) return;
 			const a = img.width / img.height, c = w / h;
 			tex.repeat.set(a > c ? c / a : 1, a > c ? 1 : a / c);
-			tex.offset.set((1 - tex.repeat.x) / 2, (1 - tex.repeat.y) / 2);
-			mat.userData.target = 0.78;
+			// по высоте кадр сдвинут к верху (лица в портретах — в верхней трети), а не обрезан по центру
+			const focusY = 0.72; // доля высоты снизу, которая будет в середине ячейки
+			const oy = Math.min(1 - tex.repeat.y, Math.max(0, focusY - tex.repeat.y / 2));
+			tex.offset.set((1 - tex.repeat.x) / 2, oy);
+			mat.userData.target = 0.95;
 		};
 		if (tex.image && tex.image.width) fit(); else tex.source.data ? fit() : null;
 		mat.userData.fit = fit;
