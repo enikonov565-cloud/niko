@@ -250,40 +250,461 @@ html.mn-open {
 .ft {
 	position: relative;
 	z-index: 3;
-	padding: clamp(4rem, 3rem + 4vw, 8rem) var(--gutter) clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+	padding: clamp(1rem, 0.5rem + 1vw, 1.5rem) var(--gutter) clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
 	border-top: 1px solid rgba(235, 235, 235, 0.12);
 	background: #010203; /* продолжение тёмного фона «Моих работ» */
 	color: var(--c-light);
 }
 
-.ft__top {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	justify-content: space-between;
-	gap: 1.5rem 3rem;
-	padding-bottom: clamp(2.5rem, 2rem + 3vw, 5rem);
-	border-bottom: 1px solid rgba(235, 235, 235, 0.12);
+/* ---------- приглашение на съёмку (верх футера) ----------
+   Экран во всю ширину: фотограф выходит из темноты в центре, по бокам медленно плывут колонки снимков
+   навстречу друг другу; текст и кнопка — по центру. Цвета, шрифт и кнопка — как на остальном сайте */
+.inv {
+	position: relative;
+	display: grid;
+	place-items: center;
+	min-height: min(100svh, 56rem);
+	margin: 0 calc(-1 * var(--gutter)) clamp(3rem, 2rem + 3vw, 5rem);
+	overflow: hidden;
+	border-radius: clamp(0.75rem, 0.3rem + 0.9vw, 1.25rem);
+	background: #050608;
+	isolation: isolate;
 }
 
-.ft__title {
+/* колонки снимков по краям; к центру гаснут */
+.inv__cols {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	display: flex;
+	justify-content: space-between;
+	padding: 0 clamp(0.75rem, 0.5rem + 1vw, 1.5rem);
+	pointer-events: none;
+	perspective: 1200px;
+}
+
+.inv__col {
+	width: clamp(9rem, 5rem + 12vw, 21rem);
+	height: 100%;
+	overflow: hidden;
+	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+	mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+}
+
+/* колонки чуть развёрнуты к центру — как стены коридора */
+.inv__col--l {
+	transform: rotateY(14deg);
+	transform-origin: 0 50%;
+}
+
+.inv__col--r {
+	transform: rotateY(-14deg);
+	transform-origin: 100% 50%;
+}
+
+.inv__track {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(0.75rem, 0.5rem + 1vw, 1.5rem);
+	animation: inv-drift 70s linear infinite;
+}
+
+.inv__col--r .inv__track {
+	animation-direction: reverse;
+}
+
+@keyframes inv-drift {
+	from {
+		transform: translateY(0);
+	}
+
+	to {
+		transform: translateY(-50%);
+	}
+}
+
+.inv__frame {
 	margin: 0;
-	font-size: var(--fs-h1);
+	overflow: hidden;
+	aspect-ratio: 3 / 4;
+	border-radius: var(--r-photo, 0.75rem);
+	filter: grayscale(0.55) brightness(0.62);
+}
+
+.inv__frame img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* фотограф — в центре, выходит из темноты: края кадра растворяются в фон */
+.inv__hero {
+	position: absolute;
+	z-index: 1;
+	top: 50%;
+	left: 50%;
+	width: min(48rem, 72%);
+	height: auto;
+	transform: translate(-50%, -54%);
+	filter: grayscale(1) contrast(1.25) brightness(0.6);
+	-webkit-mask-image: radial-gradient(closest-side, #000 38%, rgba(0, 0, 0, 0.5) 62%, transparent 100%);
+	mask-image: radial-gradient(closest-side, #000 38%, rgba(0, 0, 0, 0.5) 62%, transparent 100%);
+	pointer-events: none;
+}
+
+/* затемнение под текстом — снизу вверх */
+.inv::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	background: linear-gradient(to top, rgba(5, 6, 8, 0.92) 8%, rgba(5, 6, 8, 0) 62%);
+	pointer-events: none;
+}
+
+.inv__body {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	align-self: end;
+	max-width: 46rem;
+	padding: 0 1.25rem clamp(3rem, 2rem + 4vw, 6rem);
+	text-align: center;
+}
+
+.inv__kicker {
+	margin: 0 0 clamp(1rem, 0.75rem + 0.8vw, 1.5rem);
+	padding: 0.4em 1em;
+	border: 1px solid rgba(235, 235, 235, 0.3);
+	border-radius: 999px;
+	font-size: var(--fs-small);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: rgba(235, 235, 235, 0.85);
+}
+
+.inv__title {
+	margin: 0;
+	font-size: clamp(2.25rem, 1rem + 5vw, 5.5rem);
 	font-weight: 500;
-	line-height: var(--lh-h1);
-	letter-spacing: -0.01em;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	text-transform: uppercase;
+	color: var(--c-light);
+}
+
+.inv__title span,
+.inv__text span {
+	display: block;
+}
+
+.inv__text {
+	max-width: none;
+	margin: clamp(1.25rem, 1rem + 0.8vw, 1.75rem) 0 0;
+	font-size: var(--fs-text);
+	font-weight: 300;
+	line-height: 1.5;
+	color: rgba(235, 235, 235, 0.85);
+}
+
+/* «как проходит съёмка +» — открывает окно с шагами */
+.inv__how {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6em;
+	min-height: 44px;
+	margin-top: clamp(1rem, 0.75rem + 0.6vw, 1.5rem);
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	font-size: var(--fs-text);
+	font-weight: 400;
+	color: var(--c-light);
+	cursor: pointer;
+}
+
+.inv__plus {
+	display: grid;
+	place-items: center;
+	width: 1.6em;
+	height: 1.6em;
+	border: 1px solid rgba(235, 235, 235, 0.55);
+	border-radius: 50%;
+	font-size: 0.85em;
+	line-height: 1;
+	transition: transform 0.8s var(--mn-ease, ease), background-color 0.8s ease, color 0.8s ease;
+}
+
+@media (hover: hover) {
+	.inv__how:hover .inv__plus {
+		transform: rotate(90deg);
+		background: var(--c-light);
+		color: #0b0c11;
+	}
+}
+
+/* кнопка — светлая, как «все работы», со скруглением из макета; при наведении тёмная заливка наплывает слева */
+.inv__btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	min-width: min(22rem, 100%);
+	min-height: clamp(3rem, 2.4rem + 1.2vw, 3.75rem);
+	margin-top: clamp(1rem, 0.75rem + 0.6vw, 1.5rem);
+	padding: 0 1.25rem 0 1.75rem;
+	overflow: hidden;
+	isolation: isolate;
+	border: 1px solid #d9d9d9;
+	border-radius: clamp(0.75rem, 0.3rem + 0.9vw, 1.25rem);
+	background: #d9d9d9;
+	font-size: clamp(0.9375rem, 0.8rem + 0.45vw, 1.25rem);
+	letter-spacing: 0.04em;
+	text-transform: lowercase;
+	text-decoration: none;
+}
+
+.inv__btn::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: #0b0f15;
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.inv__btn-label,
+.inv__btn-arrow {
+	color: #fff;
+	mix-blend-mode: difference;
+}
+
+.inv__btn-arrow {
+	display: grid;
+	place-items: center;
+	transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.inv__btn-arrow svg {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+@media (hover: hover) {
+	.inv__btn:hover::before {
+		transform: scaleX(1);
+	}
+
+	.inv__btn:hover .inv__btn-arrow {
+		transform: translateX(4px);
+	}
+}
+
+.inv__how:focus-visible,
+.inv__btn:focus-visible {
+	outline: 1px solid var(--c-light);
+	outline-offset: 4px;
+}
+
+/* ---------- окно «как проходит съёмка» ---------- */
+.inv-dlg {
+	position: fixed;
+	inset: 0;
+	z-index: 93;
+	display: grid;
+	place-items: center;
+	padding: var(--gutter);
+	visibility: hidden;
+	opacity: 0;
+	transition: opacity 0.7s ease, visibility 0s linear 0.7s;
+}
+
+.inv-dlg.is-open {
+	visibility: visible;
+	opacity: 1;
+	transition: opacity 0.7s ease;
+}
+
+.inv-dlg__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(5, 6, 8, 0.7);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+}
+
+.inv-dlg__card {
+	position: relative;
+	width: min(32rem, 100%);
+	max-height: 100%;
+	overflow-y: auto;
+	padding: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
+	border-radius: clamp(0.75rem, 0.3rem + 0.9vw, 1.25rem);
+	background: #10121c;
+	color: var(--c-light);
+	box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.75);
+	transform: translateY(16px) scale(0.98);
+	transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inv-dlg.is-open .inv-dlg__card {
+	transform: none;
+}
+
+.inv-dlg__close {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border: 1px solid rgba(235, 235, 235, 0.35);
+	border-radius: 50%;
+	background: none;
+	color: var(--c-light);
+	cursor: pointer;
+}
+
+.inv-dlg__close svg {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.6;
+	stroke-linecap: round;
+}
+
+.inv-dlg__title {
+	margin: 0 3rem 0.5rem 0;
+	font-size: var(--fs-h3);
+	font-weight: 500;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
 
+.inv-dlg__lead {
+	margin: 0 0 1.5rem;
+	font-size: var(--fs-small);
+	font-weight: 300;
+	color: rgba(235, 235, 235, 0.75);
+}
+
+/* шаги — цифрами, как разделы в меню, с линией между ними */
+.inv-dlg__steps {
+	counter-reset: step;
+	margin: 0 0 0.5rem;
+	padding: 0;
+	list-style: none;
+}
+
+.inv-dlg__steps li {
+	counter-increment: step;
+	position: relative;
+	display: grid;
+	gap: 0.3rem;
+	padding: 0 0 1.25rem 2.75rem;
+}
+
+.inv-dlg__steps li::before {
+	content: counter(step, decimal-leading-zero);
+	position: absolute;
+	top: 0.15em;
+	left: 0;
+	font-size: var(--fs-small);
+	font-weight: 500;
+	color: rgba(235, 235, 235, 0.5);
+}
+
+.inv-dlg__steps li:not(:last-child)::after {
+	content: "";
+	position: absolute;
+	top: 1.9em;
+	bottom: 0.4em;
+	left: 0.55em;
+	width: 1px;
+	background: rgba(235, 235, 235, 0.2);
+}
+
+.inv-dlg__steps b {
+	font-size: var(--fs-text);
+	font-weight: 500;
+}
+
+.inv-dlg__steps span {
+	font-size: var(--fs-small);
+	font-weight: 300;
+	line-height: 1.5;
+	color: rgba(235, 235, 235, 0.78);
+}
+
+.inv__btn--wide {
+	display: flex;
+	width: 100%;
+}
+
+/* телефон: колонки уже, текст по ширине */
+@media (max-width: 767px) {
+	.inv {
+		min-height: 44rem;
+	}
+
+	.inv__col {
+		width: 28vw;
+	}
+
+	.inv__hero {
+		width: 110%;
+	}
+
+	.inv__text span {
+		display: inline;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.inv__track {
+		animation: none;
+	}
+}
+
 /* три колонки: логотип с цитатой — разделы в середине — документы и контакты */
+/* в один ряд с равными промежутками: логотип с цитатой — разделы — услуги — документы — контакты */
 .ft__grid {
 	display: grid;
-	/* как в референсе: о сайте шире, затем разделы, документы, контакты */
 	grid-template-columns: minmax(0, 1fr) repeat(3, auto);
-	justify-content: space-between;
-	gap: 3rem clamp(2rem, 0.5rem + 4vw, 7rem);
+	column-gap: clamp(2rem, 0.5rem + 4.5vw, 7.5rem);
+	row-gap: clamp(2.5rem, 2rem + 2vw, 4rem);
 	align-items: start;
 	padding: clamp(2.5rem, 2rem + 3vw, 4.5rem) 0;
+}
+
+/* NIKONOVPHOTO — от левого края «Разделов» до правого края «Документов», кнопка «наверх» — справа */
+.ft__grid .ft__markrow {
+	grid-column: 2 / -1;
+	display: flex;
+	align-items: flex-end;
+	gap: clamp(1rem, 0.5rem + 1vw, 2rem);
+	padding-bottom: 0;
+}
+
+/* размер надписи подбирает js/menu.js: ровно от «Разделов» до кнопки «наверх» */
+.ft__grid .ft__mark {
+	flex: none;
+	margin-right: -0.04em; /* межбуквенный хвост последней буквы не сдвигает край */
+	white-space: nowrap;
+}
+
+.ft__grid .ft__up {
+	flex: none;
 }
 
 
@@ -343,14 +764,14 @@ html.mn-open {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: 0.5rem;
+	gap: 0.15rem;
 }
 
 .ft__btn {
 	position: relative;
 	display: inline-flex;
 	align-items: flex-end;
-	min-height: 44px;
+	min-height: 34px; /* шаг — как у пунктов списков рядом */
 	padding-bottom: 5px;
 	font-size: clamp(1rem, 0.85rem + 0.5vw, 1.375rem);
 	font-weight: 300;
@@ -439,7 +860,9 @@ html.mn-open {
 /* крупный логотип — своей строкой над чертой, справа */
 .ft__markrow {
 	display: flex;
+	align-items: flex-end;
 	justify-content: flex-end;
+	gap: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
 	padding-bottom: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
 }
 
@@ -479,13 +902,6 @@ html.mn-open {
 	flex-wrap: wrap;
 	gap: 0 clamp(1.25rem, 1rem + 1vw, 2.25rem);
 	margin: 0;
-}
-
-.ft__end {
-	display: flex;
-	align-items: center;
-	gap: clamp(1.25rem, 1rem + 1vw, 2.25rem);
-	margin-left: auto;
 }
 
 /* TELEGRAM, VK — ссылки: подчёркивание проявляется слева при наведении */
@@ -591,23 +1007,29 @@ html.mn-open {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
+	.ft__grid .ft__markrow {
+		grid-column: 1 / -1;
+	}
+
 	.ft__brand {
 		justify-self: stretch;
 	}
 
 	.ft__markrow {
-		justify-content: flex-start;
+		justify-content: space-between;
 	}
+
 }
 
 /* планшет: логотип с цитатой — сверху, ниже три колонки */
 @media (min-width: 768px) and (max-width: 1023px) {
 	.ft__grid {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 2.5rem 2rem;
+		grid-template-columns: repeat(3, auto);
+		justify-content: space-between;
 	}
 
-	.ft__brand {
+	.ft__brand,
+	.ft__grid .ft__markrow {
 		grid-column: 1 / -1;
 	}
 
@@ -622,5 +1044,35 @@ html.mn-open {
 	.topbar__burger::after,
 	.topbar__burger-icon {
 		transition: none;
+	}
+}
+
+/* «Бриф на съёмку» — пока не ссылка, но цветом как все пункты */
+.ft__soon {
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
+	color: var(--c-light);
+	cursor: default;
+}
+
+.mn__link.is-soon {
+	cursor: default;
+}
+
+/* документы сверху, контакты прижаты книзу — по нижней строке «Разделов» */
+.ft__col--docs {
+	align-self: stretch;
+	display: flex;
+	flex-direction: column;
+}
+
+.ft__contacts {
+	margin-top: auto;
+}
+
+@media (max-width: 767px) {
+	.ft__contacts {
+		margin-top: 0;
 	}
 }
