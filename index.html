@@ -19,9 +19,10 @@
 		<link rel="stylesheet" href="css/about.css?v=54" />
 		<link rel="stylesheet" href="css/room.css?v=55" />
 		<link rel="stylesheet" href="css/art.css?v=55" />
-		<link rel="stylesheet" href="css/menu.css?v=59" />
+		<link rel="stylesheet" href="css/menu.css?v=60" />
 		<link rel="stylesheet" href="css/approach.css?v=31" />
 		<link rel="stylesheet" href="css/works.css?v=59" />
+		<link rel="stylesheet" href="css/stages.css?v=40" />
 		<link rel="stylesheet" href="css/photo-card.css?v=8" />
 		<link rel="stylesheet" href="css/services.css?v=62" />
 		<link rel="stylesheet" href="css/gallery-entry.css?v=22" />
@@ -284,6 +285,36 @@
 			<ol class="wk__stairs" aria-label="Разделы"></ol>
 
 			<a class="wk-btn wk__all" href="#all-works"><span class="wk-btn__label">все работы</span></a>
+		</section>
+
+		<!-- «Как рождается кадр» — по макету Figma (648:33): снимок мальчика без фона слева на весь экран,
+		     четыре шага лесенкой поверх него (01 и 03 слева, 02 и 04 справа), глаз — в просвете между парами шагов.
+		     Логика — js/stages.js, стили — css/stages.css -->
+		<section class="st" id="stages" aria-labelledby="st-title">
+			<div class="st__photo" aria-hidden="true"><img src="img/stages/boy.png" alt="" width="1280" height="853" loading="lazy" decoding="async"></div>
+			<h2 class="st__title" id="st-title">Как рождается кадр</h2>
+			<ol class="st__steps">
+				<li class="st__step">
+					<span class="st__num">01</span>
+					<p class="st__body"><span class="st__name">Опишите</span> <span class="st__text">свои пожелания: жанр, настроение, примерные даты.</span></p>
+				</li>
+				<li class="st__step">
+					<span class="st__num">02</span>
+					<p class="st__body"><span class="st__name">Определяемся</span> <span class="st__text">место и&nbsp;время под нужный свет, отвечаю на&nbsp;вопросы об&nbsp;образе и&nbsp;позах.</span></p>
+				</li>
+				<li class="st__step">
+					<span class="st__num">03</span>
+					<p class="st__body"><span class="st__name">Фотосессия</span> <span class="st__text">спокойно, без спешки: я&nbsp;подсказываю и&nbsp;ловлю естественные эмоции и&nbsp;моменты.</span></p>
+				</li>
+				<li class="st__step">
+					<span class="st__num">04</span>
+					<p class="st__body"><span class="st__name">Результат</span> <span class="st__text">отбираю лучшие кадры, обрабатываю и&nbsp;присылаю ссылку на&nbsp;готовые файлы.</span></p>
+				</li>
+			</ol>
+			<!-- финал: одна кнопка — записаться -->
+			<div class="st__cta">
+				<a class="inv__btn st__btn" href="https://t.me/Nikonovevgeny" target="_blank" rel="noopener"><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+			</div>
 		</section>
 
 		<!-- Шестой экран: «Кадр под настроение» — жанры и цены. По макету Figma: бирюзовая панель слева, два снимка-полароида,
@@ -729,10 +760,11 @@
 		<script src="js/services-data.js?v=3"></script>
 		<script src="js/services.js?v=25"></script>
 		<script src="js/works.js?v=56"></script>
+		<script src="js/stages.js?v=34"></script>
 		<script src="js/photo-card.js?v=11"></script>
 		<script type="module" src="js/gallery-entry.js?v=38"></script>
 		<script src="js/gallery-transition.js?v=13"></script>
-		<script src="js/menu.js?v=37"></script>
+		<script src="js/menu.js?v=38"></script>
 		<script type="module" src="js/invite-tunnel.js?v=15"></script>
 	</body>
 </html>

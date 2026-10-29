@@ -16,6 +16,7 @@
 		{ id: 'gallery-entry', title: 'Галерея' },
 		{ id: 'approach', title: 'Мой подход', page: 'approach.html' },
 		{ id: 'works', title: 'Выбор за вами', page: 'works.html' },
+		{ id: 'stages', title: 'Как рождается кадр' },
 		{ id: 'services', title: 'Кадр под настроение' },
 		{ id: 'all-works', title: 'Мои работы' },
 		// бриф на съёмку — страница появится позже: впишите href: 'brief.html' (или адрес формы) и уберите soon (пока пункт не ссылка)
@@ -173,25 +174,9 @@
 				<div class="inv__body">
 					<h2 class="inv__title" id="inv-title"><span>Ваш кадр —</span> <span>следующий</span></h2>
 					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить, —</span> <span>подберу место, свет и&nbsp;время.</span></p>
-					<button class="inv__how" type="button" aria-haspopup="dialog" aria-controls="inv-steps">как проходит съёмка <span class="inv__plus" aria-hidden="true">+</span></button>
 					<a class="inv__btn" href="https://t.me/Nikonovevgeny" ${ext}><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
 			</section>
-			<div class="inv-dlg" id="inv-steps" role="dialog" aria-modal="true" aria-labelledby="inv-steps-title" aria-hidden="true">
-				<div class="inv-dlg__backdrop"></div>
-				<div class="inv-dlg__card">
-					<button class="inv-dlg__close" type="button" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-					<h3 class="inv-dlg__title" id="inv-steps-title">Как проходит съёмка</h3>
-					<p class="inv-dlg__lead">Четыре шага — от первого сообщения до готовых снимков.</p>
-					<ol class="inv-dlg__steps">
-						<li><b>Пишете</b><span>Коротко рассказываете, что хочется снять: жанр, настроение, примерные даты.</span></li>
-						<li><b>Договариваемся</b><span>Предлагаю место и время под нужный свет, отвечаю на вопросы об образе и позах.</span></li>
-						<li><b>Снимаем</b><span>Спокойно, без спешки: я подсказываю, а вы остаётесь собой.</span></li>
-						<li><b>Получаете снимки</b><span>Отбираю лучшие кадры, обрабатываю и присылаю ссылку на готовые файлы.</span></li>
-					</ol>
-					<a class="inv__btn inv__btn--wide" href="https://t.me/Nikonovevgeny" ${ext}><span class="inv__btn-label">написать в&nbsp;telegram</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
-				</div>
-			</div>
 			<div class="ft__grid">
 				<!-- слева: логотип, под ним цитата в две строки, автор — в строку после неё -->
 				<div class="ft__brand">
@@ -245,22 +230,6 @@
 		fitMark();
 		if (document.fonts) document.fonts.ready.then(fitMark);
 		window.addEventListener('resize', fitMark);
-		// окно «как проходит съёмка»
-		const dlg = footer.querySelector('.inv-dlg');
-		const how = footer.querySelector('.inv__how');
-		if (dlg && how) {
-			document.body.appendChild(dlg); // поверх всей страницы, не внутри футера
-			const openDlg = (on) => {
-				dlg.classList.toggle('is-open', on);
-				dlg.setAttribute('aria-hidden', String(!on));
-				if (window.lenis) window.lenis[on ? 'stop' : 'start']();
-				if (on) dlg.querySelector('.inv-dlg__close').focus({ preventScroll: true }); else how.focus({ preventScroll: true });
-			};
-			how.addEventListener('click', () => openDlg(true));
-			dlg.querySelector('.inv-dlg__close').addEventListener('click', () => openDlg(false));
-			dlg.querySelector('.inv-dlg__backdrop').addEventListener('click', () => openDlg(false));
-			document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && dlg.classList.contains('is-open')) openDlg(false); });
-		}
 		footer.addEventListener('click', (e) => {
 			// услуга на главной — к «Кадру под настроение» и сразу нужный жанр
 			const sv = e.target.closest('a[data-service]');

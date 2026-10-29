@@ -1,0 +1,255 @@
+/* ---------- «Как рождается кадр» (главная, после «Выбора за вами») ----------
+   По макету Figma (648:33): снимок мальчика без фона слева на весь экран, четыре шага лесенкой поверх него —
+   01 и 03 слева, 02 и 04 справа; глаз — в просвете между парами шагов, его ничто не перекрывает.
+   Номер — Inter Light 50, название шага капсом и текст строчными — Inter Light 32, цвет #cdcbc7 (размеры — на 1920).
+   Логика — js/stages.js */
+.st {
+	--st-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--st-ink: #cdcbc7;
+	--r-photo: clamp(0.625rem, 0.4rem + 0.6vw, 0.9375rem); /* скругление снимков — как у всех фото сайта */
+	--st-num: clamp(2.25rem, 0.5rem + 2.2vw, 3.125rem);   /* 50 на 1920 */
+	--st-fs: clamp(1.125rem, 0.25rem + 1.45vw, 2rem);      /* 32 на 1920 */
+	position: relative;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	min-height: 100svh;
+	overflow: hidden;
+	/* сверху — под шапкой (меню и «связаться со мной»): заголовок и шаги с ней не сливаются.
+	   Отступы ограничены долей высоты окна — экран целиком помещается в кадр и на невысоких ноутбуках */
+	--st-pad-b: min(clamp(2rem, 1rem + 2vw, 3.75rem), 3.5svh);
+	padding: calc(var(--topbar-y) + var(--burger-h) + min(clamp(2rem, 1rem + 2.5vw, 4rem), 3svh)) var(--gutter) var(--st-pad-b);
+	/* фон — из макета */
+	background-color: #0c0d12;
+	background-image: linear-gradient(51.77deg, #0c0d12 62.643%, rgba(12, 13, 18, 0.5) 99.431%);
+	color: var(--st-ink);
+}
+
+/* снимок: слева, на всю высоту; где именно — ставит js/stages.js, чтобы глаз оказался в просвете между парами шагов.
+   При прокрутке медленно приближается к глазу (--z) */
+.st__photo {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.st__photo img {
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	width: 84.3%;
+	height: auto;
+	transform: scale(var(--z, 1.06));
+	transform-origin: 46% 56%;
+	will-change: transform;
+	opacity: 0.5; /* снимок приглушён — тексты поверх него читаются легко, глаз по-прежнему виден */
+}
+
+/* название экрана — слева сверху, над шагами */
+.st__title {
+	position: relative;
+	margin: 0 0 min(clamp(2rem, 1rem + 2.5vw, 4rem), 2.5svh);
+	font-size: var(--fs-h1);
+	font-weight: 500;
+	line-height: var(--lh-h1);
+	letter-spacing: -0.01em;
+	text-transform: uppercase;
+	color: var(--c-light);
+	text-shadow: 0 1px 14px rgba(5, 6, 9, 0.75);
+}
+
+/* ---------- шаги: лесенкой, как в макете ---------- */
+.st__steps {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.st__step {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: clamp(0.5rem, 0.2rem + 0.4vw, 0.75rem);
+	padding: clamp(0.25rem, 0.1rem + 0.3vw, 0.625rem);
+}
+
+.st__step:nth-child(odd) {
+	justify-self: start;
+}
+
+.st__step:nth-child(even) {
+	justify-self: end;
+}
+
+/* просвет внутри пары — 65, между парами (там глаз) — 124 на 1920 */
+.st__step:nth-child(2),
+.st__step:nth-child(4) {
+	margin-top: min(clamp(1.5rem, 0.5rem + 2.8vw, 4.0625rem), 4svh);
+}
+
+.st__step:nth-child(3) {
+	margin-top: min(clamp(3rem, 0.75rem + 5.8vw, 7.75rem), 8svh);
+}
+
+.st__num {
+	position: relative;
+	flex: none;
+	font-size: var(--st-num);
+	font-weight: 300;
+	line-height: 1.3;
+	letter-spacing: -0.01em;
+	color: var(--st-ink);
+	font-variant-numeric: tabular-nums;
+}
+
+.st__body {
+	max-width: 21em; /* 671 при 32 — как в макете: строки переносятся так же на любой ширине */
+	margin: 0;
+	padding-top: calc((var(--st-num) * 1.3 - var(--st-fs) * 1.2) / 2); /* название — на одной линии с номером */
+	font-size: var(--st-fs);
+	font-weight: 300;
+	line-height: 1.2;
+	text-transform: lowercase;
+	color: var(--st-ink);
+}
+
+.st__name {
+	display: block;
+	text-transform: uppercase;
+	color: var(--c-light);
+}
+
+.st__text {
+	display: block;
+}
+
+/* текст поверх снимка: мягкая тень — читается и на светлых волосах, и на лице, вид макета не меняется */
+.st__num,
+.st__body {
+	text-shadow: 0 1px 14px rgba(5, 6, 9, 0.75), 0 0 3px rgba(5, 6, 9, 0.35);
+}
+
+/* проявление: номер, затем название с текстом — медленно, одно за другим */
+.st__num,
+.st__body {
+	opacity: 0.08;
+	transform: translateY(1.25rem);
+	transition: opacity 1.4s var(--st-ease), transform 1.8s var(--st-ease);
+}
+
+.st__body {
+	transition-delay: 0.18s;
+}
+
+.st__step.is-in .st__num,
+.st__step.is-in .st__body {
+	opacity: 1;
+	transform: none;
+}
+
+/* ---------- финал: внизу слева, под шагом 03 — там в макете свободно; экран остаётся в один кадр ---------- */
+.st__cta {
+	position: absolute;
+	left: var(--gutter);
+	bottom: var(--st-pad-b);
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: clamp(0.85rem, 0.6rem + 0.7vw, 1.4rem);
+	max-width: calc(50% - var(--gutter)); /* левая половина — правее, внизу, шаг 04 */
+	opacity: 0;
+	transform: translateY(1.5rem);
+	transition: opacity 1.6s var(--st-ease), transform 2s var(--st-ease);
+}
+
+.st__cta.is-in {
+	opacity: 1;
+	transform: none;
+}
+
+.st__btn {
+	min-width: min(18rem, 100%);
+	min-height: clamp(3.25rem, 2.6rem + 1.2vw, 4.25rem);
+	margin-top: 0;
+}
+
+/* ---------- планшет и телефон: снимок фоном под текстами (глаз — в просвете под названием), шаги столбиком, кнопка на всю ширину ---------- */
+@media (max-width: 899px) {
+	.st {
+		padding-top: calc(var(--topbar-y) + var(--burger-h) + min(clamp(3rem, 2rem + 3vw, 5rem), 5.5svh));
+	}
+
+	/* шаги — мельче и светлее: номер и текст лёгкого начертания */
+	.st {
+		--st-pad-b: min(clamp(2rem, 1rem + 2vw, 3.75rem), 2svh);
+		--st-num: clamp(1.75rem, 1.45rem + 1.3vw, 2.25rem);
+		--st-fs: clamp(0.9375rem, 0.86rem + 0.35vw, 1.0625rem);
+	}
+
+	.st__body {
+		line-height: 1.35;
+		padding-top: calc((var(--st-num) * 1.3 - var(--st-fs) * 1.35) / 2);
+	}
+
+	.st__name {
+		font-weight: 300;
+		letter-spacing: 0.02em;
+	}
+
+	/* снимок — фоном под текстами; js/stages.js ставит его так, что глаз — крупно в просвете между названием
+	   и первым шагом, остальное лицо приглушено, низ растворяется в фоне — без резкого края */
+	.st__photo img {
+		opacity: 0.55;
+		-webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
+		mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
+	}
+
+	.st__title {
+		margin-bottom: clamp(5rem, 3.5rem + 8vw, 7.5rem); /* просвет под глаз */
+	}
+
+	/* шаги — столбиком, все слева */
+	.st__step:nth-child(n) {
+		justify-self: start;
+	}
+
+	.st__step:nth-child(2),
+	.st__step:nth-child(3),
+	.st__step:nth-child(4) {
+		margin-top: min(clamp(2.75rem, 2rem + 3vw, 3.75rem), 3.5svh);
+	}
+
+	.st__body {
+		max-width: none;
+	}
+
+	.st__cta {
+		position: relative;
+		left: auto;
+		bottom: auto;
+		max-width: none;
+		margin-top: min(clamp(3rem, 2rem + 4vw, 4.5rem), 4svh);
+	}
+
+	.st__btn {
+		width: 100%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.st__num,
+	.st__body,
+	.st__cta {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+
+	.st__photo img {
+		transform: none;
+	}
+}
