@@ -36,4 +36,5 @@ window.GALLERY_PHOTOS = [
 	{ src: 'img/gallery/tram-greenery.jpg', alt: 'Трамвай в зелёном тоннеле деревьев', label: 'Трамвай в лето', genre: 'Стрит-фото', w: 1001, h: 1500 },
 	{ src: 'img/gallery/moscow-city-contrast.jpg', alt: 'Сталинский дом и башня Москва-Сити', label: 'Вчера и завтра', genre: 'Архитектура', w: 1602, h: 2000 },
 	{ src: 'img/gallery/pond-arch.jpg', alt: 'Ветви ив над прудом на закате', label: 'Закат в ветвях', genre: 'Пейзаж', w: 1125, h: 844 },
+	{ src: 'img/gallery/golden-spire.jpg', alt: 'Сталинская высотка со шпилем в золотом свете, осенние деревья', label: 'Золотой шпиль', genre: 'Архитектура', w: 960, h: 1280 },
 ];

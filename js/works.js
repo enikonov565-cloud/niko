@@ -255,8 +255,8 @@
 
 	// темп просмотра: всё движется медленно и мягко — плавный разгон и плавное торможение, без резких стартов
 	const T = reduced
-		? { bg: 0, veil: 0, pause: 0, grid: 0, flip: 0, nav: 0, navStep: 0, out: 0, in: 0, close: 0 }
-		: { bg: 0.7, veil: 1.2, pause: 0.35, grid: 2.2, flip: 1.5, nav: 1.1, navStep: 0.06, out: 0.7, in: 1.2, close: 1.1 };
+		? { bg: 0, veil: 0, pause: 0, grid: 0, flip: 0, grow: 0, nav: 0, navStep: 0, out: 0, in: 0, close: 0 }
+		: { bg: 0.7, veil: 1.2, pause: 0.35, grid: 2.2, flip: 1.5, grow: 1.6, nav: 1.1, navStep: 0.06, out: 0.7, in: 1.2, close: 1.1 };
 	const SMOOTH = 'power3.inOut'; // сетка, колонки, главный кадр
 	const SOFT = 'sine.inOut';     // проявление и затухание
 
@@ -344,9 +344,13 @@
 		});
 	}
 
-	function open(slug) {
-		if (busy || !gsap || !Flip) return;
-		busy = true;
+	// карточка раздела на ступеньках — из неё главный кадр вырастает на весь экран и в неё же возвращается
+	const cardOf = (slug) => document.querySelector(`.wk-card__link[data-genre="${slug}"] .wk-card__media`);
+	const onScreen = (r) => r && r.width && r.bottom > 0 && r.top < window.innerHeight;
+	const uiOf = () => wv.querySelectorAll('.wv__switch, .wv__close');
+
+	// общее начало: слой просмотра поверх страницы, прокрутка страницы остановлена
+	function begin(slug) {
 		build(slug);
 		wv.style.pointerEvents = ''; // на случай, если открыли во время невидимого прогрева сетки
 		history.replaceState(null, '', `#${state.slug}`);
@@ -354,12 +358,63 @@
 		document.documentElement.classList.add('wv-open');
 		wv.classList.add('is-open');
 		wv.setAttribute('aria-hidden', 'false');
-		gsap.set(state.grid, { scale: 0.4 });
-		const s = state;
-		// Проявление без рывков, в два шага. Сначала поверх страницы проявляется тёмный фон слоя (сетка под
-		// сплошной тёмной «вуалью»), пока снимки раздела декодируются. Затем вуаль плавно уходит и открывает сетку.
-		// Прозрачность меняется только у однотонных слоёв: смешивать полупрозрачную сетку из крупных снимков
-		// со страницей видеокарта не успевает — отсюда были рывки
+		return state;
+	}
+
+	function open(slug) {
+		if (busy || !gsap || !Flip) return;
+		busy = true;
+		const card = cardOf(slug);
+		const from = card && card.getBoundingClientRect();
+		if (reduced || !onScreen(from)) { openGrid(begin(slug)); return; } // «все работы» — через сетку
+		const s = begin(slug);
+		s.card = card;
+		// Сразу вид «один кадр», без промежуточной мелкой сетки: нажатый снимок сам плавно вырастает
+		// со своего места на ступеньке на весь экран, тёмный фон проявляется за ним, затем выплывают миниатюры.
+		// Сетка — за кадром, она появится по кнопке «сеткой»
+		s.mode = 'list';
+		s.btn.grid.classList.remove('is-current');
+		s.btn.list.classList.add('is-current');
+		s.content.classList.add('is-current');
+		gsap.set(s.grid, { scale: 1 });
+		gsap.set(s.up, { y: '-200vh' });
+		gsap.set(s.down, { y: '200vh' });
+		gsap.set(s.push, { xPercent: -100 });
+		s.main.appendChild(s.flip);
+		gsap.set(s.nav, { opacity: 1 });
+		gsap.set(s.navItems, { yPercent: 120, opacity: 0 });
+		gsap.set(uiOf(), { opacity: 0 });
+		// фон — однотонная вуаль под главным кадром (сам слой прозрачный): её прозрачность видеокарта меняет даром
+		wv.style.background = 'transparent';
+		gsap.set(s.veil, { autoAlpha: 0 });
+		// главный кадр — точно на месте карточки: тот же размер, скругление и точка кадра
+		gsap.set(s.flip, { position: 'absolute', left: from.left, top: from.top, width: from.width, height: from.height });
+		gsap.set(s.flipImg, { borderRadius: getComputedStyle(card).borderRadius, objectPosition: '50% 35%' });
+		gsap.set(wv, { autoAlpha: 1 });
+		ready([s.flipImg.getAttribute('src')], 800).then(() => frames(2)).then(() => {
+			if (state !== s) return;
+			card.style.visibility = 'hidden'; // на ступеньке — пустое место, пока снимок «в полёте»
+			gsap.timeline({
+				defaults: { duration: T.grow, ease: SMOOTH },
+				onComplete: () => {
+					gsap.set(s.flip, { clearProps: 'position,left,top,width,height' });
+					gsap.set(s.flipImg, { clearProps: 'borderRadius,objectPosition' });
+					busy = false;
+				},
+			})
+				.to(s.veil, { autoAlpha: 1, ease: SOFT }, 0)
+				.to(s.flip, { left: 0, top: 0, width: s.main.clientWidth, height: s.main.clientHeight }, 0)
+				.to(s.flipImg, { borderRadius: 0, objectPosition: '50% 30%' }, 0)
+				.to(uiOf(), { opacity: 1, duration: 1, ease: SOFT }, T.grow * 0.5)
+				.to(s.navItems, { yPercent: 0, opacity: 1, duration: T.nav, ease: 'power2.out', stagger: T.navStep }, T.grow * 0.6);
+		});
+	}
+
+	// «все работы»: сетка проявляется из-под вуали, затем — «один кадр».
+	// Прозрачность меняется только у однотонных слоёв: смешивать полупрозрачную сетку из крупных снимков
+	// со страницей видеокарта не успевает — отсюда были рывки
+	function openGrid(s) {
+		gsap.set(s.grid, { scale: 0.4 });
 		gsap.set(wv, { autoAlpha: 0 });
 		gsap.set(s.veil, { autoAlpha: 1 });
 		const fadeBg = new Promise((r) => gsap.to(wv, { autoAlpha: 1, duration: T.bg, ease: SOFT, onComplete: r }));
@@ -372,17 +427,54 @@
 				gsap.to(s.veil, { autoAlpha: 0, duration: T.veil, ease: SOFT, onComplete: r });
 			}))
 			.then(() => {
-				// «один кадр» — когда слой проявился
 				if (state !== s) return;
 				busy = false;
 				gsap.delayedCall(T.pause, () => toggle('list'));
 			});
 	}
 
+	// слой убран — страница снова прокручивается
+	function finish(s) {
+		if (s.card) s.card.style.visibility = '';
+		gsap.set(wv, { autoAlpha: 0 }); // слой невидим и не перекрывает страницу
+		wv.classList.remove('is-open');
+		wv.setAttribute('aria-hidden', 'true');
+		wv.style.background = '';
+		wv.innerHTML = '';
+		state = null;
+		document.documentElement.classList.remove('wv-open');
+		if (lenis) lenis.start();
+		history.replaceState(null, '', location.pathname);
+		busy = false;
+	}
+
 	function close() {
 		if (!state || busy) return;
 		busy = true;
 		const s = state;
+		const card = s.mode === 'list' && !reduced && (s.card || cardOf(s.slug));
+		const to = card && card.getBoundingClientRect();
+		if (onScreen(to)) {
+			// обратно: миниатюры тонут, главный кадр плавно возвращается в свою карточку, фон тает
+			s.card = card;
+			const r = s.flip.getBoundingClientRect();
+			wv.style.background = 'transparent';
+			gsap.set(s.veil, { autoAlpha: 1 });
+			gsap.set(s.flip, { position: 'absolute', left: r.left, top: r.top, width: r.width, height: r.height });
+			card.style.visibility = 'hidden';
+			const tl = gsap.timeline({ defaults: { duration: T.grow, ease: SMOOTH }, onComplete: () => finish(s) })
+				.to(s.navItems, { yPercent: 120, opacity: 0, duration: T.out, ease: 'power2.in', stagger: -T.navStep }, 0)
+				.to(uiOf(), { opacity: 0, duration: 0.6, ease: SOFT }, 0)
+				.to(s.flip, { left: to.left, top: to.top, width: to.width, height: to.height }, 0.2)
+				.to(s.flipImg, { borderRadius: getComputedStyle(card).borderRadius, objectPosition: '50% 35%' }, 0.2)
+				.to(s.veil, { autoAlpha: 0, ease: SOFT }, 0.2);
+			// смотрели другой кадр раздела — в конце он мягко растворяется в обложке карточки
+			if (s.cur !== 0) {
+				tl.call(() => { card.style.visibility = ''; }, null, 0.2 + T.grow - 0.5)
+					.to(s.flip, { opacity: 0, duration: 0.5, ease: SOFT }, 0.2 + T.grow - 0.5);
+			}
+			return;
+		}
 		// в виде «сеткой» сначала вуаль закрывает сетку, потом уходит тёмный фон — как при открытии, в обратном порядке
 		const veiled = s.mode === 'grid'
 			? new Promise((r) => gsap.to(s.veil, { autoAlpha: 1, duration: T.out, ease: SOFT, onComplete: r }))
@@ -390,16 +482,7 @@
 			: Promise.resolve();
 		veiled.then(() => gsap.to(wv, {
 			autoAlpha: 0, duration: s.mode === 'grid' ? T.bg : T.close, ease: SOFT,
-			onComplete: () => {
-				wv.classList.remove('is-open');
-				wv.setAttribute('aria-hidden', 'true');
-				wv.innerHTML = '';
-				state = null;
-				document.documentElement.classList.remove('wv-open');
-				if (lenis) lenis.start();
-				history.replaceState(null, '', location.pathname);
-				busy = false;
-			},
+			onComplete: () => finish(s),
 		}));
 	}
 

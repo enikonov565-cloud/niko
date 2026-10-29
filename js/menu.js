@@ -245,26 +245,6 @@
 		fitMark();
 		if (document.fonts) document.fonts.ready.then(fitMark);
 		window.addEventListener('resize', fitMark);
-		// приглашение — ровно в кадре: если прокрутка остановилась, когда оно почти целиком на экране,
-		// страница плавно доезжает и встаёт ровно по нему — без полосок соседних блоков сверху и снизу
-		const inv = footer.querySelector('.inv');
-		if (inv) {
-			let snapT = 0, snapping = false;
-			const snap = () => {
-				if (snapping || document.documentElement.classList.contains('mn-open')) return;
-				const top = inv.getBoundingClientRect().top;
-				const off = Math.abs(top);
-				if (off < 2 || off > window.innerHeight * 0.3) return;
-				snapping = true;
-				const y = top + window.scrollY;
-				const done = () => { snapping = false; };
-				if (window.lenis) window.lenis.scrollTo(y, { duration: 0.9, easing: (t) => 1 - Math.pow(1 - t, 3), onComplete: done });
-				else { window.scrollTo({ top: y, behavior: 'smooth' }); setTimeout(done, 900); }
-			};
-			const onScroll = () => { clearTimeout(snapT); if (!snapping) snapT = setTimeout(snap, 160); };
-			if (window.lenis) window.lenis.on('scroll', onScroll);
-			else window.addEventListener('scroll', onScroll, { passive: true });
-		}
 		// окно «как проходит съёмка»
 		const dlg = footer.querySelector('.inv-dlg');
 		const how = footer.querySelector('.inv__how');
@@ -306,4 +286,101 @@
 			go(id);
 		});
 	}
+
+	// ---------- экраны подтягиваются ----------
+	// Прокрутка остановилась, а на экране видна граница двух блоков (экран открыт не полностью) —
+	// страница медленно и плавно доезжает до ближайшего ровного положения: верх блока — к верху экрана
+	// или низ высокого блока — к низу экрана. Внутри длинного блока, где границ не видно, прокрутка свободная —
+	// анимации, привязанные к прокрутке («Я фотограф», «Мой подход», «Кадр под настроение»), не сбиваются
+	const BLOCKS = 'body > .parallax, body > section, body > main, main > section, footer.ft > *';
+	const root = document.documentElement;
+	let snapT = 0, doneT = 0, snapping = false, touching = false, userAt = 0, tween = 0;
+	const busyNow = () => /\b(mn-open|wv-open|pc-open|ge-hold)\b/.test(root.className) || (window.lenis && window.lenis.isStopped);
+	const edges = () => {
+		const y = window.scrollY;
+		const list = [];
+		document.querySelectorAll(BLOCKS).forEach((e) => {
+			if (e.offsetHeight < 2 || getComputedStyle(e).position === 'fixed') return;
+			// закреплённый прокруткой экран меряем по его обёртке — у самого экрана в это время координаты «стоят»
+			const el = e.parentElement && e.parentElement.classList.contains('pin-spacer') ? e.parentElement : e;
+			const r = el.getBoundingClientRect();
+			list.push({ top: Math.round(r.top + y), bottom: Math.round(r.bottom + y) });
+		});
+		return list;
+	};
+	// плавный ход без Lenis (страницы с обычной прокруткой): медленный разгон и торможение
+	const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+	const glide = (to, done) => {
+		const from = window.scrollY, t0 = performance.now(), dur = 1100;
+		cancelAnimationFrame(tween);
+		const step = (now) => {
+			const k = Math.min(1, (now - t0) / dur);
+			window.scrollTo(0, from + (to - from) * ease(k));
+			if (k < 1) tween = requestAnimationFrame(step); else done();
+		};
+		tween = requestAnimationFrame(step);
+	};
+	const snap = () => {
+		// только после прокрутки самим посетителем (не после перехода по ссылке) и когда поверх ничего не открыто
+		if (snapping || touching || busyNow() || performance.now() - userAt > 3000) return;
+		const vh = window.innerHeight, y = window.scrollY;
+		const max = root.scrollHeight - vh;
+		const blocks = edges();
+		// граница блоков видна на экране?
+		const cut = blocks.some((b) => (b.top > y + 2 && b.top < y + vh - 2) || (b.bottom > y + 2 && b.bottom < y + vh - 2 && b.bottom < max + vh - 2));
+		if (!cut) return;
+		// ровные положения: верх каждого блока; у блоков выше экрана — ещё и низ по нижнему краю; конец страницы
+		const spots = [max];
+		blocks.forEach((b) => {
+			const h = b.bottom - b.top;
+			if (h > vh * 0.4) spots.push(b.top); // мелкий блок (нижняя строка футера) к верху экрана не ставим
+			if (h > vh) spots.push(b.bottom - vh);
+		});
+		let to = y, best = Infinity;
+		spots.forEach((s) => {
+			const c = Math.max(0, Math.min(max, s));
+			const d = Math.abs(c - y);
+			if (d < best) { best = d; to = c; }
+		});
+		if (best < 2 || best > vh) return;
+		snapping = true;
+		// конец хода — по таймеру: Lenis сообщает о нём не всегда (например, если ход прервали)
+		clearTimeout(doneT);
+		doneT = setTimeout(() => { snapping = false; }, 1250);
+		if (window.lenis) window.lenis.scrollTo(to, { duration: 1.1, easing: ease });
+		else glide(to, () => {});
+	};
+	// прокрутка остановилась — 180 мс без сдвига хотя бы на полпикселя («хвост» плавной прокрутки в доли
+	// пикселя не в счёт: иначе подтягивание ждало бы его секунды две)
+	let lastY = window.scrollY, movedAt = 0;
+	const check = () => {
+		const wait = 180 - (performance.now() - movedAt);
+		if (wait > 0) { snapT = setTimeout(check, wait); return; }
+		snapT = 0;
+		snap();
+	};
+	window.addEventListener('scroll', () => {
+		if (Math.abs(window.scrollY - lastY) < 0.5 || snapping) return;
+		lastY = window.scrollY;
+		movedAt = performance.now();
+		if (!snapT) snapT = setTimeout(check, 180);
+	}, { passive: true });
+	// прокрутку начал посетитель — колесо, палец, клавиши; его движение прерывает подтягивание
+	const user = () => {
+		userAt = performance.now();
+		if (!snapping) return;
+		cancelAnimationFrame(tween); // свой плавный ход прерываем; ход Lenis прерывается сам
+		clearTimeout(doneT);
+		snapping = false;
+	};
+	window.addEventListener('wheel', user, { passive: true });
+	window.addEventListener('keydown', user);
+	window.addEventListener('touchstart', () => { touching = true; user(); }, { passive: true });
+	window.addEventListener('touchend', () => {
+		touching = false;
+		user();
+		movedAt = performance.now();
+		if (!snapT) snapT = setTimeout(check, 180);
+	}, { passive: true });
+	window.addEventListener('pointerdown', (e) => { if (e.clientX >= root.clientWidth) user(); }, { passive: true }); // полоса прокрутки
 })();
