@@ -22,8 +22,7 @@
 		{ id: 'brief', title: 'Бриф на съёмку', soon: true },
 	];
 	const CONTACTS = [
-		{ title: 'Telegram', href: 'https://t.me/nikonovphoto', note: '@nikonovphoto' },
-		{ title: 'ВКонтакте', href: 'https://vk.com/nikonovphoto' },
+		{ title: 'Telegram', href: 'https://t.me/Nikonovevgeny', note: '@Nikonovevgeny' },
 	];
 	// услуги — жанры «Кадра под настроение» (js/services-data.js); на главной ссылка открывает нужный жанр
 	const SERVICES = ['Портрет', 'Уличный портрет', 'Стрит-фото', 'Архитектура', 'Пейзаж'];
@@ -84,7 +83,7 @@
 					</div>
 				</div>
 				<div class="mn__foot mn__item">
-					<a class="mn__contact" href="https://t.me/nikonovphoto" ${ext}>заказать съёмку</a>
+					<a class="mn__contact" href="https://t.me/Nikonovevgeny" ${ext}>заказать съёмку</a>
 				</div>
 			</nav>`;
 		document.body.appendChild(root);
@@ -169,7 +168,7 @@
 					<h2 class="inv__title" id="inv-title"><span>Ваш кадр —</span> <span>следующий</span></h2>
 					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить, —</span> <span>подберу место, свет и&nbsp;время.</span></p>
 					<button class="inv__how" type="button" aria-haspopup="dialog" aria-controls="inv-steps">как проходит съёмка <span class="inv__plus" aria-hidden="true">+</span></button>
-					<a class="inv__btn" href="https://t.me/nikonovphoto" ${ext}><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+					<a class="inv__btn" href="https://t.me/Nikonovevgeny" ${ext}><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
 			</section>
 			<div class="inv-dlg" id="inv-steps" role="dialog" aria-modal="true" aria-labelledby="inv-steps-title" aria-hidden="true">
@@ -184,7 +183,7 @@
 						<li><b>Снимаем</b><span>Спокойно, без спешки: я подсказываю, а вы остаётесь собой.</span></li>
 						<li><b>Получаете снимки</b><span>Отбираю лучшие кадры, обрабатываю и присылаю ссылку на готовые файлы.</span></li>
 					</ol>
-					<a class="inv__btn inv__btn--wide" href="https://t.me/nikonovphoto" ${ext}><span class="inv__btn-label">написать в&nbsp;telegram</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+					<a class="inv__btn inv__btn--wide" href="https://t.me/Nikonovevgeny" ${ext}><span class="inv__btn-label">написать в&nbsp;telegram</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
 			</div>
 			<div class="ft__grid">
@@ -223,7 +222,7 @@
 			</div>
 			<div class="ft__bottom">
 				<span>© ${new Date().getFullYear()} nikonovphoto. Все права защищены.</span>
-				<p class="ft__social">${CONTACTS.map((c) => `<a href="${c.href}" ${ext}>${c.title === 'ВКонтакте' ? 'VK' : c.title}</a>`).join('')}</p>
+				<p class="ft__social">${CONTACTS.map((c) => `<a href="${c.href}" ${ext}>${c.title}</a>`).join('')}</p>
 			</div>`;
 		// NIKONOVPHOTO — по ширине: от левого края «Разделов» до кнопки «наверх»
 		const mark = footer.querySelector('.ft__mark');

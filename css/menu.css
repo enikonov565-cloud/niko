@@ -265,7 +265,7 @@ html.mn-open {
 	}
 }
 
-/* Telegram и ВКонтакте — кнопки как в футере: капсом, с подчёркиванием */
+/* Telegram — кнопка как в футере: капсом, с подчёркиванием */
 .mn__social {
 	display: flex;
 	flex-direction: column;
