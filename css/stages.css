@@ -19,9 +19,14 @@
 	   Отступы ограничены долей высоты окна — экран целиком помещается в кадр и на невысоких ноутбуках */
 	--st-pad-b: min(clamp(2rem, 1rem + 2vw, 3.75rem), 3.5svh);
 	padding: calc(var(--topbar-y) + var(--burger-h) + min(clamp(2rem, 1rem + 2.5vw, 4rem), 3svh)) var(--gutter) var(--st-pad-b);
-	/* фон — из макета */
-	background-color: #0c0d12;
-	background-image: linear-gradient(51.77deg, #0c0d12 62.643%, rgba(12, 13, 18, 0.5) 99.431%);
+	/* фон под снимком — в гамме «Выбора за вами»: сланец со свечением того же глубокого синего справа сверху.
+	   Сверху и снизу — почти чёрный #030406: им заканчивается «Выбор за вами» и начинается «Кадр под настроение»,
+	   поэтому оба шва совпадают по цвету один в один */
+	background-color: #0f141b;
+	background-image:
+		linear-gradient(to bottom, #030406 0%, rgba(3, 4, 6, 0) 40%),
+		linear-gradient(to top, #030406 0%, rgba(3, 4, 6, 0) 30%),
+		radial-gradient(ellipse 55% 75% at 92% 30%, rgba(14, 56, 85, 0.6) 0%, rgba(14, 56, 85, 0) 100%);
 	color: var(--st-ink);
 }
 
@@ -31,6 +36,9 @@
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
+	/* верх и низ снимка растворяются в фоне — у швов с соседними экранами нет резкой границы */
+	-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 clamp(6rem, 22%, 14rem), #000 calc(100% - clamp(4rem, 14%, 10rem)), transparent 100%);
+	mask-image: linear-gradient(to bottom, transparent 0, #000 clamp(6rem, 22%, 14rem), #000 calc(100% - clamp(4rem, 14%, 10rem)), transparent 100%);
 }
 
 .st__photo img {
@@ -43,7 +51,7 @@
 	transform: scale(var(--z, 1.06));
 	transform-origin: 46% 56%;
 	will-change: transform;
-	opacity: 0.5; /* снимок приглушён — тексты поверх него читаются легко, глаз по-прежнему виден */
+	filter: brightness(0.5); /* снимок притемнён, но не прозрачен: фон сквозь него не просвечивает, тона фото не меняются */
 }
 
 /* название экрана — слева сверху, над шагами */
@@ -177,6 +185,46 @@
 	margin-top: 0;
 }
 
+/* ---------- компьютер: заголовок — тенью ----------
+   Вертикально вдоль левого края, по центру высоты, снизу вверх, крупными едва заметными буквами — на тёмной стороне лица.
+   Левые шаги и кнопка сдвинуты вправо на ширину надписи; у шапки и шага 01 становится свободно */
+@media (min-width: 900px) {
+	.st {
+		--st-ghost: min(clamp(3rem, 1rem + 4vw, 7.5rem), 5.6svh); /* размер надписи */
+		--st-ghost-w: calc(var(--st-ghost) * 1.35);               /* место под неё слева */
+		padding-top: calc(var(--topbar-y) + var(--burger-h) + min(clamp(3.5rem, 1rem + 5vw, 8rem), 10svh));
+	}
+
+	.st__title {
+		position: absolute;
+		z-index: 2;
+		left: calc(var(--gutter) * 0.55);
+		top: 50%; /* по центру высоты экрана */
+		margin: 0;
+		font-size: var(--st-ghost);
+		line-height: 1;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+		writing-mode: vertical-rl;
+		transform: translateY(-50%) rotate(180deg);
+		color: rgba(235, 235, 235, 0.08);
+		text-shadow: none;
+		pointer-events: none;
+	}
+
+	.st__step:nth-child(odd) {
+		margin-left: var(--st-ghost-w);
+	}
+
+	.st__cta {
+		left: calc(var(--gutter) + var(--st-ghost-w));
+	}
+
+	.st__photo { z-index: 1; }
+	.st__steps,
+	.st__cta { z-index: 3; }
+}
+
 /* ---------- планшет и телефон: снимок фоном под текстами (глаз — в просвете под названием), шаги столбиком, кнопка на всю ширину ---------- */
 @media (max-width: 899px) {
 	.st {
@@ -203,7 +251,7 @@
 	/* снимок — фоном под текстами; js/stages.js ставит его так, что глаз — крупно в просвете между названием
 	   и первым шагом, остальное лицо приглушено, низ растворяется в фоне — без резкого края */
 	.st__photo img {
-		opacity: 0.55;
+		filter: brightness(0.55);
 		-webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
 		mask-image: linear-gradient(to bottom, #000 66%, transparent 100%);
 	}
