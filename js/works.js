@@ -53,6 +53,15 @@
 			</a>`;
 		stairs.appendChild(li);
 	});
+	// карточки выплывают снизу по очереди, когда ступеньки показались на экране (CSS: .wk__stairs.is-in)
+	if ('IntersectionObserver' in window && !reduced) {
+		stairs.classList.add('is-ready');
+		new IntersectionObserver(([e], io) => {
+			if (!e.isIntersecting) return;
+			stairs.classList.add('is-in');
+			io.disconnect();
+		}, { threshold: 0.15 }).observe(stairs);
+	}
 
 	// ---------- схематичные рисунки: фотоаппарат и плёнка — тонкие линии в стиле сайта ----------
 	const svg = (cls, vb, parts) => `<svg class="wa__sketch wa__sketch--${cls}" viewBox="${vb}" aria-hidden="true">${parts.join('')}</svg>`;
@@ -150,6 +159,7 @@
 	let lenis = null;
 	if (window.Lenis && !reduced) {
 		lenis = new window.Lenis();
+		window.lenis = lenis; // меню и карточка снимка останавливают прокрутку через него
 		const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
 		requestAnimationFrame(raf);
 	}
@@ -157,7 +167,10 @@
 	const COLS = 6, ROWS = 5; // как в демо: 6 колонок по 5 кадров
 	const FLIP_AT = [3, 0];   // главный кадр — первый в четвёртой колонке (едет вниз и встаёт в центр)
 	const PUSH_AT = [2, 4];   // соседний — последний в третьей колонке (едет вверх и встаёт слева)
-	const bg = (p) => `background-image:url('${p.src}')`;
+	// уменьшенная копия снимка (800 px по длинной стороне, img/thumbs/…) — для сетки и миниатюр:
+	// 28 полноразмерных снимков видеокарта отрисовывает с рывками. На весь экран и в карточке — полный размер
+	const small = (src) => src.replace(/^img\//, 'img/thumbs/');
+	const bg = (p) => `background-image:url('${small(p.src)}')`;
 	const esc = (s) => String(s).replace(/"/g, '&quot;');
 
 	let state = null; // открытый раздел: элементы, режим, текущий кадр
@@ -189,13 +202,16 @@
 			let items = '';
 			for (let r = 0; r < ROWS; r++) {
 				const { p, cls } = cell(c, r);
-				items += `<figure class="wv__item"><div class="wv__wrap${cls}"><div class="wv__img" style="${bg(p)}" data-src="${p.src}" role="img" aria-label="${esc(p.alt)}"></div></div></figure>`;
+				// главный кадр раскроется на весь экран — сразу в полном размере; остальные — уменьшенные копии
+				const src = cls.includes('flip') ? p.src : small(p.src);
+				items += `<figure class="wv__item"><div class="wv__wrap${cls}"><img class="wv__img" src="${src}" data-src="${p.src}" alt="${esc(p.alt)}" decoding="async"></div></figure>`;
 			}
 			cols += `<div class="wv__col wv__col--${c % 2 ? 'down' : 'up'}"><div class="wv__inner">${items}</div></div>`;
 		}
 		const thumbs = [cover, ...rest];
 		wv.innerHTML = `
 			<div class="wv__columns">${cols}</div>
+			<div class="wv__veil" aria-hidden="true"></div>
 			<div class="wv__content">
 				<div class="wv__main"></div>
 				<nav class="wv__nav" aria-label="Снимки раздела">${thumbs.map((p, i) => `<button class="wv__thumb${i ? '' : ' is-current'}" type="button" data-i="${i}" style="${bg(p)}" aria-label="${esc(p.alt)}"></button>`).join('')}</nav>
@@ -210,7 +226,7 @@
 		const flip = q('.wv__wrap--flip');
 		state = {
 			slug: g ? slug : 'all', thumbs, cur: 0, mode: 'grid',
-			grid: q('.wv__columns'),
+			grid: q('.wv__columns'), veil: q('.wv__veil'),
 			up: wv.querySelectorAll('.wv__col--up > .wv__inner'),
 			down: wv.querySelectorAll('.wv__col--down > .wv__inner'),
 			content: q('.wv__content'), main: q('.wv__main'),
@@ -218,42 +234,73 @@
 			flip, flipParent: flip.parentNode, flipImg: flip.querySelector('.wv__img'),
 			push: q('.wv__wrap--push'),
 			btn: { grid: q('.wv__switch-btn--grid'), list: q('.wv__switch-btn--list') },
+			// что загрузить заранее: снимки сетки (как они в ней стоят) и копии для миниатюр
+			srcs: [...new Set([...[...wv.querySelectorAll('.wv__img')].map((im) => im.getAttribute('src')), ...thumbs.map((p) => small(p.src))])],
 		};
 		state.btn.grid.classList.add('is-current');
+	}
+
+	// снимки раздела загружаются и декодируются заранее, пока проявляется слой, —
+	// иначе декодирование крупных кадров идёт посреди анимации и она дёргается
+	const decode = (src) => {
+		const im = new Image();
+		im.src = src;
+		return im.decode ? im.decode().catch(() => {}) : Promise.resolve();
+	};
+	const ready = (srcs, max) => Promise.race([
+		Promise.all(srcs.map(decode)),
+		new Promise((r) => setTimeout(r, max)), // медленная сеть — не ждём бесконечно
+	]);
+	const frames = (n) => new Promise((r) => { const f = () => (n-- > 0 ? requestAnimationFrame(f) : r()); f(); });
+
+	// темп просмотра: всё движется медленно и мягко — плавный разгон и плавное торможение, без резких стартов
+	const T = reduced
+		? { bg: 0, veil: 0, pause: 0, grid: 0, flip: 0, nav: 0, navStep: 0, out: 0, in: 0, close: 0 }
+		: { bg: 0.7, veil: 1.2, pause: 0.35, grid: 2.2, flip: 1.5, nav: 1.1, navStep: 0.06, out: 0.7, in: 1.2, close: 1.1 };
+	const SMOOTH = 'power3.inOut'; // сетка, колонки, главный кадр
+	const SOFT = 'sine.inOut';     // проявление и затухание
+
+	// главный кадр переезжает между сеткой и экраном (GSAP Flip): размерами, не масштабом — снимок не растягивается;
+	// поле вокруг снимка и скругление меняются плавно вместе с ним, без скачка в первый кадр
+	function morph(s, to, ease) {
+		const st = Flip.getState(s.flip, { props: 'padding' });
+		const r0 = getComputedStyle(s.flipImg).borderRadius;
+		to.appendChild(s.flip);
+		const r1 = getComputedStyle(s.flipImg).borderRadius;
+		Flip.from(st, { duration: T.flip, ease, props: 'padding' });
+		gsap.fromTo(s.flipImg, { borderRadius: r0 }, { borderRadius: r1, duration: T.flip, ease, clearProps: 'borderRadius' });
 	}
 
 	// «один кадр»: колонки разъезжаются, главный кадр раскрывается на весь экран, миниатюры выезжают
 	const showList = () => {
 		const s = state;
-		return gsap.timeline({ defaults: { duration: 1.7, ease: 'power2.inOut' }, onStart: () => s.content.classList.add('is-current') })
+		return gsap.timeline({ defaults: { duration: T.grid, ease: SMOOTH }, onStart: () => s.content.classList.add('is-current') })
 			.addLabel('start', 0)
 			.fromTo(s.grid, { scale: 0.4 }, { scale: 1 }, 'start')
 			.to(s.up, { y: '-200vh' }, 'start')
 			.to(s.down, { y: '200vh' }, 'start')
-			.addLabel('flip', 1.7)
+			// главный кадр начинает раскрываться чуть раньше, чем колонки остановятся, — движение перетекает, без паузы
+			.addLabel('flip', T.grid * 0.85)
+			// колонки не прячем: в одной из них соседний снимок — он на экране слева и плавно уезжает влево
 			.add(() => {
-				const st = Flip.getState(s.flip);
-				s.main.appendChild(s.flip);
-				Flip.from(st, { duration: 1, ease: 'power4' });
+				morph(s, s.main, SMOOTH);
 				gsap.set(s.nav, { opacity: 1 });
 			}, 'flip')
-			.to(s.push, { duration: 1, ease: 'power4', xPercent: -100 }, 'flip')
-			.fromTo(s.navItems, { yPercent: 200, opacity: 0 }, { duration: 0.7, ease: 'power4', stagger: 0.03, yPercent: 0, opacity: 1 }, 'flip');
+			.to(s.push, { duration: T.flip, ease: SMOOTH, xPercent: -100 }, 'flip')
+			// миниатюры выплывают снизу по одной, когда главный кадр уже почти раскрылся
+			.fromTo(s.navItems, { yPercent: 120, opacity: 0 }, { duration: T.nav, ease: 'power2.out', stagger: T.navStep, yPercent: 0, opacity: 1 }, `flip+=${T.flip * 0.45}`);
 	};
 
 	// «сеткой»: всё возвращается обратно
 	const showGrid = () => {
 		const s = state;
-		return gsap.timeline({ defaults: { duration: 1.7, ease: 'power2.inOut' }, onStart: () => s.content.classList.remove('is-current') })
-			.addLabel('flip', 0)
-			.to(s.navItems, { duration: 0.7, stagger: -0.03, yPercent: 200, opacity: 0 }, 'flip')
-			.to(s.push, { duration: 1, xPercent: 0 }, 'flip')
-			.add(() => {
-				const st = Flip.getState(s.flip);
-				s.flipParent.appendChild(s.flip);
-				Flip.from(st, { duration: 1, ease: 'power2.inOut' });
-			}, 'flip')
-			.addLabel('columns', 1)
+		return gsap.timeline({ defaults: { duration: T.grid, ease: SMOOTH }, onStart: () => s.content.classList.remove('is-current') })
+			// миниатюры тонут вниз по одной, затем главный кадр возвращается в сетку
+			.to(s.navItems, { duration: T.out, ease: 'power2.in', stagger: -T.navStep, yPercent: 120, opacity: 0 }, 0)
+			.addLabel('flip', T.out * 0.6)
+			.to(s.push, { duration: T.flip, xPercent: 0 }, 'flip')
+			.add(() => morph(s, s.flipParent, SMOOTH), 'flip')
+			.addLabel('columns', `flip+=${T.flip * 0.15}`)
 			.to([s.down, s.up], { y: 0 }, 'columns')
 			.to(s.grid, { scale: 0.4 }, 'columns');
 	};
@@ -278,14 +325,22 @@
 		s.navItems[i].classList.add('is-current');
 		s.cur = i;
 		const p = s.thumbs[i];
+		// новый кадр декодируется, пока старый гаснет, — смена без рывка
+		const loaded = decode(p.src);
 		gsap.to(s.flipImg, {
-			opacity: 0, duration: reduced ? 0 : 0.6, ease: 'sine.in',
-			onComplete: () => {
-				s.flipImg.style.backgroundImage = `url('${p.src}')`;
+			opacity: 0, duration: T.out, ease: 'sine.in',
+			onComplete: () => loaded.then(() => {
+				if (s.cur !== i) return; // за это время выбрали другой кадр
+				s.flipImg.src = p.src;
 				s.flipImg.dataset.src = p.src;
-				s.flipImg.setAttribute('aria-label', p.alt);
-				gsap.to(s.flipImg, { opacity: 1, duration: reduced ? 0 : 0.8, ease: 'sine.out' });
-			},
+				s.flipImg.alt = p.alt;
+				// проявляется, когда сам элемент декодировал кадр (вне основного потока)
+				const shown = s.flipImg.decode ? s.flipImg.decode().catch(() => {}) : Promise.resolve();
+				shown.then(() => {
+					// новый кадр проявляется и чуть приближается к зрителю — «выплывает»
+					if (s.cur === i) gsap.fromTo(s.flipImg, { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: T.in, ease: 'power2.out', clearProps: 'scale' });
+				});
+			}),
 		});
 	}
 
@@ -293,23 +348,48 @@
 		if (busy || !gsap || !Flip) return;
 		busy = true;
 		build(slug);
+		wv.style.pointerEvents = ''; // на случай, если открыли во время невидимого прогрева сетки
 		history.replaceState(null, '', `#${state.slug}`);
 		if (lenis) lenis.stop();
 		document.documentElement.classList.add('wv-open');
 		wv.classList.add('is-open');
 		wv.setAttribute('aria-hidden', 'false');
 		gsap.set(state.grid, { scale: 0.4 });
-		gsap.fromTo(wv, { autoAlpha: 0 }, {
-			autoAlpha: 1, duration: reduced ? 0 : 0.9, ease: 'sine.inOut',
-			onComplete: () => { busy = false; gsap.delayedCall(reduced ? 0 : 0.25, () => toggle('list')); },
-		});
+		const s = state;
+		// Проявление без рывков, в два шага. Сначала поверх страницы проявляется тёмный фон слоя (сетка под
+		// сплошной тёмной «вуалью»), пока снимки раздела декодируются. Затем вуаль плавно уходит и открывает сетку.
+		// Прозрачность меняется только у однотонных слоёв: смешивать полупрозрачную сетку из крупных снимков
+		// со страницей видеокарта не успевает — отсюда были рывки
+		gsap.set(wv, { autoAlpha: 0 });
+		gsap.set(s.veil, { autoAlpha: 1 });
+		const fadeBg = new Promise((r) => gsap.to(wv, { autoAlpha: 1, duration: T.bg, ease: SOFT, onComplete: r }));
+		Promise.all([fadeBg, ready(s.srcs, 1500)])
+			// под полностью непрозрачной вуалью браузер сетку не рисует — откладывает до снятия вуали, и тогда рывки.
+			// Поэтому вуаль чуть-чуть прозрачная (глазу незаметно), и несколько кадров сетка отрисовывается под ней
+			.then(() => { if (state === s) gsap.set(s.veil, { opacity: 0.985 }); return frames(20); })
+			.then(() => new Promise((r) => {
+				if (state !== s) return r();
+				gsap.to(s.veil, { autoAlpha: 0, duration: T.veil, ease: SOFT, onComplete: r });
+			}))
+			.then(() => {
+				// «один кадр» — когда слой проявился
+				if (state !== s) return;
+				busy = false;
+				gsap.delayedCall(T.pause, () => toggle('list'));
+			});
 	}
 
 	function close() {
 		if (!state || busy) return;
 		busy = true;
-		gsap.to(wv, {
-			autoAlpha: 0, duration: reduced ? 0 : 0.9, ease: 'sine.inOut',
+		const s = state;
+		// в виде «сеткой» сначала вуаль закрывает сетку, потом уходит тёмный фон — как при открытии, в обратном порядке
+		const veiled = s.mode === 'grid'
+			? new Promise((r) => gsap.to(s.veil, { autoAlpha: 1, duration: T.out, ease: SOFT, onComplete: r }))
+				.then(() => { s.grid.style.visibility = 'hidden'; })
+			: Promise.resolve();
+		veiled.then(() => gsap.to(wv, {
+			autoAlpha: 0, duration: s.mode === 'grid' ? T.bg : T.close, ease: SOFT,
 			onComplete: () => {
 				wv.classList.remove('is-open');
 				wv.setAttribute('aria-hidden', 'true');
@@ -320,7 +400,7 @@
 				history.replaceState(null, '', location.pathname);
 				busy = false;
 			},
-		});
+		}));
 	}
 
 	document.addEventListener('click', (e) => {
@@ -350,5 +430,32 @@
 	// пришли по ссылке с разделом (works.html#street, с главной) — сразу просмотр раздела
 	const start = location.hash.slice(1);
 	if (start === 'all' || bySlug(start)) window.addEventListener('load', () => open(start), { once: true });
-	else if (location.hash) history.replaceState(null, '', location.pathname);
+	else {
+		if (location.hash) history.replaceState(null, '', location.pathname);
+		// страница загрузилась и браузер свободен — заранее подгружаем уменьшенные копии (около 3 МБ)
+		// и главные снимки разделов, а затем на несколько кадров собираем сетку «всех работ» невидимой
+		// (прозрачность 0,2 %, нажатия проходят сквозь неё): видеокарта один раз отрисовывает снимки
+		// и запоминает их — первое открытие раздела идёт так же плавно, как повторное
+		const warm = () => {
+			const list = [...new Set([...photos.map((p) => small(p.src)), ...Object.values(COVERS)])];
+			list.reduce((chain, src) => chain.then(() => decode(src)), Promise.resolve()) // по одному, не мешая странице
+				.then(() => {
+					if (state || busy || !gsap) return;
+					build('all');
+					const s = state;
+					wv.style.pointerEvents = 'none';
+					gsap.set(wv, { autoAlpha: 0.002 });
+					gsap.set(s.grid, { scale: 0.4 });
+					return frames(6).then(() => {
+						if (state !== s) return; // за это время открыли раздел — он уже на месте
+						gsap.set(wv, { autoAlpha: 0 });
+						wv.style.pointerEvents = '';
+						wv.innerHTML = '';
+						state = null;
+					});
+				});
+		};
+		const idle = window.requestIdleCallback || ((f) => setTimeout(f, 300));
+		window.addEventListener('load', () => setTimeout(() => idle(warm, { timeout: 2000 }), 1200), { once: true });
+	}
 })();

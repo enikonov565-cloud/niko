@@ -9,7 +9,7 @@
 	const photos = window.GALLERY_PHOTOS || [];
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const EASE = 'power3.inOut';
-	const D = reduced ? 0 : 1.2;
+	const D = reduced ? 0 : 1.5; // перелёт снимка и выезд панели — медленно и плавно
 
 	const root = document.createElement('div');
 	root.className = 'pc';
@@ -110,7 +110,7 @@
 				onComplete: () => { gsap.set(img, { opacity: 1 }); if (fly) { fly.remove(); fly = null; } },
 			}, 0);
 		} else {
-			tl.to(img, { opacity: 1, duration: reduced ? 0 : 0.8 }, reduced ? 0 : 0.4);
+			tl.to(img, { opacity: 1, duration: reduced ? 0 : 1.2, ease: 'sine.inOut' }, reduced ? 0 : 0.4);
 		}
 	}
 
@@ -147,7 +147,7 @@
 			root.appendChild(fly);
 			gsap.set(img, { opacity: 0 });
 			tl.to(fly, { left: b.left, top: b.top, width: b.width, height: b.height, duration: D, ease: EASE }, 0.3)
-				.to(fly, { opacity: 0, duration: 0.3 }, 0.3 + D - 0.15);
+				.to(fly, { opacity: 0, duration: 0.5, ease: 'sine.inOut' }, 0.3 + D - 0.25);
 		}
 	}
 

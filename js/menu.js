@@ -95,8 +95,14 @@
 		let open = false;
 		let tl = null;
 
+		// пока меню открыто, страница не прокручивается: колесо и свайп мимо окна гасятся
+		// (не через overflow: hidden — иначе пропадает полоса прокрутки и страница скачком сдвигается вбок)
+		const block = (e) => { if (!e.target.closest('.mn__card')) e.preventDefault(); };
 		const lock = (on) => {
 			document.documentElement.classList.toggle('mn-open', on);
+			const listen = on ? 'addEventListener' : 'removeEventListener';
+			document[listen]('wheel', block, { passive: false });
+			document[listen]('touchmove', block, { passive: false });
 			if (window.lenis && !document.documentElement.classList.contains('ge-hold')) window.lenis[on ? 'stop' : 'start']();
 		};
 

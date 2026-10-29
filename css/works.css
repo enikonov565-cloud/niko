@@ -222,6 +222,21 @@ html:has(.works-page) {
 	margin-top: calc(var(--step) * (4 - var(--i)));
 }
 
+/* появление: карточки по очереди медленно выплывают снизу (класс is-in ставит js/works.js,
+   is-ready — только если есть чем его поставить: без скрипта карточки видны сразу) */
+.wk__stairs.is-ready .wk-card__link {
+	opacity: 0;
+	transform: translateY(2.5rem);
+	transition:
+		opacity 1.4s var(--ease) calc(var(--i) * 0.14s),
+		transform 1.8s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--i) * 0.14s);
+}
+
+.wk__stairs.is-in .wk-card__link {
+	opacity: 1;
+	transform: none;
+}
+
 .wk-card__link {
 	display: block;
 	color: inherit;
@@ -503,9 +518,8 @@ html:has(.works-page) {
 /* ---------- просмотр раздела — по мотивам codrops GridViewSwitch (MIT) ----------
    Слой на весь экран поверх страницы: сетка 6 × 5 снимков раздела, уменьшенная до 0,4;
    «один кадр» — главный снимок на весь экран, миниатюры внизу. Логика — js/works.js */
-html.wv-open {
-	overflow: hidden;
-}
+/* просмотр открыт: прокрутку страницы не отключаем через overflow: hidden — иначе пропадает полоса прокрутки
+   и вся страница скачком сдвигается вбок на её ширину. Прокрутку останавливает скрипт (Lenis / блокировка колеса) */
 
 .wv {
 	--gi-w: 50vw;
@@ -531,6 +545,9 @@ html.wv-open {
 	width: 100%;
 	height: 100vh;
 	transform: scale(0.4);
+	/* постоянный слой видеокарты: масштаб сетки меняется без перерисовки. Без него (или если включать
+	   слой только на время анимации) открытие и переключение вида дёргаются */
+	will-change: transform;
 }
 
 .wv__col {
@@ -562,17 +579,18 @@ html.wv-open {
 }
 
 .wv__img {
+	display: block;
 	width: 100%;
 	height: 100%;
 	border-radius: calc(var(--r-photo) * 2.5);
-	background-size: cover;
-	background-position: 50% 20%;
+	object-fit: cover;
+	object-position: 50% 20%;
 	backface-visibility: hidden;
 }
 
 /* главный кадр — точка кадра чуть выше середины: на весь экран лица и вершины не срезаются */
 .wv__wrap--flip .wv__img {
-	background-position: 50% 30%;
+	object-position: 50% 30%;
 }
 
 /* раскрытый на весь экран — без полей и скругления */
@@ -582,6 +600,14 @@ html.wv-open {
 
 .wv__main .wv__img {
 	border-radius: 0;
+}
+
+/* вуаль — сплошной тёмный слой над сеткой: плавно открывает и закрывает её (js/works.js) */
+.wv__veil {
+	position: absolute;
+	inset: 0;
+	background: var(--c-dark);
+	pointer-events: none;
 }
 
 .wv__content {
