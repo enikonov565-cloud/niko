@@ -63,26 +63,123 @@
 		}, { threshold: 0.15 }).observe(stairs);
 	}
 
-	// ---------- «Мои работы» на главной: все снимки ровной сеткой ----------
-	// по 4 в ряд (планшет — 3, телефон — 2, CSS), все одного формата 3:4: кадр заполняет ячейку
-	// и чуть смещён вверх — лица и вершины не срезаются. Ряды проявляются при прокрутке, снимки в ряду — по очереди
+	// ---------- схематичные рисунки: фотоаппарат и плёнка — тонкие линии в стиле сайта ----------
+	const svg = (cls, vb, parts) => `<svg class="wa__sketch wa__sketch--${cls}" viewBox="${vb}" aria-hidden="true">${parts.join('')}</svg>`;
+	// фотоаппарат-дальномер: корпус, выступ, видоискатель, кнопка спуска, объектив
+	const camera = svg('camera', '0 0 160 100', [
+		'<rect x="8" y="28" width="144" height="62" rx="9"/>',
+		'<path d="M8 44 H152"/>',
+		'<path d="M26 28 V20 H58 V28"/>',
+		'<rect x="40" y="12" width="12" height="8" rx="2"/>',
+		'<rect x="114" y="34" width="26" height="14" rx="3"/>',
+		'<circle cx="78" cy="62" r="24"/>',
+		'<circle cx="78" cy="62" r="16"/>',
+		'<circle cx="78" cy="62" r="6"/>',
+		'<path d="M69 54 A12 12 0 0 1 84 51"/>',
+	]);
+	// плёнка: кассета и лента с перфорацией и кадрами
+	const holes = [];
+	for (let x = 50; x <= 130; x += 10) holes.push(`<rect x="${x}" y="30" width="5" height="4" rx="1"/>`, `<rect x="${x}" y="66" width="5" height="4" rx="1"/>`);
+	const film = svg('film', '0 0 140 100', [
+		'<rect x="6" y="20" width="34" height="60" rx="7"/>',
+		'<path d="M6 30 H40 M6 70 H40"/>',
+		'<rect x="17" y="10" width="12" height="10" rx="2"/>',
+		'<path d="M40 26 H136 M40 74 H136"/>',
+		...holes,
+		'<rect x="52" y="38" width="34" height="24" rx="2"/>',
+		'<rect x="94" y="38" width="34" height="24" rx="2"/>',
+	]);
+
+	// ---------- «Мои работы» на главной: все снимки в шахматном порядке ----------
+	// колонки через одну опущены (CSS); каждый кадр — в самую короткую колонку, в своих пропорциях, без обрезки.
+	// Форматы вразбег: снимки одной ориентации не выстраиваются в колонке друг под другом (больше двух подряд — никогда,
+	// если это возможно). Раскладка пробует несколько вариантов расстановки и берёт лучший.
+	// Рисунки — на пустых местах над опущенными колонками
 	const allGrid = document.querySelector('.wa__grid');
 	if (allGrid) {
-		allGrid.innerHTML = photos.map((p) => `<figure class="wa__item"><img src="${p.src}" alt="${p.alt}" loading="lazy" decoding="async"></figure>`).join('');
-		const items = [...allGrid.querySelectorAll('.wa__item')];
-		// место в ряду — для задержки появления (сколько колонок, берём из сетки)
-		const order = () => {
-			const n = getComputedStyle(allGrid).gridTemplateColumns.split(' ').length || 1;
-			items.forEach((el, i) => el.style.setProperty('--k', i % n));
+		const colsAll = () => (window.innerWidth >= 1024 ? 4 : window.innerWidth >= 600 ? 3 : 2);
+		// ориентация: вертикальный, горизонтальный, почти квадратный
+		const kind = (r) => (r > 1.1 ? 'v' : r < 0.9 ? 'h' : 's');
+		const items = photos.map((p) => ({ p, r: p.w && p.h ? p.h / p.w : 1.25 }));
+		// форматы равномерно по всему списку: горизонтальных меньше — пусть не кончаются раньше времени
+		// и не оставляют в конце одни вертикальные; каждый раз берём формат, который больше всех «отстаёт»
+		const spread = () => {
+			const groups = {};
+			items.forEach((it) => (groups[kind(it.r)] = groups[kind(it.r)] || []).push(it));
+			const g = Object.values(groups).map((list) => ({ list, used: 0 }));
+			const out = [];
+			while (out.length < items.length) {
+				const next = g.filter((x) => x.used < x.list.length).sort((x, y) => x.used / x.list.length - y.used / y.list.length)[0];
+				out.push(next.list[next.used++]);
+			}
+			return out;
 		};
-		order();
-		window.addEventListener('resize', order);
-		if ('IntersectionObserver' in window && !reduced) {
-			const io = new IntersectionObserver((entries) => entries.forEach((e) => {
-				if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
-			}), { rootMargin: '0px 0px -8% 0px' });
-			items.forEach((el) => io.observe(el));
-		} else items.forEach((el) => el.classList.add('is-in'));
+		// одна раскладка: кадр — в самую короткую колонку (колонки растут ровно); из ближайших look снимков списка
+		// берётся тот, что не повторяет формат конца колонки (rule 'diff'), или хотя бы не даёт трёх подряд ('pair')
+		const layout = (n, list, look, rule) => {
+			const queue = list.slice();
+			const cols = Array.from({ length: n }, () => ({ h: 0, ks: [], items: [] }));
+			while (queue.length) {
+				let c = 0;
+				for (let i = 1; i < n; i++) if (cols[i].h < cols[c].h) c = i;
+				const ks = cols[c].ks, last = ks[ks.length - 1], prev = ks[ks.length - 2];
+				const ok = (q) => (rule === 'diff' ? kind(q.r) !== last : !(kind(q.r) === last && kind(q.r) === prev));
+				let j = queue.findIndex((q, idx) => idx < look && ok(q));
+				if (j < 0) j = 0;
+				const it = queue.splice(j, 1)[0];
+				cols[c].h += it.r;
+				cols[c].ks.push(kind(it.r));
+				cols[c].items.push(it);
+			}
+			// оценка: самая длинная серия одного формата, число пар, разница высот колонок
+			let maxRun = 1, pairs = 0;
+			cols.forEach(({ ks }) => {
+				let run = 1;
+				for (let i = 1; i < ks.length; i++) {
+					run = ks[i] === ks[i - 1] ? run + 1 : 1;
+					if (run === 2) pairs++;
+					maxRun = Math.max(maxRun, run);
+				}
+			});
+			const hs = cols.map((x) => x.h);
+			return { cols, score: maxRun * 100 + pairs * 2 + (Math.max(...hs) - Math.min(...hs)) };
+		};
+		const best = (n) => {
+			const lists = [items, spread()];
+			let top = null;
+			lists.forEach((list) => [3, 5].forEach((look) => ['diff', 'pair'].forEach((rule) => {
+				const v = layout(n, list, look, rule);
+				if (!top || v.score < top.score) top = v;
+			})));
+			return top.cols;
+		};
+		let builtCols = 0;
+		const buildAll = () => {
+			const n = colsAll();
+			if (n === builtCols) return;
+			builtCols = n;
+			const cols = best(n).map((c) => ({
+				html: c.items.map(({ p }) => `<figure class="wa__item"><img src="${p.src}" alt="${p.alt}" ${p.w ? `width="${p.w}" height="${p.h}"` : ''} loading="lazy" decoding="async"></figure>`).join(''),
+			}));
+			// над опущенными колонками — фотоаппарат и плёнка по очереди
+			const tops = [camera, film];
+			let k = 0;
+			const html = cols.map((c, i) => {
+				const top = i % 2 ? `<div class="wa__spot wa__spot--top">${tops[k++ % tops.length]}</div>` : '';
+				return `<div class="wa__col">${top}${c.html}</div>`;
+			});
+			allGrid.innerHTML = html.join('');
+			// кадры и рисунки проявляются при прокрутке — медленно и плавно
+			const items = allGrid.querySelectorAll('.wa__item, .wa__sketch');
+			if ('IntersectionObserver' in window && !reduced) {
+				const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+					if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+				}), { rootMargin: '0px 0px -8% 0px' });
+				items.forEach((el) => io.observe(el));
+			} else items.forEach((el) => el.classList.add('is-in'));
+		};
+		buildAll();
+		window.addEventListener('resize', buildAll);
 		// «все работы» — сразу к этому блоку, без долгой прокрутки через «Кадр под настроение»
 		const toAll = () => {
 			const y = document.querySelector('#all-works').getBoundingClientRect().top + window.scrollY;
