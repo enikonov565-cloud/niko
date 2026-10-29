@@ -341,8 +341,8 @@ html:has(.works-page) {
 	}
 }
 
-/* ---------- «Мои работы» на главной: все снимки в шахматном порядке ----------
-   Колонки через одну опущены на полкадра — ряды идут шахматкой; кадры целиком, в своих пропорциях, без подписей.
+/* ---------- «Мои работы» на главной: все снимки ровной сеткой ----------
+   По 4 в ряд (планшет — 3, телефон — 2), все одного формата 3:4, как карточки «Выбора за вами»; без подписей.
    Фон — тёмный, как низ «Кадра под настроение»: стыка не видно */
 .wa {
 	position: relative;
@@ -397,59 +397,6 @@ html:has(.works-page) {
 	}
 }
 
-/* пустые места над опущенными колонками — фотоаппарат или плёнка */
-.wa__spot {
-	display: grid;
-	pointer-events: none;
-}
-
-.wa__spot--top {
-	margin-top: calc(-1 * clamp(4rem, 2rem + 10vw, 14rem)); /* в отступ опущенной колонки */
-	height: clamp(4rem, 2rem + 10vw, 14rem);
-	margin-bottom: calc(-1 * var(--g));
-}
-
-.wa__sketch {
-	width: min(78%, 15rem);
-	height: auto;
-	color: rgba(235, 235, 235, 0.62);
-	opacity: 0;
-	transform: translateY(1rem) rotate(var(--tilt, 0deg));
-	transition: opacity 2.4s var(--ease), transform 2.4s var(--ease);
-}
-
-/* несимметрично: каждый рисунок — со своим сдвигом от центра, наклоном и размером */
-.wa__sketch--camera {
-	--tilt: -9deg;
-	width: min(78%, 15rem);
-	justify-self: start;
-	margin-left: 8%;
-	align-self: start;
-	margin-top: -10%; /* выше — с воздухом до снимка под ним */
-}
-
-.wa__sketch--film {
-	--tilt: 7deg;
-	width: min(70%, 13rem);
-	justify-self: end;
-	margin-right: 4%;
-	align-self: end;
-	margin-bottom: 14%;
-}
-
-.wa__sketch.is-in {
-	opacity: 1;
-	transform: rotate(var(--tilt, 0deg));
-}
-
-.wa__sketch * {
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 1.6;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-}
-
 .wa__title {
 	margin: 0;
 	font-size: var(--fs-h1);
@@ -461,32 +408,35 @@ html:has(.works-page) {
 
 .wa__grid {
 	--g: clamp(0.75rem, 0.4rem + 1.2vw, 2rem);
-	display: flex;
-	align-items: flex-start;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: var(--g);
 }
 
-.wa__col {
-	display: flex;
-	flex: 1 1 0;
-	flex-direction: column;
-	gap: var(--g);
-	min-width: 0;
+@media (max-width: 1023px) {
+	.wa__grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
 }
 
-/* шахматка: каждая вторая колонка опущена */
-.wa__col:nth-child(even) {
-	padding-top: clamp(4rem, 2rem + 10vw, 14rem);
+@media (max-width: 599px) {
+	.wa__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
+/* ячейка — формат 3:4; ряд проявляется снизу, снимки в ряду — по очереди слева направо (--k ставит js/works.js) */
 .wa__item {
 	margin: 0;
 	overflow: hidden;
+	aspect-ratio: 3 / 4;
 	border-radius: var(--r-photo);
 	background: rgba(235, 235, 235, 0.04);
 	opacity: 0;
 	transform: translateY(2.5rem);
-	transition: opacity 1.4s var(--ease), transform 1.6s var(--ease);
+	transition:
+		opacity 1.4s var(--ease) calc(var(--k, 0) * 0.12s),
+		transform 1.8s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--k, 0) * 0.12s);
 }
 
 .wa__item.is-in {
@@ -494,10 +444,13 @@ html:has(.works-page) {
 	transform: none;
 }
 
+/* кадр заполняет ячейку; точка кадра чуть выше середины — лица и вершины не срезаются */
 .wa__item img {
 	display: block;
 	width: 100%;
-	height: auto;
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 35%;
 	transition: transform 1.4s var(--ease);
 }
 
