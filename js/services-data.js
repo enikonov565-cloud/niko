@@ -19,8 +19,8 @@ window.SERVICES = [
 		price: 'от 5 000 ₽',
 		includes: ['1 час на локации', '20 кадров в обработке', 'подберу место и время света'],
 		photos: [
-			{ src: 'img/gallery/bench.jpg', alt: 'Пара на скамейке в парке', w: 426, h: 640 },
-			{ src: 'img/gallery/birches.jpg', alt: 'Две пожилые женщины гуляют у пруда среди берёз', w: 428, h: 640 },
+			{ src: 'img/gallery/bench.jpg', alt: 'Пара на скамейке в парке', w: 852, h: 1280 },
+			{ src: 'img/gallery/birches.jpg', alt: 'Две пожилые женщины гуляют у пруда среди берёз', w: 856, h: 1280 },
 		],
 	},
 	{

@@ -34,7 +34,7 @@ function init() {
 		{ src: 'img/gallery/sunbeams-forest.jpg', w: 1200, h: 1800 },
 		{ src: 'img/genres/portrait/DSC04053.jpg', w: 1334, h: 2000 },
 		{ src: 'img/gallery/red-square-night.jpg', w: 1217, h: 1500 },
-		{ src: 'img/gallery/walk.jpg', w: 958, h: 640 },
+		{ src: 'img/gallery/walk.jpg', w: 1916, h: 1280 },
 	];
 	// цитата — слово в слово как над залом галереи на главной
 	const QUOTE = [

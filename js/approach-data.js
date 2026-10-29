@@ -8,7 +8,7 @@ window.APPROACH = [
 	{
 		text: 'Снимаю взглядом, | а не нажатием кнопки.',
 		note: 'До съёмки показываю примеры и согласуем стиль обработки.',
-		bg: { src: 'img/gallery/lake.jpg', w: 1304, h: 640 },
+		bg: { src: 'img/gallery/lake.jpg', w: 2608, h: 1280 },
 		photos: [
 			{ src: 'img/gallery/tram-greenery.jpg', alt: 'Трамвай в зелёном тоннеле деревьев' },
 			{ src: 'img/gallery/cat-window.jpg', alt: 'Кошка в светящемся окне ночью' },
@@ -26,7 +26,7 @@ window.APPROACH = [
 	{
 		text: 'Ловлю настоящие эмоции, | а не идеальные улыбки.',
 		note: 'Если файлы потеряются, отправлю их повторно.',
-		bg: { src: 'img/gallery/bridge.jpg', w: 960, h: 640 },
+		bg: { src: 'img/gallery/bridge.jpg', w: 1920, h: 1280 },
 		photos: [
 			{ src: 'img/genres/portrait/DSC04053.jpg', alt: 'Девушка держит флакон духов у лица' },
 			{ src: 'img/gallery/swing-couple.jpg', alt: 'Пара на качелях под навесом' },
