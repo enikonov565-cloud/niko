@@ -162,6 +162,19 @@
 			toAll();
 			window.addEventListener('load', () => requestAnimationFrame(toAll), { once: true });
 		}
+		// закрыли просмотр раздела, открытый отсюда (index.html#works), — сразу на «Выбор за вами», без прокрутки
+		if (location.hash === '#works') {
+			const toWorks = () => {
+				const y = stairs.closest('.wk').getBoundingClientRect().top + window.scrollY;
+				if (window.lenis) window.lenis.scrollTo(y, { immediate: true, force: true });
+				else window.scrollTo(0, y);
+			};
+			toWorks();
+			window.addEventListener('load', () => requestAnimationFrame(() => {
+				toWorks();
+				history.replaceState(null, '', location.pathname);
+			}), { once: true });
+		}
 	}
 
 	// на главной — только ступеньки, ссылки ведут на works.html
@@ -485,6 +498,16 @@
 		if (!state || busy) return;
 		busy = true;
 		const s = state;
+		// открыли с главной («Выбор за вами») — «закрыть» возвращает туда же, к этому блоку, а не на works.html:
+		// кадр и миниатюры гаснут на тёмном фоне, затем главная открывается сразу на «Выборе за вами»
+		if (fromHome) {
+			gsap.set(s.veil, { autoAlpha: 1 });
+			gsap.to([s.content, ...uiOf()], {
+				opacity: 0, duration: T.out, ease: SOFT,
+				onComplete: () => { location.href = 'index.html#works'; },
+			});
+			return;
+		}
 		const card = s.mode === 'list' && !reduced && (s.card || cardOf(s.slug));
 		const to = card && card.getBoundingClientRect();
 		if (onScreen(to)) {
@@ -545,6 +568,12 @@
 
 	// пришли по ссылке с разделом (works.html#street, с главной) — сразу просмотр раздела
 	const start = location.hash.slice(1);
+	const fromHome = (() => {
+		try {
+			const r = new URL(document.referrer);
+			return !!start && r.origin === location.origin && !/works/.test(r.pathname);
+		} catch (e) { return false; }
+	})();
 	if (start === 'all' || bySlug(start)) window.addEventListener('load', () => open(start), { once: true });
 	else {
 		if (location.hash) history.replaceState(null, '', location.pathname);
