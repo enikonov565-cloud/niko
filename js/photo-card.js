@@ -72,7 +72,7 @@
 		const chars = setTitle(p.label || p.alt || 'Без названия');
 		$('desc').textContent = nb(p.alt ? `${p.alt.replace(/[.\s]+$/, '')}.` : '');
 		const what = p.label ? `«${p.label}»` : '';
-		$('contact').href = `https://t.me/Nikonovevgeny?text=${encodeURIComponent(`Здравствуйте! На сайте понравился снимок ${what}${p.genre ? ` (${p.genre.toLowerCase()})` : ''} — хочу обсудить съёмку.`)}`;
+		$('contact').href = `https://t.me/Nikonovevgeny?text=${encodeURIComponent(`Здравствуйте! На сайте понравился снимок ${what}${p.genre ? ` (${p.genre.toLowerCase()})` : ''}. Хочу обсудить съёмку.`)}`;
 		img.src = p.src;
 		img.alt = p.alt || '';
 		root.classList.add('is-open');

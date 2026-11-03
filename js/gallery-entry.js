@@ -133,11 +133,13 @@ function init() {
 		const narrow = W < 768;
 		const top = m.top + (narrow ? 24 : 0); // на телефоне логотип в шапке ниже бургера
 
-		// заголовок H1 — по линии бургера, как заголовки других экранов
+		// заголовок H1 — по центру экрана, над листом
 		ctx.fillStyle = INK;
 		ctx.font = `500 ${m.h1}px Inter, sans-serif`;
 		spaced(ctx, -0.01, m.h1);
-		ctx.fillText('ДОБРО ПОЖАЛОВАТЬ!', m.gutter, top + m.h1 * 0.85);
+		ctx.textAlign = 'center';
+		ctx.fillText('ДОБРО ПОЖАЛОВАТЬ!', W / 2, top + m.h1 * 0.85);
+		ctx.textAlign = 'left';
 		spaced(ctx, 0, m.h1);
 		titleCanvas.width = cw;
 		titleCanvas.height = ch;
@@ -303,8 +305,9 @@ function init() {
 		const idx = [], wts = [];
 		for (let k = 0; k < position.count; k++) {
 			v.fromBufferAttribute(position, k);
-			const gx = ((v.x + width / 2) / width) * (ST.boneX - 1);
-			const gy = ((v.y + height / 2) / height) * (ST.boneY - 1);
+			// в пределах решётки: на краях листа погрешность даёт −0,0000001 — индекс −1 ломал отрисовку
+			const gx = Math.min(ST.boneX - 1, Math.max(0, ((v.x + width / 2) / width) * (ST.boneX - 1)));
+			const gy = Math.min(ST.boneY - 1, Math.max(0, ((v.y + height / 2) / height) * (ST.boneY - 1)));
 			const x0 = Math.floor(gx), y0 = Math.floor(gy);
 			const x1 = Math.min(x0 + 1, ST.boneX - 1), y1 = Math.min(y0 + 1, ST.boneY - 1);
 			const tx = gx - x0, ty = gy - y0;
@@ -564,17 +567,32 @@ function init() {
 	}
 
 	// кадр страницы: основа + написанная часть рукописи; возвращает, где сейчас кончик ручки.
-	// В покое лист с рукописью — в наклейке, в текстуре сцены остаётся только заголовок
+	// В покое лист с рукописью — в наклейке, в текстуре сцены остаётся только заголовок.
+	// В облёте в текстуру ложится снимок самой наклейки — с тем же скатанным уголком и тенью, что в покое
+	// (без видеокарты для наклейки — прежний лист с загибом из основы)
 	function renderPage() {
 		if (!layout) return null;
 		const ctx = pageCanvas.getContext('2d');
+		const snap = !sticker.on && sticker.ok && !!stR && !!stMesh && !!sticker.box;
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
 		ctx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-		ctx.drawImage(sticker.on ? titleCanvas : baseCanvas, 0, 0);
+		ctx.drawImage(sticker.on || snap ? titleCanvas : baseCanvas, 0, 0);
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-		const tip = handwriting(ctx, !sticker.on);
+		const tip = handwriting(ctx, !sticker.on && !snap);
+		if (sticker.on || snap) sticker.paint();
+		if (snap) {
+			// кадр наклейки читаем сразу после отрисовки — до этого браузер холст не очищает
+			bendSticker();
+			stR.render(stScene, stCam);
+			const S = layout.sheet;
+			const { cw, ch } = sticker.box;
+			ctx.save();
+			ctx.translate(S.x + S.w / 2, S.y + S.h / 2);
+			ctx.rotate(S.a);
+			ctx.drawImage(stEl, -cw / 2, -ch / 2, cw, ch);
+			ctx.restore();
+		}
 		pageTex.needsUpdate = true;
-		if (sticker.on) sticker.paint();
 		return tip;
 	}
 

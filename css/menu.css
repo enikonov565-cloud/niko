@@ -717,7 +717,7 @@ html.mn-open .topbar {
 	align-items: flex-end;
 	min-height: 34px; /* шаг — как у пунктов списков рядом */
 	padding-bottom: 5px;
-	font-size: clamp(1rem, 0.85rem + 0.5vw, 1.375rem);
+	font-size: clamp(0.875rem, 0.75rem + 0.45vw, 1.25rem);
 	font-weight: 300;
 	line-height: normal;
 	letter-spacing: 0.06em;

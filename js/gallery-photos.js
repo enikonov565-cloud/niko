@@ -24,7 +24,7 @@ window.GALLERY_PHOTOS = [
 	{ src: 'img/genres/portrait/DSC04026.jpg', alt: 'Девушка с флаконом духов в руках', label: 'Нежность в ладонях', genre: 'Портрет', w: 1334, h: 2000 },
 	{ src: 'img/gallery/railing.jpg', alt: 'Кованая ограда набережной, город в дымке', label: 'Дымка', genre: 'Архитектура', w: 1920, h: 1280 },
 	{ src: 'img/gallery/willow-alley.jpg', alt: 'Аллея старых ив в вечернем свете', label: 'Ивы помнят', genre: 'Пейзаж', w: 870, h: 1280 },
-	{ src: 'img/gallery/tunnel-light.jpg', alt: 'Силуэт человека в кирпичном тоннеле подземной реки Неглинки', label: 'Неглинка — река под Москвой', genre: 'Архитектура', w: 1125, h: 1125 },
+	{ src: 'img/gallery/tunnel-light.jpg', alt: 'Силуэт человека в кирпичном тоннеле подземной реки Неглинки', label: 'Неглинка, река под Москвой', genre: 'Архитектура', w: 1125, h: 1125 },
 	{ src: 'img/gallery/foggy-tree.jpg', alt: 'Дерево в рассветном тумане у реки', label: 'Утро в молоке', genre: 'Пейзаж', w: 1085, h: 1500 },
 	{ src: 'img/gallery/cat-window.jpg', alt: 'Кошка в светящемся окне ночью', label: 'Ждёт', genre: 'Стрит-фото', w: 1327, h: 2000 },
 	{ src: 'img/gallery/bridge.jpg', alt: 'Мостик над прудом в весеннем парке, сепия', label: 'Вчерашний день', genre: 'Пейзаж', w: 1920, h: 1280 },

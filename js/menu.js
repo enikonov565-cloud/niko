@@ -172,8 +172,8 @@
 			<section class="inv" aria-labelledby="inv-title">
 				<img class="inv__hero" src="img/about/photographer.png" alt="" width="640" height="640" loading="lazy" aria-hidden="true">
 				<div class="inv__body">
-					<h2 class="inv__title" id="inv-title"><span>Ваш кадр —</span> <span>следующий</span></h2>
-					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить, —</span> <span>подберу место, свет и&nbsp;время.</span></p>
+					<h2 class="inv__title" id="inv-title"><span>Следующий кадр</span> <span>за&nbsp;вами</span></h2>
+					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить,</span> <span>а&nbsp;я&nbsp;подберу место, свет и&nbsp;время.</span></p>
 					<a class="inv__btn" href="https://t.me/Nikonovevgeny" ${ext}><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
 			</section>
@@ -280,7 +280,7 @@
 	// плавный ход без Lenis (страницы с обычной прокруткой): медленный разгон и торможение
 	const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 	const glide = (to, done) => {
-		const from = window.scrollY, t0 = performance.now(), dur = 1100;
+		const from = window.scrollY, t0 = performance.now(), dur = 800;
 		cancelAnimationFrame(tween);
 		const step = (now) => {
 			const k = Math.min(1, (now - t0) / dur);
@@ -305,23 +305,27 @@
 			if (h > vh * 0.4) spots.push(b.top); // мелкий блок (нижняя строка футера) к верху экрана не ставим
 			if (h > vh) spots.push(b.bottom - vh);
 		});
+		// доводим только по ходу прокрутки (до полэкрана); против хода — лишь лёгкая поправка, иначе страница
+		// «тянула назад»: листаешь вверх, остановился — а её уводит вниз, к экрану, который покидаешь
 		let to = y, best = Infinity;
 		spots.forEach((s) => {
 			const c = Math.max(0, Math.min(max, s));
-			const d = Math.abs(c - y);
-			if (d < best) { best = d; to = c; }
+			const d = c - y;
+			const ad = Math.abs(d);
+			const ok = (Math.sign(d) === dir && ad <= vh * 0.5) || ad <= vh * 0.12;
+			if (ok && ad < best) { best = ad; to = c; }
 		});
-		if (best < 2 || best > vh) return;
+		if (best < 2 || best === Infinity) return;
 		snapping = true;
 		// конец хода — по таймеру: Lenis сообщает о нём не всегда (например, если ход прервали)
 		clearTimeout(doneT);
-		doneT = setTimeout(() => { snapping = false; }, 1250);
-		if (window.lenis) window.lenis.scrollTo(to, { duration: 1.1, easing: ease });
+		doneT = setTimeout(() => { snapping = false; }, 950);
+		if (window.lenis) window.lenis.scrollTo(to, { duration: 0.8, easing: ease });
 		else glide(to, () => {});
 	};
 	// прокрутка остановилась — 180 мс без сдвига хотя бы на полпикселя («хвост» плавной прокрутки в доли
 	// пикселя не в счёт: иначе подтягивание ждало бы его секунды две)
-	let lastY = window.scrollY, movedAt = 0;
+	let lastY = window.scrollY, movedAt = 0, dir = 0; // dir — куда листали последним: 1 вниз, −1 вверх
 	const check = () => {
 		const wait = 180 - (performance.now() - movedAt);
 		if (wait > 0) { snapT = setTimeout(check, wait); return; }
@@ -330,6 +334,7 @@
 	};
 	window.addEventListener('scroll', () => {
 		if (Math.abs(window.scrollY - lastY) < 0.5 || snapping) return;
+		dir = Math.sign(window.scrollY - lastY);
 		lastY = window.scrollY;
 		movedAt = performance.now();
 		if (!snapT) snapT = setTimeout(check, 180);
