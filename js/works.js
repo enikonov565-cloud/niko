@@ -584,15 +584,9 @@
 			});
 			return;
 		}
-		// в виде «сеткой» сначала вуаль закрывает сетку, потом уходит тёмный фон — как при открытии, в обратном порядке
-		const veiled = s.mode === 'grid'
-			? new Promise((r) => gsap.to(s.veil, { autoAlpha: 1, duration: T.out, ease: SOFT, onComplete: r }))
-				.then(() => { s.grid.style.visibility = 'hidden'; })
-			: Promise.resolve();
-		veiled.then(() => gsap.to(wv, {
-			autoAlpha: 0, duration: s.mode === 'grid' ? T.bg : T.close, ease: SOFT,
-			onComplete: () => finish(s),
-		}));
+		// карточка сразу на месте под слоем, слой тает целиком — страница проступает с первого кадра, без паузы
+		if (s.card) s.card.style.visibility = '';
+		gsap.to(wv, { autoAlpha: 0, duration: T.close, ease: SOFT, onComplete: () => finish(s) });
 	}
 
 	document.addEventListener('click', (e) => {
