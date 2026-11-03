@@ -2,8 +2,8 @@
 // Карточка раздела открывает просмотр её снимков (по мотивам codrops GridViewSwitch, MIT),
 // кнопка «все работы» — просмотр всех снимков. Снимки и разделы берутся из js/gallery-photos.js
 // (genre у каждого снимка) и js/services-data.js (названия и порядок разделов).
-// На главной (блок «Выбор за вами» между «Моим подходом» и «Кадром под настроение») — только ступеньки:
-// карточка и кнопка ведут на works.html к снимкам раздела или ко всем снимкам.
+// На главной (блок «Выбор за вами» между «Моим подходом» и «Кадром под настроение») карточка открывает
+// тот же просмотр прямо поверх главной, без перехода на works.html; кнопка «все работы» ведёт к блоку всех снимков.
 (() => {
 	const gsap = window.gsap;
 	const photos = window.GALLERY_PHOTOS || [];
@@ -162,22 +162,9 @@
 			toAll();
 			window.addEventListener('load', () => requestAnimationFrame(toAll), { once: true });
 		}
-		// закрыли просмотр раздела, открытый отсюда (index.html#works), — сразу на «Выбор за вами», без прокрутки
-		if (location.hash === '#works') {
-			const toWorks = () => {
-				const y = stairs.closest('.wk').getBoundingClientRect().top + window.scrollY;
-				if (window.lenis) window.lenis.scrollTo(y, { immediate: true, force: true });
-				else window.scrollTo(0, y);
-			};
-			toWorks();
-			window.addEventListener('load', () => requestAnimationFrame(() => {
-				toWorks();
-				history.replaceState(null, '', location.pathname);
-			}), { once: true });
-		}
 	}
 
-	// на главной — только ступеньки, ссылки ведут на works.html
+	// просмотр раздела — там, где есть его слой (.wv): на works.html и на главной, поверх страницы
 	if (!onPage) return;
 
 	// ---------- просмотр раздела — по мотивам codrops GridViewSwitch (MIT) ----------
@@ -186,8 +173,9 @@
 	const Flip = window.Flip;
 	if (gsap && Flip) gsap.registerPlugin(Flip);
 	const wv = document.querySelector('.wv');
-	let lenis = null;
-	if (window.Lenis && !reduced) {
+	// на главной плавная прокрутка уже есть (js/parallax.js) — берём её, второй не заводим
+	let lenis = window.lenis || null;
+	if (!lenis && window.Lenis && !reduced) {
 		lenis = new window.Lenis();
 		window.lenis = lenis; // меню и карточка снимка останавливают прокрутку через него
 		const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
@@ -498,16 +486,6 @@
 		if (!state || busy) return;
 		busy = true;
 		const s = state;
-		// открыли с главной («Выбор за вами») — «закрыть» возвращает туда же, к этому блоку, а не на works.html:
-		// кадр и миниатюры гаснут на тёмном фоне, затем главная открывается сразу на «Выборе за вами»
-		if (fromHome) {
-			gsap.set(s.veil, { autoAlpha: 1 });
-			gsap.to([s.content, ...uiOf()], {
-				opacity: 0, duration: T.out, ease: SOFT,
-				onComplete: () => { location.href = 'index.html#works'; },
-			});
-			return;
-		}
 		const card = s.mode === 'list' && !reduced && (s.card || cardOf(s.slug));
 		const to = card && card.getBoundingClientRect();
 		if (onScreen(to)) {
@@ -568,15 +546,9 @@
 
 	// пришли по ссылке с разделом (works.html#street, с главной) — сразу просмотр раздела
 	const start = location.hash.slice(1);
-	const fromHome = (() => {
-		try {
-			const r = new URL(document.referrer);
-			return !!start && r.origin === location.origin && !/works/.test(r.pathname);
-		} catch (e) { return false; }
-	})();
 	if (start === 'all' || bySlug(start)) window.addEventListener('load', () => open(start), { once: true });
 	else {
-		if (location.hash) history.replaceState(null, '', location.pathname);
+		if (location.hash && !allGrid) history.replaceState(null, '', location.pathname); // на главной якоря нужны меню
 		// страница загрузилась и браузер свободен — заранее подгружаем уменьшенные копии (около 3 МБ)
 		// и главные снимки разделов, а затем на несколько кадров собираем сетку «всех работ» невидимой
 		// (прозрачность 0,2 %, нажатия проходят сквозь неё): видеокарта один раз отрисовывает снимки
