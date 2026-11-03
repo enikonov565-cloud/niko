@@ -48,15 +48,16 @@
 	height: 100%;
 }
 
-/* живой загнутый уголок листа — поверх страницы, вращается вокруг самого угла (js/gallery-entry.js) */
-.ge__curl {
+/* лист-наклейка: в покое лист с цитатой — отдельная 3D-наклейка поверх страницы, у неё отклеивается
+   правый нижний угол (js/gallery-entry.js); повёрнута вокруг своего центра, как лист на странице */
+.ge__sheet {
 	position: absolute;
 	z-index: 1;
 	top: 0;
 	left: 0;
 	opacity: 0;
 	pointer-events: none;
-	transform-origin: 100% 100%;
+	transform-origin: 50% 50%;
 	transition: opacity 0.4s ease;
 }
 

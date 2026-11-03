@@ -114,6 +114,7 @@ function init() {
 	const PEN_INK = '#1c3540';      // чернила — глубокая бирюза
 	const HAND_FONT = 'Lemon';      // рукописный шрифт (fonts/ofont.ru_Lemon.ttf)
 	const baseCanvas = document.createElement('canvas'); // всё, кроме рукописи, — рисуется один раз
+	const titleCanvas = document.createElement('canvas'); // только заголовок: в покое лист показывает наклейка
 	let layout = null;    // строки рукописи: текст, x, y, ширина
 	let written = 0;      // сколько пикселей рукописи уже написано (по всем строкам подряд)
 
@@ -138,6 +139,9 @@ function init() {
 		spaced(ctx, -0.01, m.h1);
 		ctx.fillText('ДОБРО ПОЖАЛОВАТЬ!', m.gutter, top + m.h1 * 0.85);
 		spaced(ctx, 0, m.h1);
+		titleCanvas.width = cw;
+		titleCanvas.height = ch;
+		titleCanvas.getContext('2d').drawImage(baseCanvas, 0, 0);
 
 		// лист — между заголовком и приглашением, по полям сайта; чуть повёрнут, как положенный на стол
 		const inviteTop = invite ? invite.getBoundingClientRect().top - stage.getBoundingClientRect().top : H * 0.72;
@@ -173,7 +177,7 @@ function init() {
 		ctx.globalCompositeOperation = 'source-over';
 		drawFlap(ctx, hw, hh, fold, 0);
 		ctx.restore();
-		// где уголок на экране — для живого слоя поверх (js: curlFrame)
+		// где угол листа на экране — по нему наклейка ловит наведение (nearCorner)
 		const ca = -0.012;
 		const ccx = sheetX + hw;
 		const ccy = sheetTop + hh;
@@ -195,7 +199,7 @@ function init() {
 		}
 		const blockH = lines.length * lh + size * 1.3;
 		let y = sheetTop + (sheetH - blockH) / 2 + size * 0.95;
-		layout = { size, lines: [], W, H, curl };
+		layout = { size, lines: [], W, H, curl, sheet: { x: sheetX, y: sheetTop, w: sheetW, h: sheetH, r: m.radius * 0.5, a: -0.012 } };
 		lines.forEach((t) => {
 			layout.lines.push({ t, x: sheetX + pad, y, w: ctx.measureText(t).width, size });
 			y += lh;
@@ -207,6 +211,7 @@ function init() {
 		// подпись не заходит под загнутый уголок
 		layout.lines.push({ t: AUTHOR, x: sheetX + sheetW - pad - fold * 0.6 - aw, y: y - lh + size * 1.25, w: aw, size: aSize });
 		layout.total = layout.lines.reduce((s, l) => s + l.w, 0);
+		sticker.resize();
 		renderPage();
 	}
 
@@ -237,59 +242,305 @@ function init() {
 		ctx.restore();
 	}
 
-	// живой уголок поверх страницы: в покое отворот чуть приподнимается и опускается, как от сквозняка.
-	// Под ним в текстуре — неподвижный загиб, его слой закрывает; в облёте слой гаснет и остаётся загиб
-	const curlEl = document.createElement('canvas');
-	curlEl.className = 'ge__curl';
-	curlEl.setAttribute('aria-hidden', 'true');
-	stage.parentElement.appendChild(curlEl);
-	function curlFrame(p, now) {
-		const c = layout && layout.curl;
-		if (!c) return;
-		const show = p < 0.01 && !reduced && fontsReady;
-		curlEl.style.opacity = show ? '1' : '0';
-		if (!show) return;
-		const S = Math.ceil(c.fold * 2.2);
-		if (curlEl.width !== Math.round(S * dpr)) {
-			curlEl.width = curlEl.height = Math.round(S * dpr);
-			curlEl.style.width = curlEl.style.height = `${S}px`;
+	// ---------- лист-наклейка: в покое лист с цитатой — отдельная 3D-наклейка, у неё отклеивается правый нижний угол ----------
+	// Перенесено из «Sticker Peel — Originkit» (React/Framer) без изменений в самом эффекте: та же сетка 80×60,
+	// решётка костей 30×30 с билинейной привязкой, тот же изгиб полукругом (радиус 0.15, сила 0.6), те же материалы
+	// (лицо с бликом, изнанка своего цвета, торцы), свет и мягкая тень на фон. Наведёшь на угол — отклеивается
+	// сильнее (как hoverPeel), нажмёшь — ещё сильнее (pressPeel), уведёшь — плавно ложится обратно.
+	// В облёте наклейка гаснет, и лист снова рисуется в текстуре сцены
+	const ST = {
+		depth: 0.003, boneX: 30, boneY: 30, segW: 80, segH: 60,
+		cam: 1200,
+		curlFactor: 0.6,
+		curlR: 0.05 + ((0.15 - 0.1) / 0.9) * (1 / Math.PI - 0.05), // mapInternalRadiusToUIValue(FIXED_CURL_RADIUS = 0.15)
+		rotation: 315,                                               // направление загиба: к правому нижнему углу
+		peel: { rest: 0.14, hover: 0.22, press: 0.3 },               // доля листа по диагонали: покой, наведение, нажатие
+		back: '#d6d2ca',                                             // изнанка бумаги
+		shadow: { opacity: 30, color: '#000000', x: -300, y: 140 },
+	};
+	const sticker = { on: false, ok: false, amount: ST.peel.rest, hover: false, press: false, t: 0, dirty: true, size: null, box: null };
+	const stEl = document.createElement('canvas');
+	stEl.className = 'ge__sheet';
+	stEl.setAttribute('aria-hidden', 'true');
+	stage.parentElement.appendChild(stEl);
+	const sheetCanvas = document.createElement('canvas'); // лицо наклейки: бумага и рукопись
+	const backCanvas = document.createElement('canvas');  // изнанка: та же форма, цвет изнанки
+	const stScene = new THREE.Scene();
+	const stCam = new THREE.PerspectiveCamera(30, 1, 100, 2000);
+	stCam.position.set(0, 0, ST.cam);
+	stCam.lookAt(0, 0, 0);
+	let stR = null, stMesh = null, stBones = [], stInit = [];
+	const stTex = new THREE.CanvasTexture(sheetCanvas);
+	stTex.colorSpace = THREE.SRGBColorSpace;
+	stTex.minFilter = THREE.LinearFilter;
+	stTex.generateMipmaps = false;
+	const stBack = new THREE.CanvasTexture(backCanvas);
+	stBack.colorSpace = THREE.SRGBColorSpace;
+	stBack.minFilter = THREE.LinearFilter;
+	stBack.generateMipmaps = false;
+	// изнанка зеркальна лицу — иначе при загибе она смотрит не в ту сторону (makeBackTextureViewConsistent)
+	stBack.wrapS = THREE.RepeatWrapping;
+	stBack.repeat.x = -1;
+	stBack.offset.x = 1;
+	if (!reduced) {
+		try {
+			stR = new THREE.WebGLRenderer({ canvas: stEl, alpha: true, antialias: true });
+			stR.setPixelRatio(1);
+			stR.shadowMap.enabled = true;
+			stR.shadowMap.type = THREE.PCFSoftShadowMap;
+			stEl.addEventListener('webglcontextlost', (e) => { e.preventDefault(); sticker.ok = false; });
+			stEl.addEventListener('webglcontextrestored', () => { sticker.size = null; sticker.resize(); });
+		} catch (err) { stR = null; }
+	}
+	const _q = new THREE.Quaternion();
+	const _axis = new THREE.Vector3();
+
+	// сетка наклейки с билинейной привязкой к решётке костей (createStickerGeometry)
+	function stickerGeometry(width, height) {
+		const geometry = new THREE.BoxGeometry(width, height, ST.depth, ST.segW, ST.segH, 1);
+		const position = geometry.attributes.position;
+		const v = new THREE.Vector3();
+		const idx = [], wts = [];
+		for (let k = 0; k < position.count; k++) {
+			v.fromBufferAttribute(position, k);
+			const gx = ((v.x + width / 2) / width) * (ST.boneX - 1);
+			const gy = ((v.y + height / 2) / height) * (ST.boneY - 1);
+			const x0 = Math.floor(gx), y0 = Math.floor(gy);
+			const x1 = Math.min(x0 + 1, ST.boneX - 1), y1 = Math.min(y0 + 1, ST.boneY - 1);
+			const tx = gx - x0, ty = gy - y0;
+			idx.push(y0 * ST.boneX + x0, y0 * ST.boneX + x1, y1 * ST.boneX + x0, y1 * ST.boneX + x1);
+			wts.push((1 - tx) * (1 - ty), tx * (1 - ty), (1 - tx) * ty, tx * ty);
 		}
-		curlEl.style.transform = `translate(${(c.x - S).toFixed(1)}px, ${(c.y - S).toFixed(1)}px) rotate(${c.a}rad)`;
-		const ctx = curlEl.getContext('2d');
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-		ctx.clearRect(0, 0, S, S);
-		const lift = 0.5 + 0.5 * Math.sin(now / 900) * Math.sin(now / 2300 + 1);
-		const f = c.fold * (1 + lift * 0.28);
-		// 1) прячем неподвижный отворот из текстуры — закрашиваем его листом
-		const [a0, s1, s2] = flapPath(S, S, c.fold, 0);
-		ctx.fillStyle = PAPER_COLOR;
-		ctx.beginPath();
-		ctx.moveTo(a0[0] - 2, a0[1]);
-		ctx.quadraticCurveTo(s1[0] - 2, s1[1], s1[2] - 2, s1[3] - 2);
-		ctx.quadraticCurveTo(s2[0], s2[1] - 2, s2[2], s2[3] - 2);
-		ctx.lineTo(S, S);
-		ctx.closePath();
-		ctx.fill();
-		// 2) срез уголка — фоном страницы, на величину нынешнего загиба
-		ctx.fillStyle = '#0b0f15';
-		ctx.beginPath();
-		ctx.moveTo(S - f, S + 1);
-		ctx.lineTo(S + 1, S - f);
-		ctx.lineTo(S + 1, S + 1);
-		ctx.closePath();
-		ctx.fill();
-		// 3) отворот
-		drawFlap(ctx, S, S, f, lift);
+		geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(idx, 4));
+		geometry.setAttribute('skinWeight', new THREE.Float32BufferAttribute(wts, 4));
+		geometry.computeVertexNormals();
+		return geometry;
 	}
 
-	// кадр страницы: основа + написанная часть рукописи; возвращает, где сейчас кончик ручки
-	function renderPage() {
-		if (!layout) return null;
-		const ctx = pageCanvas.getContext('2d');
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		ctx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-		ctx.drawImage(baseCanvas, 0, 0);
+	function disposeSticker() {
+		stScene.traverse((o) => {
+			if (o.geometry) o.geometry.dispose();
+			if (o.material) [].concat(o.material).forEach((mt) => mt.dispose());
+			if (o.isLight && o.dispose) o.dispose();
+		});
+		stScene.clear();
+		stMesh = null;
+		stBones = [];
+		stInit = [];
+	}
+
+	// сцена наклейки под размер листа (setupScene / recreateMeshForSize)
+	function buildSticker(w, h) {
+		disposeSticker();
+		const margin = Math.round(Math.min(w, h) * 0.45);         // место под отклеенный угол и тень
+		const cw = w + margin * 2, ch = h + margin * 2;
+		stCam.fov = 2 * Math.atan(ch / (2 * ST.cam)) * (180 / Math.PI); // calculateCameraFov: 1 единица = 1 px
+		stCam.aspect = cw / ch;
+		stCam.updateProjectionMatrix();
+		stR.setSize(Math.round(cw * dpr), Math.round(ch * dpr), false);
+		stEl.style.width = `${cw}px`;
+		stEl.style.height = `${ch}px`;
+
+		const geometry = stickerGeometry(w, h);
+		const bones = [];
+		const sx = w / (ST.boneX - 1), sy = h / (ST.boneY - 1);
+		for (let y = 0; y < ST.boneY; y++) {
+			for (let x = 0; x < ST.boneX; x++) {
+				const b = new THREE.Bone();
+				b.position.set(-w / 2 + x * sx, -h / 2 + y * sy, 0);
+				bones.push(b);
+			}
+		}
+		stBones = bones;
+		stInit = bones.map((b) => b.position.clone());
+		const skeleton = new THREE.Skeleton(bones);
+		const front = new THREE.MeshStandardMaterial({
+			color: 0xffffff, side: THREE.FrontSide, transparent: true, roughness: 0.2, metalness: 0.4,
+			emissive: 0xffffff, emissiveIntensity: 0.8, map: stTex, emissiveMap: stTex, alphaTest: 0.01,
+		});
+		const back = new THREE.MeshStandardMaterial({
+			color: 0xffffff, side: THREE.FrontSide, transparent: true, roughness: 0.3, metalness: 0,
+			emissive: 0xffffff, emissiveIntensity: 0.3, map: stBack, alphaTest: 0.01,
+		});
+		const side = new THREE.MeshStandardMaterial({
+			color: new THREE.Color(ST.back), transparent: true, opacity: 1, roughness: 0.1, metalness: 0,
+			map: stTex, emissive: 0xffffff, emissiveMap: stTex, emissiveIntensity: 0.8, alphaTest: 0.01,
+		});
+		// порядок граней BoxGeometry: +X, −X, +Y, −Y, +Z (лицо), −Z (изнанка)
+		const mesh = new THREE.SkinnedMesh(geometry, [side, side, side, side, front, back]);
+		mesh.frustumCulled = false;
+		bones.forEach((b) => { mesh.add(b); b.updateMatrixWorld(true); });
+		mesh.bind(skeleton);
+		mesh.castShadow = true;
+		mesh.receiveShadow = false;
+		stMesh = mesh;
+		const group = new THREE.Group();
+		group.add(mesh);
+		stScene.add(group);
+
+		// свет и тень — как в образце
+		stScene.add(new THREE.AmbientLight(0xffffff, 0.4));
+		const light = new THREE.DirectionalLight(0xffffff, 2);
+		light.position.set(ST.shadow.x, ST.shadow.y, 400);
+		light.castShadow = true;
+		light.shadow.mapSize.set(2048, 2048);
+		light.shadow.camera.near = 1;
+		light.shadow.camera.far = 2000;
+		light.shadow.bias = -0.00001;
+		light.shadow.radius = 8;
+		const size = Math.max(cw, ch);
+		light.shadow.camera.left = -size / 2 + ST.shadow.x * 0.3;
+		light.shadow.camera.right = size / 2 + ST.shadow.x * 0.3;
+		light.shadow.camera.top = size / 2 + ST.shadow.y * 0.3;
+		light.shadow.camera.bottom = -size / 2 + ST.shadow.y * 0.3;
+		light.shadow.camera.updateProjectionMatrix();
+		stScene.add(light);
+		const plane = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.ShadowMaterial({ opacity: ST.shadow.opacity / 100, color: new THREE.Color(ST.shadow.color) }));
+		plane.receiveShadow = true;
+		plane.position.set(0, 0, -1);
+		stScene.add(plane);
+		return { cw, ch };
+	}
+
+	// изгиб: решётка костей, линия сгиба поперёк направления загиба, за ней бумага ложится полукругом (updateBones)
+	function bendSticker() {
+		if (!stMesh || !stBones.length) return;
+		const amount = Math.min(1, Math.max(0, sticker.amount));
+		const curlStart = 1 - amount;
+		const curlFactor = amount <= 0 ? 1e-4 : ST.curlFactor;
+		const { width, height } = stMesh.geometry.parameters;
+		const rot = ST.rotation * (Math.PI / 180);
+		const dx = Math.cos(rot), dy = Math.sin(rot);
+		_axis.set(-dy, dx, 0).normalize();
+		const hw = width / 2, hh = height / 2;
+		const maxAlong = Math.max(hw * dx + hh * dy, hw * dx - hh * dy, -hw * dx + hh * dy, -hw * dx - hh * dy);
+		const maxFromCenter = Math.sqrt(width * width + height * height) / 2;
+		const foldOffset = -maxAlong + curlStart * 2 * maxAlong;
+		const radius = ST.curlR * maxFromCenter;
+		const RPrime = radius / curlFactor;
+		const arcLimit = Math.PI * radius;
+		for (let k = 0; k < stBones.length; k++) {
+			const bone = stBones[k];
+			const p0 = stInit[k];
+			const signed = p0.x * dx + p0.y * dy - foldOffset;
+			if (signed > 0) {
+				let xRel, zRel, ang;
+				const a = (signed * curlFactor) / radius;
+				if (signed <= arcLimit) {
+					xRel = RPrime * Math.sin(a);
+					zRel = RPrime * (1 - Math.cos(a));
+					ang = a;
+				} else {
+					const Phi = Math.PI * curlFactor;
+					const extra = signed - arcLimit;
+					xRel = RPrime * Math.sin(Phi) + extra * Math.cos(Phi);
+					zRel = RPrime * (1 - Math.cos(Phi)) + extra * Math.sin(Phi);
+					ang = Phi;
+				}
+				const d = xRel - signed;
+				bone.position.set(p0.x + d * dx, p0.y + d * dy, p0.z + zRel);
+				_q.setFromAxisAngle(_axis, -ang);
+				bone.quaternion.copy(_q);
+			} else {
+				bone.position.copy(p0);
+				bone.quaternion.identity();
+			}
+		}
+		stMesh.updateMatrixWorld(true);
+		stMesh.skeleton.update();
+	}
+
+	// лицо наклейки: бумага и написанная часть рукописи (рукопись — в координатах страницы, наклейка повёрнута)
+	sticker.paint = () => {
+		const S = layout && layout.sheet;
+		if (!S || !sticker.ok) return;
+		const ctx = sheetCanvas.getContext('2d');
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx.clearRect(0, 0, S.w, S.h);
+		ctx.fillStyle = PAPER_COLOR;
+		ctx.beginPath();
+		if (ctx.roundRect) ctx.roundRect(0, 0, S.w, S.h, S.r); else ctx.rect(0, 0, S.w, S.h);
+		ctx.fill();
+		ctx.save();
+		ctx.translate(S.w / 2, S.h / 2);
+		ctx.rotate(-S.a);
+		ctx.translate(-(S.x + S.w / 2), -(S.y + S.h / 2));
+		handwriting(ctx, true);
+		ctx.restore();
+		stTex.needsUpdate = true;
+		sticker.dirty = true;
+	};
+
+	// под новый размер листа: холсты, сетка, место на экране
+	sticker.resize = () => {
+		const S = layout && layout.sheet;
+		if (!S || !stR) return;
+		const key = `${Math.round(S.w)}x${Math.round(S.h)}x${dpr}`;
+		if (sticker.size !== key) {
+			sheetCanvas.width = backCanvas.width = Math.round(S.w * dpr);
+			sheetCanvas.height = backCanvas.height = Math.round(S.h * dpr);
+			stTex.dispose();
+			stBack.dispose();
+			const bx = backCanvas.getContext('2d');
+			bx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			bx.clearRect(0, 0, S.w, S.h);
+			bx.fillStyle = ST.back;
+			bx.beginPath();
+			if (bx.roundRect) bx.roundRect(0, 0, S.w, S.h, S.r); else bx.rect(0, 0, S.w, S.h);
+			bx.fill();
+			stBack.needsUpdate = true;
+			sticker.box = buildSticker(S.w, S.h);
+			sticker.size = key;
+		}
+		const { cw, ch } = sticker.box;
+		stEl.style.transform = `translate(${(S.x + S.w / 2 - cw / 2).toFixed(1)}px, ${(S.y + S.h / 2 - ch / 2).toFixed(1)}px) rotate(${S.a}rad)`;
+		sticker.ok = true;
+		bendSticker();
+		sticker.dirty = true;
+	};
+
+	// угол листа под курсором? — по расстоянию до самого угла, в координатах сцены
+	const nearCorner = (e) => {
+		const c = layout && layout.curl;
+		if (!c || !sticker.on) return false;
+		const r = stage.parentElement.getBoundingClientRect();
+		return Math.hypot(e.clientX - r.left - c.x, e.clientY - r.top - c.y) < Math.max(90, layout.sheet.h * 0.5);
+	};
+	window.addEventListener('pointermove', (e) => {
+		const on = nearCorner(e);
+		if (on !== sticker.hover) stage.parentElement.style.cursor = on ? 'pointer' : '';
+		sticker.hover = on;
+		if (!on) sticker.press = false;
+	}, { passive: true });
+	window.addEventListener('pointerdown', (e) => { if (nearCorner(e)) sticker.press = true; }, { passive: true });
+	window.addEventListener('pointerup', () => { sticker.press = false; }, { passive: true });
+
+	// каждый кадр: наклейка видна только в покое; отгиб плавно идёт к нужному (как tween 0.6 с easeInOut)
+	function stickerFrame(p, now) {
+		const want = !!(sticker.ok && stR && fontsReady && !reduced && !glLost && layout && p < 0.01);
+		if (want !== sticker.on) {
+			sticker.on = want;
+			// гаснет сразу (облёт начинается без двойного листа), проявляется плавно
+			stEl.style.transition = want ? '' : 'none';
+			stEl.style.opacity = want ? '1' : '0';
+			if (!want && stage.parentElement.style.cursor) stage.parentElement.style.cursor = '';
+			renderPage(); // лист — то в наклейке, то снова в текстуре сцены
+		}
+		if (!sticker.on) { sticker.t = now; return; }
+		const dt = Math.min(0.05, (now - (sticker.t || now)) / 1000);
+		sticker.t = now;
+		const target = sticker.press ? ST.peel.press : sticker.hover ? ST.peel.hover : ST.peel.rest;
+		const prev = sticker.amount;
+		sticker.amount += (target - sticker.amount) * (1 - Math.exp(-dt / 0.2));
+		if (Math.abs(sticker.amount - prev) > 1e-5 || sticker.dirty) {
+			bendSticker();
+			stR.render(stScene, stCam);
+			sticker.dirty = false;
+		}
+	}
+
+	// рукопись: написанная часть строк; draw — рисовать ли (иначе только найти кончик ручки)
+	function handwriting(ctx, draw) {
 		ctx.fillStyle = PEN_INK;
 		ctx.textBaseline = 'alphabetic';
 		let left = written;
@@ -297,17 +548,33 @@ function init() {
 		for (const l of layout.lines) {
 			if (left <= 0) break;
 			const show = Math.min(l.w, left);
-			ctx.save();
-			ctx.beginPath();
-			ctx.rect(l.x - l.size * 0.3, l.y - l.size * 1.2, show + l.size * 0.3, l.size * 1.8);
-			ctx.clip();
-			ctx.font = `${l.size}px ${HAND_FONT}, cursive`;
-			ctx.fillText(l.t, l.x, l.y);
-			ctx.restore();
+			if (draw) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(l.x - l.size * 0.3, l.y - l.size * 1.2, show + l.size * 0.3, l.size * 1.8);
+				ctx.clip();
+				ctx.font = `${l.size}px ${HAND_FONT}, cursive`;
+				ctx.fillText(l.t, l.x, l.y);
+				ctx.restore();
+			}
 			tip = { x: l.x + show, y: l.y - l.size * 0.12 };
 			left -= l.w;
 		}
+		return tip;
+	}
+
+	// кадр страницы: основа + написанная часть рукописи; возвращает, где сейчас кончик ручки.
+	// В покое лист с рукописью — в наклейке, в текстуре сцены остаётся только заголовок
+	function renderPage() {
+		if (!layout) return null;
+		const ctx = pageCanvas.getContext('2d');
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+		ctx.drawImage(sticker.on ? titleCanvas : baseCanvas, 0, 0);
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		const tip = handwriting(ctx, !sticker.on);
 		pageTex.needsUpdate = true;
+		if (sticker.on) sticker.paint();
 		return tip;
 	}
 
@@ -684,7 +951,7 @@ function init() {
 			invite.style.transform = `translateX(-50%) scale(${(1 + ease(go) * 0.12).toFixed(3)})`;
 		}
 		writeFrame(p);
-		curlFrame(p, performance.now());
+		stickerFrame(p, performance.now());
 		if (renderer && !glLost) renderer.render(scene, camera);
 	}
 
