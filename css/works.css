@@ -621,6 +621,9 @@ html:has(.works-page) {
 	background-color: rgba(235, 235, 235, 0.08);
 	background-size: cover;
 	background-position: 50% 30%;
+	/* снимок от внешнего края рамки и без повтора — из-под прозрачной рамки не торчит полоска с другого края кадра */
+	background-origin: border-box;
+	background-repeat: no-repeat;
 	cursor: pointer;
 	transition: border-color 0.6s var(--ease);
 }

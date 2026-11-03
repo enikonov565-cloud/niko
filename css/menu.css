@@ -644,6 +644,7 @@ html.mn-open .topbar {
 .ft__grid .ft__mark {
 	flex: none;
 	margin-right: -0.04em; /* межбуквенный хвост последней буквы не сдвигает край */
+	margin-bottom: -0.065em; /* под буквами у Tupik пустой хвост строки — низ букв и низ кнопки «наверх» на одной линии */
 	white-space: nowrap;
 }
 
