@@ -383,6 +383,61 @@
 	const onScreen = (r) => r && r.width && r.bottom > 0 && r.top < window.innerHeight;
 	const uiOf = () => wv.querySelectorAll('.wv__switch, .wv__close');
 
+	// ---------- полёт кадра между карточкой и экраном ----------
+	// Летит отдельный слой: рамка (обрезка) и снимок в ней двигаются только трансформациями — видеокарта
+	// перемещает готовую картинку, ничего не перерисовывая. Раньше менялись размеры, положение, скругление
+	// и точка кадра крупного снимка — на каждом кадре заново раскладка и отрисовка, отсюда рывки.
+	// Снимок всё время в своих пропорциях: и в карточке, и на весь экран он обрезан так же, как настоящий
+	const pct = (v) => String(v).split(' ').map((x) => (/%$/.test(x) ? parseFloat(x) / 100 : 0.5));
+	// снимок с пропорциями ar, закрывающий прямоугольник r, с точкой кадра f
+	const coverBox = (r, ar, f) => {
+		const w = Math.max(r.width, r.height * ar), h = w / ar;
+		return { x: r.left + (r.width - w) * f[0], y: r.top + (r.height - h) * f[1], w };
+	};
+	// состояние полёта: рамка (x, y, w, h, скругление) и снимок в ней (x, y, ширина)
+	const flyAt = (r, photo, radius) => ({ x: r.left, y: r.top, w: r.width, h: r.height, r: radius, p: photo });
+	function flyer(src, ar) {
+		const W = state.main.clientWidth, H = state.main.clientHeight;
+		const PW = Math.max(W, H * ar); // ширина снимка на весь экран — от неё масштаб
+		const box = document.createElement('div');
+		box.className = 'wv__fly';
+		box.style.width = `${W}px`;
+		box.style.height = `${H}px`;
+		const im = new Image();
+		im.alt = '';
+		im.decoding = 'sync';
+		im.src = src;
+		im.style.width = `${PW}px`;
+		im.style.height = `${PW / ar}px`;
+		box.appendChild(im);
+		state.main.appendChild(box); // поверх настоящего кадра, но под миниатюрами и кнопками
+		const L = (a, b, k) => a + (b - a) * k;
+		return {
+			box,
+			ready: im.decode ? im.decode().catch(() => {}) : Promise.resolve(),
+			// k: 0 — состояние a, 1 — состояние b
+			draw(a, b, k) {
+				const x = L(a.x, b.x, k), y = L(a.y, b.y, k), sx = L(a.w, b.w, k) / W, sy = L(a.h, b.h, k) / H;
+				const r = L(a.r, b.r, k), s = L(a.p.w, b.p.w, k) / PW;
+				box.style.transform = `translate3d(${x}px,${y}px,0) scale(${sx},${sy})`;
+				box.style.borderRadius = r > 0.5 ? `${r / sx}px / ${r / sy}px` : '0';
+				im.style.transform = `translate3d(${(L(a.p.x, b.p.x, k) - x) / sx}px,${(L(a.p.y, b.p.y, k) - y) / sy}px,0) scale(${s / sx},${s / sy})`;
+			},
+		};
+	}
+	// карточка на ступеньке: рамка, снимок в ней (с учётом приближения при наведении) и скругление
+	function cardState(card, ar) {
+		const img = card.querySelector('img');
+		const r = card.getBoundingClientRect();
+		const ir = img ? img.getBoundingClientRect() : r;
+		return flyAt(r, coverBox(ir, ar, pct(img ? getComputedStyle(img).objectPosition : '50% 35%')), parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0);
+	}
+	function screenState(s, p, ar) {
+		const r = s.main.getBoundingClientRect();
+		return flyAt(r, coverBox(r, ar, pct(focus(p))), 0);
+	}
+	const ratio = (p, im) => (im && im.naturalWidth ? im.naturalWidth / im.naturalHeight : p.w && p.h ? p.w / p.h : 1.5);
+
 	// общее начало: слой просмотра поверх страницы, прокрутка страницы остановлена
 	function begin(slug) {
 		build(slug);
@@ -421,27 +476,36 @@
 		// фон — однотонная вуаль под главным кадром (сам слой прозрачный): её прозрачность видеокарта меняет даром
 		wv.style.background = 'transparent';
 		gsap.set(s.veil, { autoAlpha: 0 });
-		// главный кадр — точно на месте карточки: тот же размер, скругление и точка кадра
-		gsap.set(s.flip, { position: 'absolute', left: from.left, top: from.top, width: from.width, height: from.height });
-		gsap.set(s.flipImg, { borderRadius: getComputedStyle(card).borderRadius, objectPosition: '50% 35%' });
+		// настоящий кадр на весь экран ждёт под летящим слоем невидимым; летит его копия (flyer)
+		gsap.set(s.flip, { opacity: 0 });
 		gsap.set(wv, { autoAlpha: 1 });
-		ready([s.flipImg.getAttribute('src')], 800).then(() => frames(2)).then(() => {
-			if (state !== s) return;
-			card.style.visibility = 'hidden'; // на ступеньке — пустое место, пока снимок «в полёте»
-			gsap.timeline({
-				defaults: { duration: T.grow, ease: SMOOTH },
-				onComplete: () => {
-					gsap.set(s.flip, { clearProps: 'position,left,top,width,height' });
-					gsap.set(s.flipImg, { clearProps: 'borderRadius' });
-					busy = false;
-				},
-			})
-				.to(s.veil, { autoAlpha: 1, ease: SOFT }, 0)
-				.to(s.flip, { left: 0, top: 0, width: s.main.clientWidth, height: s.main.clientHeight }, 0)
-				.to(s.flipImg, { borderRadius: 0, objectPosition: focus(s.thumbs[0]) }, 0)
-				.to(uiOf(), { opacity: 1, duration: 1, ease: SOFT }, T.grow * 0.5)
-				.to(s.navItems, { yPercent: 0, opacity: 1, duration: T.nav, ease: 'power2.out', stagger: T.navStep }, T.grow * 0.6);
-		});
+		const p = s.thumbs[0];
+		const ar = ratio(p);
+		const fly = flyer(p.src, ar);
+		const a = cardState(card, ar), b = screenState(s, p, ar);
+		fly.draw(a, b, 0);
+		// полёт начинается, когда снимок декодирован и уже нарисован поверх карточки: без пустого кадра
+		Promise.race([Promise.all([fly.ready, ready([s.flipImg.getAttribute('src')], 800)]), new Promise((r) => setTimeout(r, 1200))])
+			.then(() => frames(2)).then(() => {
+				if (state !== s) return;
+				card.style.visibility = 'hidden'; // на ступеньке — пустое место, пока снимок «в полёте»
+				const k = { v: 0 };
+				gsap.timeline({
+					defaults: { duration: T.grow, ease: SMOOTH },
+					onComplete: () => {
+						// подмена: настоящий кадр под копией — точно такой же; копию убираем через кадр
+						gsap.set(s.flip, { opacity: 1 });
+						// тёмный фон — снова у самого слоя, вуаль убрана: иначе она закрывала бы сетку по кнопке «сеткой»
+						wv.style.background = '';
+						gsap.set(s.veil, { autoAlpha: 0 });
+						frames(2).then(() => { fly.box.remove(); busy = false; });
+					},
+				})
+					.to(s.veil, { autoAlpha: 1, ease: SOFT }, 0)
+					.to(k, { v: 1, onUpdate: () => fly.draw(a, b, k.v) }, 0)
+					.to(uiOf(), { opacity: 1, duration: 1, ease: SOFT }, T.grow * 0.5)
+					.to(s.navItems, { yPercent: 0, opacity: 1, duration: T.nav, ease: 'power2.out', stagger: T.navStep }, T.grow * 0.6);
+			});
 	}
 
 	// «все работы»: сетка проявляется из-под вуали, затем — «один кадр».
@@ -491,22 +555,33 @@
 		if (onScreen(to)) {
 			// обратно: миниатюры тонут, главный кадр плавно возвращается в свою карточку, фон тает
 			s.card = card;
-			const r = s.flip.getBoundingClientRect();
 			wv.style.background = 'transparent';
 			gsap.set(s.veil, { autoAlpha: 1 });
-			gsap.set(s.flip, { position: 'absolute', left: r.left, top: r.top, width: r.width, height: r.height });
-			card.style.visibility = 'hidden';
-			const tl = gsap.timeline({ defaults: { duration: T.grow, ease: SMOOTH }, onComplete: () => finish(s) })
-				.to(s.navItems, { yPercent: 120, opacity: 0, duration: T.out, ease: 'power2.in', stagger: -T.navStep }, 0)
-				.to(uiOf(), { opacity: 0, duration: 0.6, ease: SOFT }, 0)
-				.to(s.flip, { left: to.left, top: to.top, width: to.width, height: to.height }, 0.2)
-				.to(s.flipImg, { borderRadius: getComputedStyle(card).borderRadius, objectPosition: '50% 35%' }, 0.2)
-				.to(s.veil, { autoAlpha: 0, ease: SOFT }, 0.2);
-			// смотрели другой кадр раздела — в конце он мягко растворяется в обложке карточки
-			if (s.cur !== 0) {
-				tl.call(() => { card.style.visibility = ''; }, null, 0.2 + T.grow - 0.5)
-					.to(s.flip, { opacity: 0, duration: 0.5, ease: SOFT }, 0.2 + T.grow - 0.5);
-			}
+			// летит копия текущего кадра; настоящий прячется, только когда копия уже нарисована поверх него
+			const p = s.thumbs[s.cur];
+			const ar = ratio(p, s.flipImg);
+			const fly = flyer(s.flipImg.getAttribute('src'), ar);
+			const a = screenState(s, p, ar), b = cardState(card, ar);
+			fly.draw(a, b, 0);
+			const k = { v: 0 };
+			Promise.race([fly.ready, new Promise((r) => setTimeout(r, 600))]).then(() => frames(1)).then(() => {
+				gsap.set(s.flip, { opacity: 0 });
+				card.style.visibility = 'hidden';
+				const tl = gsap.timeline({
+					defaults: { duration: T.grow, ease: SMOOTH },
+					// карточка снова на месте, а копия ещё над ней — убираем слой через кадр, без мигания
+					onComplete: () => { card.style.visibility = ''; frames(2).then(() => finish(s)); },
+				})
+					.to(s.navItems, { yPercent: 120, opacity: 0, duration: T.out, ease: 'power2.in', stagger: -T.navStep }, 0)
+					.to(uiOf(), { opacity: 0, duration: 0.6, ease: SOFT }, 0)
+					.to(k, { v: 1, onUpdate: () => fly.draw(a, b, k.v) }, 0.2)
+					.to(s.veil, { autoAlpha: 0, ease: SOFT }, 0.2);
+				// смотрели другой кадр раздела — в конце он мягко растворяется в обложке карточки
+				if (s.cur !== 0) {
+					tl.call(() => { card.style.visibility = ''; }, null, 0.2 + T.grow - 0.5)
+						.to(fly.box, { opacity: 0, duration: 0.5, ease: SOFT }, 0.2 + T.grow - 0.5);
+				}
+			});
 			return;
 		}
 		// в виде «сеткой» сначала вуаль закрывает сетку, потом уходит тёмный фон — как при открытии, в обратном порядке
@@ -573,6 +648,21 @@
 				});
 		};
 		const idle = window.requestIdleCallback || ((f) => setTimeout(f, 300));
-		window.addEventListener('load', () => setTimeout(() => idle(warm, { timeout: 2000 }), 1200), { once: true });
+		if (!allGrid) window.addEventListener('load', () => setTimeout(() => idle(warm, { timeout: 2000 }), 1200), { once: true });
+		else {
+			// на главной прогрев целиком не делаем: 3 МБ снимков и невидимая сетка поверх тяжёлой страницы дают
+			// рывки и мигание при прокрутке. Подгружаем только раздел, к которому тянется рука, — по одному снимку
+			const warmed = new Set();
+			const warmGenre = (e) => {
+				const a = e.target.closest && e.target.closest('.wk-card__link');
+				const g = a && bySlug(a.dataset.genre);
+				if (!g || warmed.has(g.slug)) return;
+				warmed.add(g.slug);
+				const cover = g.photos.find((p) => p.src === COVERS[g.title]) || g.photos[0];
+				[cover.src, ...g.photos.map((p) => small(p.src))].reduce((chain, src) => chain.then(() => decode(src)), Promise.resolve());
+			};
+			stairs.addEventListener('pointerover', warmGenre, { passive: true });
+			stairs.addEventListener('touchstart', warmGenre, { passive: true });
+		}
 	}
 })();

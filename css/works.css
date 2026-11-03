@@ -544,6 +544,27 @@ html:has(.works-page) {
 	border-radius: 0;
 }
 
+/* летящая копия кадра между карточкой и экраном — двигается только трансформациями (js/works.js, flyer) */
+.wv__fly {
+	position: fixed;
+	left: 0;
+	top: 0;
+	overflow: hidden;
+	transform-origin: 0 0;
+	will-change: transform;
+	pointer-events: none;
+}
+
+.wv__fly img {
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: block;
+	max-width: none;
+	transform-origin: 0 0;
+	will-change: transform;
+}
+
 /* вуаль — сплошной тёмный слой над сеткой: плавно открывает и закрывает её (js/works.js) */
 .wv__veil {
 	position: absolute;
