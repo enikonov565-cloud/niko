@@ -123,21 +123,23 @@
 		if (busy || zone !== 'room') return;
 		busy = true;
 		hold(true);
+		// зал сразу встаёт ровно в кадр: прокрутка не замирает на полпути между залом и цитатой
+		jump(top(room));
 		if (reduced) { done('entry'); return; }
 		const f = flight();
 		gsap.set(backdrop, { autoAlpha: 0 });
 		gsap.timeline({ onComplete: () => done('entry') })
-			.to(backdrop, { autoAlpha: 1, duration: 1.4, ease: 'sine.inOut' }, 0)
+			.to(backdrop, { autoAlpha: 1, duration: 0.8, ease: 'sine.inOut' }, 0)
 			.add(() => {
 				jump(top(entry));
 				f.p = FLY;
 				entry.classList.add('is-flipping');
 				gsap.set(pin, { transformOrigin: '50% 50%', rotate: -90, scale: 2.7, autoAlpha: 0 });
-			}, 1.45)
-			.to(pin, { autoAlpha: 1, duration: 1.2, ease: 'sine.out' }, 1.45)
-			.to(pin, { rotate: 0, scale: 1, duration: 2.6, ease: 'sine.inOut' }, 1.45)
-			.to(backdrop, { autoAlpha: 0, duration: 1.6, ease: 'sine.inOut' }, 2.2)
-			.to(f, { p: 0, duration: 8, ease: 'sine.inOut' }, 1.8); // обратный облёт — так же неторопливо
+			}, 0.85)
+			.to(pin, { autoAlpha: 1, duration: 1, ease: 'sine.out' }, 0.85)
+			.to(pin, { rotate: 0, scale: 1, duration: 2.2, ease: 'sine.inOut' }, 0.85)
+			.to(backdrop, { autoAlpha: 0, duration: 1.2, ease: 'sine.inOut' }, 1.4)
+			.to(f, { p: 0, duration: 5.5, ease: 'sine.inOut' }, 1.1); // обратный облёт — плавно, но без затяжки
 	}
 
 	// с цитаты вверх — снова обычная прокрутка к «Я фотограф»
@@ -175,7 +177,7 @@
 		if (jumpBy > vh() * 1.2) { zone = zoneNow(); if (zone === 'entry') standOnEntry(); return; }
 		if (zone === 'pre') {
 			if (y > top(entry) - vh() * 0.5) arrive();
-		} else if (zone === 'room' && y < top(room) - vh() * 0.12) back();
+		} else if (zone === 'room' && y < top(room) - 4) back(); // первое движение вверх у края зала — сразу назад
 	};
 	if (window.lenis) window.lenis.on('scroll', check);
 	else window.addEventListener('scroll', check, { passive: true });

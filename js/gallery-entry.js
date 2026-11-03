@@ -256,9 +256,9 @@ function init() {
 		curlFactor: 0.6,
 		curlR: 0.05 + ((0.15 - 0.1) / 0.9) * (1 / Math.PI - 0.05), // mapInternalRadiusToUIValue(FIXED_CURL_RADIUS = 0.15)
 		rotation: 315,                                               // направление загиба: к правому нижнему углу
-		peel: { rest: 0.14, hover: 0.22, press: 0.3 },               // доля листа по диагонали: покой, наведение, нажатие
-		back: '#d6d2ca',                                             // изнанка бумаги
-		shadow: { opacity: 30, color: '#000000', x: -300, y: 140 },
+		peel: { rest: 0.18, hover: 0.25, press: 0.32 },               // доля листа по диагонали: покой, наведение, нажатие
+		back: '#cfd3da',                                             // изнанка глянцевой бумаги — светло-серая, загиб читается
+		shadow: { opacity: 55, color: '#000000', x: -300, y: 140 },
 	};
 	const sticker = { on: false, ok: false, amount: ST.peel.rest, hover: false, press: false, t: 0, dirty: true, size: null, box: null };
 	const stEl = document.createElement('canvas');
@@ -290,6 +290,8 @@ function init() {
 			stR.setPixelRatio(1);
 			stR.shadowMap.enabled = true;
 			stR.shadowMap.type = THREE.PCFSoftShadowMap;
+			// мягкое сжатие света: белая бумага не выгорает в сплошное белое — видны изгиб, блик и глянец
+			stR.toneMapping = THREE.ACESFilmicToneMapping;
 			stEl.addEventListener('webglcontextlost', (e) => { e.preventDefault(); sticker.ok = false; });
 			stEl.addEventListener('webglcontextrestored', () => { sticker.size = null; sticker.resize(); });
 		} catch (err) { stR = null; }
@@ -357,9 +359,11 @@ function init() {
 		stBones = bones;
 		stInit = bones.map((b) => b.position.clone());
 		const skeleton = new THREE.Skeleton(bones);
-		const front = new THREE.MeshStandardMaterial({
-			color: 0xffffff, side: THREE.FrontSide, transparent: true, roughness: 0.2, metalness: 0.4,
-			emissive: 0xffffff, emissiveIntensity: 0.8, map: stTex, emissiveMap: stTex, alphaTest: 0.01,
+		// лицо — глянцевая бумага: лаковый слой даёт мягкий блик по листу и яркую полосу на изгибе
+		const front = new THREE.MeshPhysicalMaterial({
+			color: 0xffffff, side: THREE.FrontSide, transparent: true, roughness: 0.3, metalness: 0.2,
+			clearcoat: 1, clearcoatRoughness: 0.32,
+			emissive: 0xffffff, emissiveIntensity: 0.5, map: stTex, emissiveMap: stTex, alphaTest: 0.01,
 		});
 		const back = new THREE.MeshStandardMaterial({
 			color: 0xffffff, side: THREE.FrontSide, transparent: true, roughness: 0.3, metalness: 0,
@@ -367,7 +371,7 @@ function init() {
 		});
 		const side = new THREE.MeshStandardMaterial({
 			color: new THREE.Color(ST.back), transparent: true, opacity: 1, roughness: 0.1, metalness: 0,
-			map: stTex, emissive: 0xffffff, emissiveMap: stTex, emissiveIntensity: 0.8, alphaTest: 0.01,
+			map: stTex, emissive: 0xffffff, emissiveMap: stTex, emissiveIntensity: 0.5, alphaTest: 0.01,
 		});
 		// порядок граней BoxGeometry: +X, −X, +Y, −Y, +Z (лицо), −Z (изнанка)
 		const mesh = new THREE.SkinnedMesh(geometry, [side, side, side, side, front, back]);
@@ -375,21 +379,26 @@ function init() {
 		bones.forEach((b) => { mesh.add(b); b.updateMatrixWorld(true); });
 		mesh.bind(skeleton);
 		mesh.castShadow = true;
-		mesh.receiveShadow = false;
+		mesh.receiveShadow = true; // тень отогнутого угла ложится на сам лист — видно, что угол загнут, а не скруглён
 		stMesh = mesh;
 		const group = new THREE.Group();
 		group.add(mesh);
 		stScene.add(group);
 
 		// свет и тень — как в образце
-		stScene.add(new THREE.AmbientLight(0xffffff, 0.4));
+		stScene.add(new THREE.AmbientLight(0xffffff, 0.3));
+		// блик глянца — мягкое пятно правее и ниже середины листа, ближе к загибу (в долях размера листа)
+		const gloss = new THREE.PointLight(0xffffff, 1.1, 0, 0);
+		gloss.position.set(w * 0.32, -h * 0.29, Math.max(w, h) * 0.77);
+		stScene.add(gloss);
 		const light = new THREE.DirectionalLight(0xffffff, 2);
 		light.position.set(ST.shadow.x, ST.shadow.y, 400);
 		light.castShadow = true;
 		light.shadow.mapSize.set(2048, 2048);
 		light.shadow.camera.near = 1;
 		light.shadow.camera.far = 2000;
-		light.shadow.bias = -0.00001;
+		light.shadow.bias = -0.0004;
+		light.shadow.normalBias = 1.5; // без «ряби» тени на плоском листе
 		light.shadow.radius = 8;
 		const size = Math.max(cw, ch);
 		light.shadow.camera.left = -size / 2 + ST.shadow.x * 0.3;

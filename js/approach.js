@@ -13,7 +13,7 @@ if (root && gsap && slides.length) init();
 
 function init() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const T = reduced ? 0.01 : 1; // множитель длительностей
+    const T = reduced ? 0.01 : 0.75; // множитель длительностей: смена слайда ~1,8 с — плавно, но без ожидания
     const section = root.classList.contains('sl--section');
     root.style.setProperty('--sl-n', slides.length);
 
@@ -254,8 +254,12 @@ function init() {
                     const y = window.scrollY;
                     const p = (y - startY()) / scrollSpan();
                     if (p <= 0 || p >= 1) return;
-                    const target = pointY(pick(p));
-                    if (Math.abs(target - y) > 2) window.lenis.scrollTo(target, { duration: 0.7, easing: (t) => 1 - Math.pow(1 - t, 3) });
+                    // доводим по ходу прокрутки (назад не тянет): чуть сдвинулись — к следующему слайду, едва-едва — на месте
+                    const f = p * (n - 1), base = Math.floor(f), frac = f - base;
+                    const dir = window.lenis.direction || 1;
+                    const i = dir > 0 ? (frac > 0.15 ? base + 1 : base) : (frac < 0.85 ? base : base + 1);
+                    const target = pointY(Math.min(n - 1, Math.max(0, i)));
+                    if (Math.abs(target - y) > 2) window.lenis.scrollTo(target, { duration: 0.6, easing: (t) => 1 - Math.pow(1 - t, 3) });
                 }, 180);
             });
         }
@@ -268,14 +272,17 @@ function init() {
     } else {
         els.forEach((e, i) => e.bullet.addEventListener('click', () => go(i)));
 
-        // колёсико: одна прокрутка — один слайд
+        // колёсико: одна прокрутка — один слайд. Жест во время смены слайда не пропадает — следующий слайд
+        // начнётся сразу, как закончится текущий (раньше такие жесты терялись, и листание «залипало»)
         let wheelLock = 0;
         window.addEventListener('wheel', (ev) => {
             if (Math.abs(ev.deltaY) < 8) return;
             const now = Date.now();
-            if (busy || now < wheelLock) return;
-            wheelLock = now + 600;
-            go(current + (ev.deltaY > 0 ? 1 : -1));
+            if (now < wheelLock) return;
+            wheelLock = now + 450;
+            const step = ev.deltaY > 0 ? 1 : -1;
+            if (busy) { if (want === current) want = current + step; return; }
+            go(current + step);
         }, { passive: true });
 
         // свайп вверх/вниз
