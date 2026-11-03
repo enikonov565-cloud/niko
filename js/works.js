@@ -63,8 +63,8 @@
 		}, { threshold: 0.15 }).observe(stairs);
 	}
 
-	// ---------- «Мои работы» на главной: все снимки в шахматном порядке ----------
-	// колонки через одну опущены (CSS); каждый кадр — в самую короткую колонку, в своих пропорциях, без обрезки.
+	// ---------- «Мои работы» на главной: колонки начинаются ровно, низ — вразбег ----------
+	// каждый кадр — в самую короткую колонку, в своих пропорциях, без обрезки.
 	// Форматы вразбег: снимки одной ориентации не выстраиваются в колонке друг под другом (больше двух подряд — никогда,
 	// если это возможно). Раскладка пробует несколько вариантов расстановки и берёт лучший.
 	const allGrid = document.querySelector('.wa__grid');
@@ -187,7 +187,22 @@
 	// уменьшенная копия снимка (800 px по длинной стороне, img/thumbs/…) — для сетки и миниатюр:
 	// 28 полноразмерных снимков видеокарта отрисовывает с рывками. На весь экран и в карточке — полный размер
 	const small = (src) => src.replace(/^img\//, 'img/thumbs/');
-	const bg = (p) => `background-image:url('${small(p.src)}')`;
+	// главное на снимке (доли ширины и высоты, %): на весь экран вертикальный кадр виден полосой примерно
+	// в треть высоты, на телефоне горизонтальный — узкой полосой по ширине; кадр обрезается вокруг этой точки
+	const FOCUS = {
+		'sunbeams-forest.jpg': '45% 40%', 'swing-couple.jpg': '50% 68%', 'DSC04053.jpg': '50% 30%',
+		'handrail-motion.jpg': '62% 40%', 'red-square-night.jpg': '50% 45%', 'birches.jpg': '55% 58%',
+		'cathedral-birds.jpg': '50% 55%', 'bench.jpg': '62% 52%', 'lake.jpg': '55% 60%', 'walk.jpg': '50% 62%',
+		'pine-glade.jpg': '50% 55%', 'squirrel-cafe.jpg': '40% 50%', 'arch-sunset.jpg': '50% 50%',
+		'forest-stream.jpg': '50% 50%', 'highrise-storm.jpg': '35% 68%', 'DSC04026.jpg': '50% 30%',
+		'railing.jpg': '50% 55%', 'willow-alley.jpg': '50% 55%', 'tunnel-light.jpg': '50% 55%',
+		'foggy-tree.jpg': '50% 30%', 'cat-window.jpg': '45% 36%', 'bridge.jpg': '50% 55%',
+		'kremlin-towers.jpg': '50% 25%', 'snow-path.jpg': '50% 55%', 'arbat-artist.jpg': '35% 90%',
+		'birch-railway.jpg': '50% 55%', 'pigeon-cafe.jpg': '58% 56%', 'tram-greenery.jpg': '45% 52%',
+		'moscow-city-contrast.jpg': '60% 50%', 'pond-arch.jpg': '50% 50%', 'golden-spire.jpg': '65% 30%',
+	};
+	const focus = (p) => FOCUS[p.src.split('/').pop()] || '50% 30%';
+	const bg = (p) => `background-image:url('${small(p.src)}');background-position:${focus(p)}`;
 	const esc = (s) => String(s).replace(/"/g, '&quot;');
 
 	let state = null; // открытый раздел: элементы, режим, текущий кадр
@@ -221,7 +236,7 @@
 				const { p, cls } = cell(c, r);
 				// главный кадр раскроется на весь экран — сразу в полном размере; остальные — уменьшенные копии
 				const src = cls.includes('flip') ? p.src : small(p.src);
-				items += `<figure class="wv__item"><div class="wv__wrap${cls}"><img class="wv__img" src="${src}" data-src="${p.src}" alt="${esc(p.alt)}" decoding="async"></div></figure>`;
+				items += `<figure class="wv__item"><div class="wv__wrap${cls}"><img class="wv__img" src="${src}" data-src="${p.src}" alt="${esc(p.alt)}" style="object-position:${focus(p)}" decoding="async"></div></figure>`;
 			}
 			cols += `<div class="wv__col wv__col--${c % 2 ? 'down' : 'up'}"><div class="wv__inner">${items}</div></div>`;
 		}
@@ -348,6 +363,7 @@
 			opacity: 0, duration: T.out, ease: 'sine.in',
 			onComplete: () => loaded.then(() => {
 				if (s.cur !== i) return; // за это время выбрали другой кадр
+				s.flipImg.style.objectPosition = focus(p);
 				s.flipImg.src = p.src;
 				s.flipImg.dataset.src = p.src;
 				s.flipImg.alt = p.alt;
@@ -415,13 +431,13 @@
 				defaults: { duration: T.grow, ease: SMOOTH },
 				onComplete: () => {
 					gsap.set(s.flip, { clearProps: 'position,left,top,width,height' });
-					gsap.set(s.flipImg, { clearProps: 'borderRadius,objectPosition' });
+					gsap.set(s.flipImg, { clearProps: 'borderRadius' });
 					busy = false;
 				},
 			})
 				.to(s.veil, { autoAlpha: 1, ease: SOFT }, 0)
 				.to(s.flip, { left: 0, top: 0, width: s.main.clientWidth, height: s.main.clientHeight }, 0)
-				.to(s.flipImg, { borderRadius: 0, objectPosition: '50% 30%' }, 0)
+				.to(s.flipImg, { borderRadius: 0, objectPosition: focus(s.thumbs[0]) }, 0)
 				.to(uiOf(), { opacity: 1, duration: 1, ease: SOFT }, T.grow * 0.5)
 				.to(s.navItems, { yPercent: 0, opacity: 1, duration: T.nav, ease: 'power2.out', stagger: T.navStep }, T.grow * 0.6);
 		});
