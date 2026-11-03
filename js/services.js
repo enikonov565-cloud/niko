@@ -82,6 +82,33 @@
 	menu.before(dock);
 	dock.append(nums, menu);
 
+	// подсказка, что жанры нажимаются: когда меню в кадре, пункты по очереди мягко подсвечиваются со стрелкой,
+	// у плашки — тонкая рамка. Повторяется раз в несколько секунд, пока человек сам не наведёт курсор или не выберет жанр
+	if (!reduced && 'IntersectionObserver' in window) {
+		let seen = false, timer = 0, stopped = false;
+		const wave = () => {
+			if (stopped || !seen) return;
+			menu.classList.add('is-hinting');
+			tabs.forEach((t, k) => {
+				setTimeout(() => { if (!stopped) t.classList.add('is-hint'); }, 300 + k * 220);
+				setTimeout(() => t.classList.remove('is-hint'), 300 + k * 220 + 650);
+			});
+			setTimeout(() => menu.classList.remove('is-hinting'), 300 + tabs.length * 220 + 700);
+		};
+		const stop = () => {
+			stopped = true;
+			clearInterval(timer);
+			menu.classList.remove('is-hinting');
+			tabs.forEach((t) => t.classList.remove('is-hint'));
+		};
+		new IntersectionObserver(([e]) => {
+			seen = e.isIntersecting;
+			if (seen && !stopped && !timer) { wave(); timer = setInterval(wave, 6000); }
+		}, { threshold: 0.6 }).observe(menu);
+		menu.addEventListener('pointerenter', stop, { once: true });
+		menu.addEventListener('click', stop, { once: true });
+	}
+
 	menu.addEventListener('keydown', (ev) => {
 		const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[ev.key];
 		if (!step) return;
@@ -301,16 +328,23 @@
 				const y = window.scrollY;
 				const p = (y - startY()) / span();
 				if (p <= 0 || p >= 1) return;
-				const target = pointY(Math.round(p * (n - 1)));
-				if (Math.abs(target - y) > 2) window.lenis.scrollTo(target, { duration: 0.7, easing: (t) => 1 - Math.pow(1 - t, 3) });
+				// доводим по ходу прокрутки (назад не тянет): чуть сдвинулись — к следующему жанру, едва-едва — на месте
+				const f = p * (n - 1), base = Math.floor(f), frac = f - base;
+				const dir = window.lenis.direction || 1;
+				const k = dir > 0 ? (frac > 0.15 ? base + 1 : base) : (frac < 0.85 ? base : base + 1);
+				const target = pointY(Math.min(n - 1, Math.max(0, k)));
+				if (Math.abs(target - y) > 2) window.lenis.scrollTo(target, { duration: 0.6, easing: (t) => 1 - Math.pow(1 - t, 3) });
 			}, 180);
 		});
 	}
 	// клик по жанру или номеру: на компьютере — прокрутка к его точке, иначе — сразу смена
+	// клик — нужный жанр открывается сразу: страница встаёт на его точку мгновенно, без видимой прокрутки,
+	// и промежуточные жанры не мелькают по пути
 	function choose(i) {
-		if (!desk.matches || !ST) { request(i); return; }
-		if (window.lenis) window.lenis.scrollTo(pointY(i), { duration: 1.2 });
-		else window.scrollTo({ top: pointY(i), behavior: 'smooth' });
+		request(i);
+		if (!desk.matches || !ST) return;
+		if (window.lenis) window.lenis.scrollTo(pointY(i), { immediate: true, force: true });
+		else window.scrollTo(0, pointY(i));
 	}
 
 	// снимки — под строкой заголовка: её высота зависит от того, в сколько строк лёг подзаголовок

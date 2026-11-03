@@ -486,7 +486,7 @@
 	border-radius: calc(var(--r-photo) * 0.6);
 	background: none;
 	position: relative;
-	color: rgba(255, 255, 255, 0.3);
+	color: rgba(255, 255, 255, 0.5); /* читается и как ссылка, а не как неактивный пункт */
 	font: inherit;
 	font-size: clamp(1rem, 0.8rem + 0.45vw, 1.375rem); /* компактная карточка: 16 → 22 */
 	font-weight: 300; /* тонкий, как текст бирюзовой карточки */
@@ -499,8 +499,40 @@
 }
 
 .svc__tab:hover,
-.svc__tab:focus-visible {
-	color: rgba(255, 255, 255, 0.6);
+.svc__tab:focus-visible,
+.svc__tab.is-hint {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+/* стрелка у жанра — видно, что пункт нажимается и откроет свой раздел; проявляется при наведении
+   и во время «подсказки-волны» (js/services.js) */
+.svc__tab::after {
+	content: "→";
+	margin-left: auto;
+	padding-left: 0.8em;
+	opacity: 0;
+	transform: translateX(-0.4em);
+	transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.svc__tab:hover::after,
+.svc__tab:focus-visible::after,
+.svc__tab.is-hint::after {
+	opacity: 0.85;
+	transform: none;
+}
+
+.svc__tab[aria-pressed="true"]::after {
+	opacity: 0;
+}
+
+/* пока идёт подсказка — у плашки тонкая светлая рамка, она мягко притягивает взгляд */
+.svc__menu {
+	transition: box-shadow 0.8s ease;
+}
+
+.svc__menu.is-hinting {
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22), 0 24px 50px -24px rgba(0, 0, 0, 0.7);
 }
 
 /* выбранный жанр — белый на 100%, остальные — на 30% */

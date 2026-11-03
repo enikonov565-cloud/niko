@@ -214,6 +214,7 @@ function init() {
 		layout.lines.push({ t: AUTHOR, x: sheetX + sheetW - pad - fold * 0.6 - aw, y: y - lh + size * 1.25, w: aw, size: aSize });
 		layout.total = layout.lines.reduce((s, l) => s + l.w, 0);
 		sticker.resize();
+		pageMode = ''; // новый размер — текстуру страницы рисуем заново
 		renderPage();
 	}
 
@@ -290,6 +291,7 @@ function init() {
 			stR.setPixelRatio(1);
 			stR.shadowMap.enabled = true;
 			stR.shadowMap.type = THREE.PCFSoftShadowMap;
+			stR.shadowMap.autoUpdate = false; // тени пересчитываются только при изменении изгиба (bendSticker), не каждый кадр
 			// мягкое сжатие света: белая бумага не выгорает в сплошное белое — видны изгиб, блик и глянец
 			stR.toneMapping = THREE.ACESFilmicToneMapping;
 			stEl.addEventListener('webglcontextlost', (e) => { e.preventDefault(); sticker.ok = false; });
@@ -394,7 +396,7 @@ function init() {
 		const light = new THREE.DirectionalLight(0xffffff, 2);
 		light.position.set(ST.shadow.x, ST.shadow.y, 400);
 		light.castShadow = true;
-		light.shadow.mapSize.set(2048, 2048);
+		light.shadow.mapSize.set(1024, 1024); // мягкой тени (radius 8) хватает — вчетверо легче
 		light.shadow.camera.near = 1;
 		light.shadow.camera.far = 2000;
 		light.shadow.bias = -0.0004;
@@ -460,6 +462,7 @@ function init() {
 		}
 		stMesh.updateMatrixWorld(true);
 		stMesh.skeleton.update();
+		if (stR) stR.shadowMap.needsUpdate = true;
 	}
 
 	// лицо наклейки: бумага и написанная часть рукописи (рукопись — в координатах страницы, наклейка повёрнута)
@@ -479,9 +482,10 @@ function init() {
 		ctx.translate(-(S.x + S.w / 2), -(S.y + S.h / 2));
 		handwriting(ctx, true);
 		ctx.restore();
-		stTex.needsUpdate = true;
-		sticker.dirty = true;
+		// в видеокарту лист уходит не чаще ~25 раз в секунду (stickerFrame): ручка пишет плавно, кадры лёгкие
+		sticker.pending = true;
 	};
+	const uploadSheet = () => { stTex.needsUpdate = true; sticker.pending = false; sticker.dirty = true; };
 
 	// под новый размер листа: холсты, сетка, место на экране
 	sticker.resize = () => {
@@ -541,6 +545,7 @@ function init() {
 		if (!sticker.on) { sticker.t = now; return; }
 		const dt = Math.min(0.05, (now - (sticker.t || now)) / 1000);
 		sticker.t = now;
+		if (sticker.pending && now - (sticker.upAt || 0) >= 40) { uploadSheet(); sticker.upAt = now; }
 		const target = sticker.press ? ST.peel.press : sticker.hover ? ST.peel.hover : ST.peel.rest;
 		const prev = sticker.amount;
 		sticker.amount += (target - sticker.amount) * (1 - Math.exp(-dt / 0.2));
@@ -579,8 +584,15 @@ function init() {
 	// В покое лист с рукописью — в наклейке, в текстуре сцены остаётся только заголовок.
 	// В облёте в текстуру ложится снимок самой наклейки — с тем же скатанным уголком и тенью, что в покое
 	// (без видеокарты для наклейки — прежний лист с загибом из основы)
+	let pageMode = ''; // что сейчас в текстуре страницы: 'title' (покой, лист — в наклейке) или полный лист
 	function renderPage() {
 		if (!layout) return null;
+		// покой: текстура страницы — один заголовок, он не меняется; на каждом кадре письма обновляем только наклейку
+		if (sticker.on && pageMode === 'title') {
+			sticker.paint();
+			return handwriting(pageCanvas.getContext('2d'), false);
+		}
+		pageMode = sticker.on ? 'title' : 'full';
 		const ctx = pageCanvas.getContext('2d');
 		const snap = !sticker.on && sticker.ok && !!stR && !!stMesh && !!sticker.box;
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -591,6 +603,7 @@ function init() {
 		if (sticker.on || snap) sticker.paint();
 		if (snap) {
 			// кадр наклейки читаем сразу после отрисовки — до этого браузер холст не очищает
+			uploadSheet();
 			bendSticker();
 			stR.render(stScene, stCam);
 			const S = layout.sheet;
