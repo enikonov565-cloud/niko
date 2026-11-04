@@ -15,7 +15,7 @@
 		<link rel="stylesheet" href="css/hero.css?v=4" />
 		<link rel="stylesheet" href="css/art.css?v=3" />
 		<link rel="stylesheet" href="css/menu.css?v=62" />
-		<link rel="stylesheet" href="css/brief.css?v=16" />
+		<link rel="stylesheet" href="css/brief.css?v=30" />
 	</head>
 	<body class="brief-page">
 		<!-- плёночное зерно (css/art.css) -->
@@ -39,18 +39,20 @@
 
 			<!-- Интро -->
 			<section class="brf__intro" id="intro" aria-labelledby="introTitle">
-				<header class="brf__head">
-					<p class="brf__eyebrow">бриф на&nbsp;фотосъёмку</p>
-					<h1 class="brf__title" id="introTitle" tabindex="-1">Расскажите о&nbsp;вашей съёмке</h1>
-				</header>
-
 				<div class="brf__intro-body">
+					<!-- заголовок — тенью, как «Как рождается кадр» на главной: на компьютере вертикально вдоль левого края,
+						на планшете и телефоне — строкой над фото; подпись «бриф на фотосъёмку» — над текстовой частью -->
+					<h1 class="brf__title brf__ghost" id="introTitle" tabindex="-1">Расскажите о&nbsp;вашей съёмке</h1>
+
 					<figure class="brf__photo">
 						<img src="img/about/photographer.png" alt="Фотограф nikonovphoto с камерой" width="640" height="640" decoding="async">
 					</figure>
 
 					<div class="brf__intro-text">
-						<p class="brf__lead">Опишите задумку и&nbsp;детали&nbsp;— я&nbsp;пойму, что вам важно, и&nbsp;приду подготовленным.</p>
+						<div class="brf__intro-top">
+							<p class="brf__eyebrow">бриф на&nbsp;фотосъёмку</p>
+							<p class="brf__lead">Опишите задумку и&nbsp;детали: я&nbsp;пойму, что вам важно, и&nbsp;подготовлюсь к&nbsp;съёмке.</p>
+						</div>
 
 						<!-- плашки и пояснение — одним блоком: в две колонки текст растянут на высоту фото (css/brief.css) -->
 						<div class="brf__intro-mid">
@@ -60,7 +62,7 @@
 								<li><b>Черновик</b><span>сохраняется сам: продолжите позже</span></li>
 							</ul>
 
-							<p class="brf__note">Вопросы со&nbsp;звёздочкой <span class="req">*</span> обязательные, остальные&nbsp;— по&nbsp;желанию.</p>
+							<p class="brf__note">Вопросы со&nbsp;звёздочкой <span class="req">*</span> обязательные, остальные по&nbsp;желанию.</p>
 						</div>
 
 						<button class="brf__cta" type="button" id="startBtn">
@@ -157,6 +159,6 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 		<script src="js/menu.js?v=43"></script>
 		<!-- Анкета: вопросы, черновик, отправка в Telegram через приёмник на Cloudflare -->
-		<script src="js/brief.js?v=6"></script>
+		<script src="js/brief.js?v=8"></script>
 	</body>
 </html>

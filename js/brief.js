@@ -18,9 +18,9 @@ window.BRIEF_CONFIG = window.BRIEF_CONFIG || {
    description — пояснение под заголовком                     */
 const STEPS = [
   { id: 'format',  title: 'Какой будет съёмка',     description: 'Начнём с главного: формат, повод и кто будет в кадре. От ответа про вид съёмки зависят следующие вопросы.' },
-  { id: 'idea',    title: 'Настроение и идея',      description: 'Расскажите, какие фотографии вам хочется получить. Если чёткой идеи пока нет — это нормально, придумаем вместе.' },
+  { id: 'idea',    title: 'Настроение и идея',      description: 'Расскажите, какие фотографии вам хочется получить. Если чёткой идеи пока нет, ничего страшного: придумаем вместе.' },
   { id: 'place',   title: 'Место и пространство',   description: 'Где пройдёт съёмка и каким будет свет. Всё, что пока непонятно, можно пропустить.' },
-  { id: 'details', title: 'Образы и детали',        description: 'Одежда, реквизит, помощники и запасные планы — мелочи, которые делают съёмку спокойной.' },
+  { id: 'details', title: 'Образы и детали',        description: 'Одежда, реквизит, помощники и запасные планы. Мелочи, которые делают съёмку спокойной.' },
   { id: 'result',  title: 'Обработка и результат',  description: 'Какими будут готовые кадры: цвет, количество и ретушь.' },
   { id: 'terms',   title: 'Сроки и бюджет',         description: 'Чтобы предложить формат, который впишется в ваши планы и ожидания.' },
   { id: 'contact', title: 'Контакты',               description: 'Последний шаг: как к вам обращаться и куда написать ответ.' }
@@ -69,14 +69,14 @@ const QUESTIONS = [
     placeholder: 'Хочется, чтобы на фото было…' },
   { id: 'concept', step: 'idea', type: 'textarea', required: false, key: false,
     label: 'Есть ли у вас конкретная идея или концепция съёмки?',
-    hint: 'Сюжет, образ, место из фильма — всё, что крутится в голове. Если идеи пока нет, просто пропустите.',
+    hint: 'Сюжет, образ, место из фильма: всё, что крутится в голове. Если идеи пока нет, просто пропустите.',
     placeholder: '' },
   { id: 'refFiles', step: 'idea', type: 'files', required: false, key: true,
     label: 'Есть ли у вас примеры фотографий, на которые вы хотите ориентироваться?',
     hint: 'Референсы лучше любых слов показывают, что вам нравится: свет, позы, цвет. Хватит 3–10 картинок.' },
   { id: 'refLinks', step: 'idea', type: 'links', required: false, key: false,
     label: 'Ссылки на примеры',
-    hint: 'Pinterest, Instagram, сайты — по одной ссылке на строку.',
+    hint: 'Pinterest, Instagram, сайты. По одной ссылке на строку.',
     placeholder: 'https://pinterest.com/…' },
   { id: 'outfit', step: 'idea', type: 'textarea', required: false, key: false,
     label: 'Какой стиль одежды вы хотели бы использовать?',
@@ -92,7 +92,7 @@ const QUESTIONS = [
     hint: '', placeholder: 'Светлый лофт, однотонный фон, домашний интерьер…' },
   { id: 'studioLight', step: 'place', type: 'textarea', required: false, key: false, showIf: STUDIO,
     label: 'Есть ли у вас пожелания по освещению и оформлению пространства?',
-    hint: 'Мягкий дневной свет, контрастные тени, цветные акценты, цветы, дым — что угодно.', placeholder: '' },
+    hint: 'Что угодно: мягкий дневной свет, контрастные тени, цветные акценты, цветы, дым.', placeholder: '' },
   { id: 'studioHours', step: 'place', type: 'choice', required: false, key: false, showIf: STUDIO,
     label: 'На сколько часов планируется аренда студии?',
     hint: 'Если не уверены, подскажу по объёму задачи.',
@@ -101,7 +101,7 @@ const QUESTIONS = [
   // Место и пространство — улица
   { id: 'location', step: 'place', type: 'textarea', required: false, key: true, showIf: STREET, summary: 'Локация',
     label: 'Есть ли у вас конкретная локация для съёмки или нужно подобрать её вместе?',
-    hint: 'Если место уже есть, напишите адрес или название. Если нет — подберу варианты под настроение.',
+    hint: 'Если место уже есть, напишите адрес или название. Если нет, подберу варианты под настроение.',
     placeholder: '' },
   { id: 'placeType', step: 'place', type: 'choice', multi: true, other: true, required: false, key: false, showIf: STREET,
     label: 'Какой тип места вам ближе: центр города, улицы, парки, архитектура, дворы или другие локации?',
@@ -143,7 +143,7 @@ const QUESTIONS = [
     options: ['Да, помогите', 'Посоветуйте немного', 'Нет, справлюсь'] },
   { id: 'weather', step: 'details', type: 'choice', other: true, required: false, key: true, showIf: STREET,
     label: 'Что будем делать, если погода испортится: перенесём съёмку или заранее подберём запасное место?',
-    hint: 'Лучше договориться заранее — тогда дождь не испортит планы.',
+    hint: 'Лучше договориться заранее, тогда дождь не испортит планы.',
     options: ['Перенесём съёмку', 'Подберём запасное место', 'Решим по ситуации'] },
   { id: 'limits', step: 'details', type: 'textarea', required: false, key: false, showIf: STREET,
     label: 'Есть ли ограничения по времени или расстоянию, на которое вы готовы перемещаться?',
@@ -168,11 +168,11 @@ const QUESTIONS = [
   // Сроки и бюджет
   { id: 'budget', step: 'terms', type: 'textarea', required: false, key: true, summary: 'Бюджет',
     label: 'Какой бюджет вы планируете на съёмку?',
-    hint: 'Можно вилкой: «от… до…». Так я сразу предложу формат, который в него впишется, — без неловких разговоров.',
+    hint: 'Можно вилкой: «от… до…». Так я сразу предложу формат, который в него впишется, без неловких разговоров.',
     placeholder: 'Например, 15–25 тысяч' },
   { id: 'deadline', step: 'terms', type: 'textarea', required: false, key: true, summary: 'Сроки',
     label: 'В какие сроки вам нужны готовые фотографии?',
-    hint: 'Если есть точная дата — день рождения, запуск, поездка, — напишите её.',
+    hint: 'Если есть точная дата (день рождения, запуск, поездка), напишите её.',
     placeholder: '' },
   { id: 'usage', step: 'terms', type: 'choice', multi: true, other: true, required: false, key: false,
     label: 'Как вы планируете использовать фотографии: для себя, социальных сетей, портфолио или других целей?',
@@ -299,7 +299,7 @@ function renderStages() {
         questions.map(renderQuestion),
         // Если вопросы этапа зависят от вида съёмки, а он ещё не выбран
         questions.length && questions.every(q => q.showIf) ? el('div', { class: 'stage__empty', 'data-empty': '' },
-          el('p', { text: 'Вопросы этого этапа зависят от вида съёмки. Выберите его на первом шаге — и они появятся здесь.' }),
+          el('p', { text: 'Вопросы этого этапа зависят от вида съёмки. Выберите его на первом шаге, и они появятся здесь.' }),
           el('button', { class: 'pill-btn', type: 'button', onclick: () => goTo(1) }, '← К выбору вида съёмки')
         ) : null,
         step.id === 'contact' ? renderConsent() : null
@@ -526,7 +526,7 @@ const CONTACT_RE = /^(@?[a-z0-9_]{4,32}|(https?:\/\/)?t\.me\/[a-z0-9_]{4,32}|\+?
 function questionError(q) {
   if (!isVisible(q)) return '';
   const v = answerText(q);
-  if (q.required && !v) return q.type === 'choice' ? 'Выберите вариант, пожалуйста' : 'Ответьте, пожалуйста — это поможет подготовиться';
+  if (q.required && !v) return q.type === 'choice' ? 'Выберите вариант, пожалуйста' : 'Ответьте, пожалуйста: это поможет подготовиться';
   if (q.validate === 'contact' && v && !CONTACT_RE.test(v.trim())) return 'Укажите ник в Telegram (например, @nikonovphoto) или номер телефона';
   return '';
 }
@@ -584,6 +584,9 @@ function goTo(n, opts = {}) {
   $('#brief').hidden = n === 0 || n === FINAL;
   $('#final').hidden = n !== FINAL;
   $('#outro').hidden = n < TOTAL; // «вернуться на сайт» — только в конце брифа
+  // экран сменился — прежнее уведомление уже не к месту и не должно закрывать кнопки (на планшете боком оно вставало
+  // ровно поверх «продолжить»)
+  if (!$('#toast').hidden) { clearTimeout(toastTimer); $('#toast').hidden = true; }
   $$('.stage').forEach(s => {
     const on = Number(s.dataset.step) === n;
     s.hidden = !on;
@@ -735,11 +738,11 @@ function addFiles(list) {
   const problems = [];
   for (const file of incoming) {
     if (state.files.length >= SETTINGS.maxFiles) {
-      problems.push(`Можно приложить не больше ${SETTINGS.maxFiles} файлов — «${file.name}» не добавлен`);
+      problems.push(`Можно приложить не больше ${SETTINGS.maxFiles} файлов. «${file.name}» не добавлен`);
       continue;
     }
     if (file.size > SETTINGS.maxFileSize) {
-      problems.push(`«${file.name}» больше ${formatSize(SETTINGS.maxFileSize)} — пришлите его потом в Telegram`);
+      problems.push(`«${file.name}» больше ${formatSize(SETTINGS.maxFileSize)}. Пришлите его потом в Telegram`);
       continue;
     }
     if (state.files.some(f => f.name === file.name && f.size === file.size)) continue;
@@ -862,7 +865,7 @@ function payloadToText(p) {
     s.items.forEach(it => lines.push('', it.q, it.a));
   });
   if (p.files.length) {
-    lines.push('', '', 'Файлы с примерами не помещаются в этот документ —', 'пришлите их, пожалуйста, отдельно в Telegram.');
+    lines.push('', '', 'Файлы с примерами не помещаются в этот документ.', 'Пришлите их, пожалуйста, отдельно в Telegram.');
   }
   return lines.join('\n').replace(/\r?\n/g, '\r\n');   // переносы строк, понятные Блокноту
 }
@@ -883,15 +886,15 @@ async function copyAnswers(payload) {
   const text = payloadToText(payload || buildPayload());
   try {
     await navigator.clipboard.writeText(text);
-    toast('Ответы скопированы — вставьте их в чат');
+    toast('Ответы скопированы, вставьте их в чат');
   } catch (e) {
     // Запасной способ для старых браузеров
     const ta = el('textarea', { style: 'position:fixed;opacity:0' });
     ta.value = text;
     document.body.append(ta);
     ta.select();
-    try { document.execCommand('copy'); toast('Ответы скопированы — вставьте их в чат'); }
-    catch (err) { toast('Не получилось скопировать — скачайте файл'); }
+    try { document.execCommand('copy'); toast('Ответы скопированы, вставьте их в чат'); }
+    catch (err) { toast('Не получилось скопировать. Скачайте файл'); }
     ta.remove();
   }
 }
@@ -910,7 +913,7 @@ async function submit() {
       if (state.step !== n) goTo(n, { noFocus: true });
       validateStep(n, true);
       updateDots();
-      toast('Остался вопрос без ответа — он подсвечен');
+      toast('Остался вопрос без ответа, он подсвечен');
       setTimeout(() => focusFirstError(n), 120);
       return;
     }
@@ -1001,11 +1004,11 @@ function openDialog(kind) {
   const texts = {
     offline: {
       title: 'Бриф готов',
-      text: 'Онлайн-отправка пока не подключена. Скачайте файл с ответами и пришлите его мне в Telegram — или скопируйте текст и вставьте в чат.'
+      text: 'Онлайн-отправка пока не подключена. Скачайте файл с ответами и пришлите его мне в Telegram или скопируйте текст и вставьте в чат.'
     },
     error: {
       title: 'Не получилось отправить',
-      text: 'Похоже, пропала связь или сервис временно недоступен. Попробуйте ещё раз через минуту — или скачайте ответы и пришлите их мне в Telegram.'
+      text: 'Похоже, пропала связь или сервис временно недоступен. Попробуйте ещё раз через минуту или скачайте ответы и пришлите их мне в Telegram.'
     }
   }[kind];
   $('#dlgTitle').textContent = typo(texts.title);
@@ -1108,7 +1111,7 @@ function applyLinkHints() {
     else if (!match && !picked.length && !state.answers.genre__other) state.answers.genre__other = genre;
   }
   if (photo && !String(state.answers.concept || '').trim()) {
-    state.answers.concept = `На сайте понравился снимок ${photo} — хочется похожего.`;
+    state.answers.concept = `На сайте понравился снимок ${photo}, хочется похожего.`;
   }
 }
 
