@@ -18,7 +18,7 @@
 		<link rel="stylesheet" href="css/showreel.css?v=54" />
 		<link rel="stylesheet" href="css/about.css?v=54" />
 		<link rel="stylesheet" href="css/room.css?v=56" />
-		<link rel="stylesheet" href="css/art.css?v=55" />
+		<link rel="stylesheet" href="css/art.css?v=56" />
 		<link rel="stylesheet" href="css/menu.css?v=62" />
 		<link rel="stylesheet" href="css/approach.css?v=31" />
 		<link rel="stylesheet" href="css/works.css?v=64" />
@@ -391,7 +391,7 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
 		<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
 		<script src="js/hero.js?v=55"></script>
-		<script src="js/parallax.js?v=54"></script>
+		<script src="js/parallax.js?v=55"></script>
 		<!-- 3D-сетка с волнами — фон галереи. Код встроен в страницу (а не отдельным файлом): так эффект работает и при открытии index.html двойным щелчком -->
 		<script type="importmap">
 			{
@@ -778,12 +778,9 @@
 			    // шейдеры собираются заранее, в фоне — первое появление экрана без рывка на сборку
 			    if (renderer.compileAsync) renderer.compileAsync(scene, camera).catch(() => {});
 			    // compileAsync собирает только материалы сцены; проход постобработки (виньетка) и карта высот
-			    // создаются на первом кадре — рисуем его вхолостую в свободную минуту, пока экран не виден
-			    if (!reduced) (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => {
-			        if (running) return;
-			        renderHeights();
-			        composer.render();
-			    }, { timeout: 4000 });
+			    // создаются на первом кадре — рисуем его сразу, пока открывается страница: иначе он ложился
+			    // на прокрутку и экран дёргался на 0,1 с
+			    if (!reduced) { renderHeights(); composer.render(); }
 
 			    if (reduced) {
 			        // без анимации: одна волна, один кадр
@@ -810,18 +807,18 @@
 		<script src="js/film.js?v=54"></script>
 		<script src="js/about.js?v=54"></script>
 		<script src="js/gallery-photos.js?v=59"></script>
-		<script src="js/room.js?v=55"></script>
+		<script src="js/room.js?v=59"></script>
 		<script src="js/art.js?v=55"></script>
 		<script src="js/approach-data.js?v=15"></script>
-		<script type="module" src="js/approach.js?v=21"></script>
+		<script type="module" src="js/approach.js?v=25"></script>
 		<script src="js/services-data.js?v=4"></script>
 		<script src="js/services.js?v=29"></script>
 		<script src="js/works.js?v=66"></script>
 		<script src="js/stages.js?v=34"></script>
 		<script src="js/photo-card.js?v=14"></script>
-		<script type="module" src="js/gallery-entry.js?v=54"></script>
+		<script type="module" src="js/gallery-entry.js?v=59"></script>
 		<script src="js/gallery-transition.js?v=14"></script>
 		<script src="js/menu.js?v=43"></script>
-		<script type="module" src="js/invite-tunnel.js?v=16"></script>
+		<script type="module" src="js/invite-tunnel.js?v=21"></script>
 	</body>
 </html>

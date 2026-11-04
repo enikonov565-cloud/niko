@@ -20,7 +20,9 @@ function init(host) {
 	// снимки — из списка работ (js/gallery-photos.js), если он есть на странице
 	const FALLBACK = ['img/gallery/sunbeams-forest.jpg', 'img/genres/portrait/DSC04053.jpg', 'img/gallery/cat-window.jpg', 'img/gallery/bench.jpg', 'img/genres/architecture/kremlin-towers.jpg', 'img/gallery/foggy-tree.jpg', 'img/gallery/swing-couple.jpg', 'img/gallery/highrise-storm.jpg', 'img/gallery/pigeon-cafe.jpg', 'img/gallery/tram-greenery.jpg', 'img/gallery/lake.jpg', 'img/gallery/walk.jpg'];
 	const list = (window.GALLERY_PHOTOS || []).map((p) => p.src);
-	const SRC = list.length >= 8 ? list : FALLBACK;
+	// уменьшенные копии (img/thumbs/, до 800 px): в коридоре снимки мелкие, а полноразмерные файлы
+	// браузер раскодировал и ужимал прямо во время прокрутки
+	const SRC = (list.length >= 8 ? list : FALLBACK).map((s) => s.replace(/^img\//, 'img/thumbs/'));
 
 	const canvas = document.createElement('canvas');
 	canvas.className = 'inv__tunnel';
@@ -214,9 +216,9 @@ function init(host) {
 	new MutationObserver(start).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 	// шейдеры собираются заранее, а не в первом кадре анимации
 	renderer.compile(scene, camera);
-	// и первый кадр (буферы геометрии, тени) — в свободную минуту, пока коридор ещё не виден: иначе он рисовался
-	// на подходе к футеру, посреди прокрутки
-	(window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => { if (!visible) renderer.render(scene, camera); }, { timeout: 5000 });
+	// и первый кадр (буферы геометрии) — сразу, пока открывается страница: иначе он рисовался на подходе к футеру,
+	// посреди прокрутки
+	renderer.render(scene, camera);
 	// рисуется, только когда виден на экране
 	new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }).observe(host);
 	// впервые показался — коридор медленно выходит из-за центральной композиции

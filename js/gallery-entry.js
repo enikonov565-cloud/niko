@@ -907,7 +907,7 @@ function init() {
 		frame.castShadow = true;
 		frame.receiveShadow = true;
 		g.add(frame);
-		const shot = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), projected(new THREE.MeshStandardMaterial({ color: 0xffffff, map: photoTex(p.src), roughness: 0.5 })));
+		const shot = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), projected(new THREE.MeshStandardMaterial({ color: 0xffffff, map: photoTex(p.src.replace(/^img\//, 'img/thumbs/')), roughness: 0.5 })));
 		shot.position.set(0, height * 0.08, 0.045);
 		shot.receiveShadow = true;
 		g.add(shot);
@@ -985,20 +985,24 @@ function init() {
 
 	let renderedP = -1; // при каком положении камеры нарисован последний кадр сцены
 
-	// прогрев: пока экран ещё не виден, в свободную минуту браузера рисуем сцену один раз «вхолостую» —
-	// снимки, лист с цитатой и карта теней уходят в видеокарту заранее. Иначе всё это грузилось на первом кадре,
-	// когда экран подъезжал снизу, и прокрутка «Я фотограф» спотыкалась на 0,1–0,2 секунды
-	let warmT = 0;
+	// прогрев: пока экран ещё не виден, сцену один раз рисуем «вхолостую» — снимки, лист с цитатой и карта теней
+	// уходят в видеокарту заранее, а не на первом кадре, когда экран подъезжает снизу.
+	// Только когда посетитель не листает (секунду без прокрутки) и браузер свободен — посреди прокрутки
+	// такой кадр сам дал бы рывок. Снимки догружаются по одному — прогрев один на всю пачку
+	let warmT = 0, lastScroll = 0;
+	window.addEventListener('scroll', () => { lastScroll = performance.now(); }, { passive: true });
 	function warmSoon() {
 		clearTimeout(warmT);
-		warmT = setTimeout(() => {
-			const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 0));
-			idle(() => {
-				if (!renderer || glLost || visible) return; // экран уже виден — его и так рисует frame()
+		warmT = setTimeout(function attempt() {
+			if (!renderer || glLost || visible) return; // экран уже виден — его и так рисует frame()
+			if (performance.now() - lastScroll < 1000) { warmT = setTimeout(attempt, 500); return; }
+			(window.requestIdleCallback || ((fn) => setTimeout(fn, 0)))(() => {
+				if (!renderer || glLost || visible) return;
+				if (performance.now() - lastScroll < 1000) { warmT = setTimeout(attempt, 500); return; }
 				renderer.render(scene, camera);
 				if (stR && stScene.children.length) stR.render(stScene, stCam);
-			}, { timeout: 2000 });
-		}, 300);
+			});
+		}, 600);
 	}
 	if (document.readyState === 'complete') warmSoon(); else window.addEventListener('load', warmSoon, { once: true });
 	function frame() {
@@ -1095,13 +1099,14 @@ function init() {
 	if (renderer && renderer.compileAsync) renderer.compileAsync(scene, camera).catch(() => {});
 	if (stR && stR.compileAsync && stScene.children.length) stR.compileAsync(stScene, stCam).catch(() => {});
 	if (document.fonts) {
+		// шрифты уже были на месте — лист только что нарисован в resize(), второй раз его не рисуем
+		const had = document.fonts.check('500 40px Inter') && document.fonts.check('40px Lemon');
 		Promise.all(['500 40px Inter', '40px Lemon'].map((f) => document.fonts.load(f)))
-			.then(() => { drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); fontsReady = true; warmSoon(); });
+			.then(() => { if (!had) drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); fontsReady = true; warmSoon(); });
 	} else fontsReady = true;
 	let resizeTimer = 0;
 	window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
 	// шрифт рукописи догрузился позже — перерисовать лист, но не сбрасывать уже написанное
 	if (document.fonts) document.fonts.addEventListener('loadingdone', () => { if (fontsReady) drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); });
-
 	gsap.ticker.add(frame);
 }

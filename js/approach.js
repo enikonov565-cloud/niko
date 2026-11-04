@@ -427,9 +427,6 @@ function init() {
                 t.minFilter = THREE.LinearFilter;
                 t.generateMipmaps = false;
                 t.colorSpace = THREE.SRGBColorSpace;
-                // в видеокарту — сразу, в свободную минуту: иначе загрузка шла на первом кадре перехода
-                // и смена слайда спотыкалась
-                (window.requestIdleCallback || ((fn) => setTimeout(fn, 0)))(() => renderer.initTexture(t));
                 resolve(t);
             }, undefined, () => resolve(null));
         }));

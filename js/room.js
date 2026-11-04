@@ -16,6 +16,7 @@
     const TURN = 1100; // мс — поворот к следующей стене
     const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
     // оттенок ламп у каждой стены: холодный лесной, тёплый закатный, нейтральный, сепия
+    const thumb = (src) => src.replace(/^img\//, 'img/thumbs/');
     const LIGHTS = ['168, 205, 222', '242, 196, 140', '232, 226, 214', '222, 184, 146'];
 
     // размеры снимка: из списка, а если не указаны — узнаём у самого файла
@@ -28,15 +29,11 @@
             im.src = p.src;
         });
 
-    // строим комнату, когда до неё осталось меньше экрана — фото не грузятся раньше времени
+    // строим комнату заранее, за три экрана (обычно — пока открывается страница): на подходе к залу его сборка
+    // ложилась на прокрутку, и экран дёргался
     new IntersectionObserver((entries, io) => {
         if (!entries[0].isIntersecting) return;
         io.disconnect();
-        // до зала ещё экран — готовим его в свободную минуту браузера, а не посреди кадра прокрутки
-        (window.requestIdleCallback || ((fn) => setTimeout(fn, 0)))(prepare, { timeout: 1200 });
-    }, { rootMargin: '100% 0px' }).observe(section);
-
-    function prepare() {
         // ждём и шрифт: от него зависит, сколько строк займёт название на этикетке
         // (начертания и кириллицу этикетки грузим явно — браузер скачивает шрифт, только когда текст им уже нарисован)
         const fontsReady = document.fonts
@@ -46,7 +43,7 @@
             const items = list.filter(Boolean);
             if (items.length) init(items);
         });
-    }
+    }, { rootMargin: '300% 0px' }).observe(section);
 
     function init(items) {
         // стены делят снимки поровну, лишние достаются первым стенам
@@ -84,7 +81,10 @@
                 fig.className = 'room__frame';
                 fig.dataset.i = i;
                 const img = document.createElement('img');
-                img.src = p.src;
+                // на стене снимок не больше ~800 px — уменьшенная копия (img/thumbs/): полноразмерные файлы
+                // браузер раскодировал прямо во время прокрутки, и подход к залу дёргался.
+                // Карточка снимка по клику всё равно открывает полный (js/photo-card.js)
+                img.src = thumb(p.src);
                 img.alt = p.alt || '';
                 img.width = p.w;
                 img.height = p.h;
@@ -124,6 +124,11 @@
             // Если справа не помещается (широкий снимок на телефоне) — этикетка под рамкой
             const labelGap = Math.round(edge * 0.6 + 6);
 
+            // все размеры читаем заранее, одним разом: чтение посреди расстановки (после записи стилей) заставляло
+            // браузер заново пересчитывать раскладку страницы на каждом снимке — и подход к залу дёргался
+            const labelSize = frames.map((f) => ({ w: f.label.offsetWidth, h: f.label.offsetHeight }));
+            const beamTop = track.offsetTop + track.offsetHeight + lampH - 2; // от линзы
+
             let left = 0;
             let prevW = 0;
             const layout = frames.map((f, i) => {
@@ -136,11 +141,11 @@
                 }
                 let w = imgW + edge * 2;
                 let h = imgH + edge * 2;
-                const labelW = f.label.offsetWidth; // этикетки одного размера — из CSS
+                const labelW = labelSize[i].w; // этикетки одного размера — из CSS
                 const side = W >= 768 || w + labelGap + labelW <= W * 0.94;
                 // этикетка под рамкой (только на телефоне) не помещается над плинтусом — снимок чуть меньше, ровно на сколько нужно
                 if (!side) {
-                    const room = zoneH - (f.label.offsetHeight + labelGap) - 4;
+                    const room = zoneH - (labelSize[i].h + labelGap) - 4;
                     if (h > room) {
                         const k = (room - edge * 2) / imgH;
                         imgW *= k; imgH *= k;
@@ -151,19 +156,18 @@
                 left = i === 0 ? W / 2 - groupW / 2 : left + prevW + gap;
                 prevW = groupW;
                 // картины висят чуть выше середины — на уровне глаз; если этикетка под рамкой — место и под неё
-                const below = side ? 0 : f.label.offsetHeight + labelGap;
+                const below = side ? 0 : labelSize[i].h + labelGap;
                 const top = zoneTop + Math.max(0, (zoneH - h - below) * 0.42);
 
                 f.img.style.width = imgW + 'px';
                 f.img.style.height = imgH + 'px';
                 Object.assign(f.fig.style, { left: left + 'px', top: top + 'px' });
                 Object.assign(f.label.style, side
-                    ? { left: left + w + labelGap + 'px', top: top + h - f.label.offsetHeight + 'px' }
+                    ? { left: left + w + labelGap + 'px', top: top + h - labelSize[i].h + 'px' }
                     : { left: left + 'px', top: top + h + labelGap + 'px' });
 
                 const cx = left + w / 2;
                 const lamp = add(el, 'room__lamp', { left: cx + 'px' });
-                const beamTop = track.offsetTop + track.offsetHeight + lampH - 2; // от линзы
                 const beam = add(el, 'room__beam', {
                     left: cx - w * 0.65 + 'px', width: w * 1.3 + 'px',
                     top: beamTop + 'px', height: top + h * 0.55 - beamTop + 'px'
@@ -232,7 +236,7 @@
                 const w = (k + wallsCount) % wallsCount;
                 if (preloaded.has(w)) return;
                 preloaded.add(w);
-                walls[w].forEach((p) => { new Image().src = p.src; });
+                walls[w].forEach((p) => { new Image().src = thumb(p.src); });
             });
         }
 

@@ -43,5 +43,7 @@
     window.lenis = lenis;
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((time) => { lenis.raf(time * 1000); });
-    gsap.ticker.lagSmoothing(0);
+    // после долгого кадра (браузер занят) время анимаций сдвигается не больше чем на 33 мс: страница и анимации
+    // чуть притормаживают, а не перепрыгивают вперёд — без этого прокрутка после каждой заминки «дёргалась» скачком
+    gsap.ticker.lagSmoothing(250, 33);
 })();
