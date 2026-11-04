@@ -133,10 +133,48 @@ html:has(.brief-page) {
 	color: rgba(235, 235, 235, 0.75);
 }
 
+/* пояснение про звёздочку — мелко и в полутонах: служебная подсказка, не спорит с плашками */
 .brf__note {
 	margin: 0 0 clamp(32px, 3vw, 48px);
-	font-size: var(--fs-small);
-	color: rgba(235, 235, 235, 0.75);
+	font-size: clamp(0.75rem, 0.72rem + 0.12vw, 0.875rem); /* 12 → 14 */
+	font-weight: 300;
+	color: rgba(235, 235, 235, 0.45);
+}
+
+.brf__note .req {
+	color: inherit;
+	opacity: 1;
+}
+
+/* две колонки: текст — ровно по высоте фото. Первая строка — по верху снимка, кнопка — по низу,
+   плашки с пояснением — между ними; фото не уменьшается */
+@media (min-width: 1280px) {
+	.brf__intro-body {
+		align-items: stretch;
+	}
+
+	.brf__intro-text {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: clamp(24px, 2vw, 40px);
+	}
+
+	.brf__intro-text .brf__lead {
+		text-box: trim-start cap alphabetic; /* без поля над строкой — верх букв точно по верху фото */
+	}
+
+	.brf__intro-text .brf__facts {
+		margin-top: 0;
+	}
+
+	.brf__intro-text .brf__note {
+		margin-bottom: 0;
+	}
+
+	.brf__intro-text .brf__cta {
+		align-self: flex-start;
+	}
 }
 
 /* ---------- главная кнопка: как «связаться со мной» в шапке — с бегущим подчёркиванием ---------- */
@@ -1039,7 +1077,20 @@ textarea.field {
 
 /* ---------- АДАПТИВ ---------- */
 
-@media (max-width: 1280px) {
+/* вступление: уже 1280 рядом с фото тексту тесно — фото сверху, текст под ним */
+@media (width < 1280px) {
+	.brf__intro-body {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 36px;
+	}
+
+	.brf__photo {
+		max-width: 420px;
+	}
+}
+
+/* плашки — квадратами, пока им хватает ширины; на телефоне — строками */
+@media (max-width: 767px) {
 	.brf__facts {
 		grid-template-columns: minmax(0, 1fr);
 		gap: 12px;
@@ -1058,15 +1109,10 @@ textarea.field {
 }
 
 @media (max-width: 1024px) {
-	.brf__intro-body,
 	.stage,
 	.brf__block {
 		grid-template-columns: minmax(0, 1fr);
 		row-gap: 36px;
-	}
-
-	.brf__photo {
-		max-width: 420px;
 	}
 
 	.stage__aside {
@@ -1124,4 +1170,44 @@ textarea.field {
 		bottom: 96px;
 		font-size: 14px;
 	}
+}
+
+/* ---------- конец брифа: «вернуться на сайт» ----------
+   Только на последнем этапе и после отправки (js/brief.js). Кнопка — .inv__btn из css/menu.css:
+   светлая, при наведении тёмная заливка наплывает слева, стрелка сдвигается. Стоит по центру */
+.brf__outro {
+	display: flex;
+	justify-content: center;
+	padding: clamp(2rem, 1.5rem + 2vw, 3.5rem) 0 var(--section-gap);
+}
+
+.brf__outro[hidden] {
+	display: none;
+}
+
+.brf__home {
+	margin-top: 0;
+	color: #fff;
+}
+
+@media (max-width: 767px) {
+	.brf__home {
+		width: 100%;
+	}
+}
+
+/* тексты брифа — строки ровные, без дыр: вступление и плашки — строками близкой длины, остальное — без коротких хвостов */
+.brf__lead,
+.brf__facts span,
+.q__label {
+	text-wrap: balance;
+}
+
+.brf__note,
+.brf__next span,
+.stage__title,
+.stage__desc,
+.q__hint,
+.consent {
+	text-wrap: pretty;
 }

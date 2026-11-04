@@ -15,7 +15,7 @@
 		<link rel="stylesheet" href="css/hero.css?v=4" />
 		<link rel="stylesheet" href="css/art.css?v=3" />
 		<link rel="stylesheet" href="css/menu.css?v=62" />
-		<link rel="stylesheet" href="css/brief.css?v=1" />
+		<link rel="stylesheet" href="css/brief.css?v=16" />
 	</head>
 	<body class="brief-page">
 		<!-- плёночное зерно (css/art.css) -->
@@ -50,15 +50,18 @@
 					</figure>
 
 					<div class="brf__intro-text">
-						<p class="brf__lead">Несколько коротких вопросов о&nbsp;задумке, настроении и&nbsp;деталях. По&nbsp;ответам я&nbsp;пойму, что&nbsp;вам важно, и&nbsp;приду на&nbsp;съёмку подготовленным.</p>
+						<p class="brf__lead">Опишите задумку и&nbsp;детали&nbsp;— я&nbsp;пойму, что вам важно, и&nbsp;приду подготовленным.</p>
 
-						<ul class="brf__facts">
-							<li><b id="introSteps">7 этапов</b><span>по&nbsp;3–5&nbsp;вопросов на&nbsp;каждом экране</span></li>
-							<li><b>10&nbsp;минут</b><span>отвечайте своими словами, как&nbsp;в&nbsp;переписке</span></li>
-							<li><b>Черновик</b><span>сохраняется сам: можно закрыть вкладку и&nbsp;вернуться позже</span></li>
-						</ul>
+						<!-- плашки и пояснение — одним блоком: в две колонки текст растянут на высоту фото (css/brief.css) -->
+						<div class="brf__intro-mid">
+							<ul class="brf__facts">
+								<li><b id="introSteps">7 этапов</b><span>по&nbsp;3–5&nbsp;вопросов на&nbsp;каждом экране</span></li>
+								<li><b>10&nbsp;минут</b><span>своими словами, как в&nbsp;переписке</span></li>
+								<li><b>Черновик</b><span>сохраняется сам: продолжите позже</span></li>
+							</ul>
 
-						<p class="brf__note">Вопросы со&nbsp;звёздочкой <span class="req">*</span> обязательные, остальные&nbsp;— по&nbsp;желанию.</p>
+							<p class="brf__note">Вопросы со&nbsp;звёздочкой <span class="req">*</span> обязательные, остальные&nbsp;— по&nbsp;желанию.</p>
+						</div>
 
 						<button class="brf__cta" type="button" id="startBtn">
 							<span id="startLabel">Начать</span>&nbsp;→
@@ -120,6 +123,15 @@
 					<button class="pill-btn" type="button" id="newBrief">Заполнить новый бриф</button>
 				</div>
 			</section>
+
+			<!-- конец брифа: возврат на сайт — только на последнем этапе и после отправки (js/brief.js, goTo).
+				Кнопка — как «записаться на съёмку»: при наведении тёмная заливка наплывает слева -->
+			<nav class="brf__outro" id="outro" aria-label="Вернуться на сайт" hidden>
+				<a class="inv__btn brf__home" href="index.html">
+					<span class="inv__btn-label">вернуться на&nbsp;сайт</span>
+					<span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+				</a>
+			</nav>
 		</main>
 
 		<!-- футер: разделы и связь — собирает js/menu.js -->
@@ -143,9 +155,8 @@
 		</dialog>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-		<script src="js/menu.js?v=42"></script>
-		<script type="module" src="js/invite-tunnel.js?v=15"></script>
+		<script src="js/menu.js?v=43"></script>
 		<!-- Анкета: вопросы, черновик, отправка в Telegram через приёмник на Cloudflare -->
-		<script src="js/brief.js?v=2"></script>
+		<script src="js/brief.js?v=6"></script>
 	</body>
 </html>

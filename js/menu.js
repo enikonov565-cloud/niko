@@ -167,7 +167,8 @@
 	// ---------- футер ----------
 	const footer = document.querySelector('[data-footer]');
 	if (footer) {
-		footer.innerHTML = `
+		// на странице брифа приглашения нет: бриф и есть запись на съёмку, после него — сразу футер
+		footer.innerHTML = `${page === 'brief' ? '' : `
 			<!-- приглашение на съёмку: фотограф в центре из темноты, фон — коридор со снимками (js/invite-tunnel.js) -->
 			<section class="inv" aria-labelledby="inv-title">
 				<img class="inv__hero" src="img/about/photographer.png" alt="" width="640" height="640" loading="lazy" aria-hidden="true">
@@ -176,7 +177,7 @@
 					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить,</span> <span>а&nbsp;я&nbsp;подберу место, свет и&nbsp;время.</span></p>
 					<a class="inv__btn" href="brief.html"><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
-			</section>
+			</section>`}
 			<div class="ft__grid">
 				<!-- слева: логотип, под ним цитата в две строки, автор — в строку после неё -->
 				<div class="ft__brand">
