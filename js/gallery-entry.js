@@ -1073,6 +1073,10 @@ function init() {
 
 	// ---------- запуск ----------
 	resize();
+	// шейдеры сцены и наклейки собираются заранее, в фоне: иначе сборка случалась на первом кадре,
+	// когда экран подъезжал снизу, — и прокрутка «Я фотограф» спотыкалась на треть секунды
+	if (renderer && renderer.compileAsync) renderer.compileAsync(scene, camera).catch(() => {});
+	if (stR && stR.compileAsync && stScene.children.length) stR.compileAsync(stScene, stCam).catch(() => {});
 	if (document.fonts) {
 		Promise.all(['500 40px Inter', '40px Lemon'].map((f) => document.fonts.load(f)))
 			.then(() => { drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); fontsReady = true; });

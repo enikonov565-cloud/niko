@@ -33,7 +33,9 @@
 			set.className = 'svc__film-set';
 			frames.forEach((src) => {
 				const img = document.createElement('img');
-				img.src = src;
+				// кадр плёнки — 250 px: уменьшенная копия (img/thumbs/, 800 px) вместо полного снимка.
+				// 96 полноразмерных снимков браузер декодировал при прокрутке — экран дёргался
+				img.src = src.replace(/^img\//, 'img/thumbs/');
 				img.alt = '';
 				img.loading = 'lazy';
 				img.decoding = 'async';

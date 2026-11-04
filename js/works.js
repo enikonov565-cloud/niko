@@ -48,7 +48,7 @@
 		li.style.setProperty('--i', i);
 		li.innerHTML = `
 			<a class="wk-card__link" href="${onPage ? '' : 'works.html'}#${g.slug}" data-genre="${g.slug}">
-				<div class="wk-card__media">${cover ? `<img src="${cover.src}" alt="${cover.alt}" width="${cover.w || ''}" height="${cover.h || ''}" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">` : ''}</div>
+				<div class="wk-card__media">${cover ? `<img src="${cover.src.replace(/^img\//, 'img/thumbs/')}" alt="${cover.alt}" width="${cover.w || ''}" height="${cover.h || ''}" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async">` : ''}</div>
 				<span class="wk-card__name">${g.title}</span>
 			</a>`;
 		stairs.appendChild(li);

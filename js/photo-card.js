@@ -42,7 +42,8 @@
 
 	// неразрывный пробел после коротких слов — без висячих предлогов
 	const nb = (s) => String(s || '').replace(/(^|\s)([а-яёa-z]{1,2})\s/giu, '$1$2 ');
-	const find = (src) => photos.find((p) => src && (src === p.src || src.endsWith('/' + p.src) || src.includes(p.src)));
+	// в плёнках и карточках стоят уменьшенные копии (img/thumbs/…) — карточка всё равно находит и открывает полный снимок
+	const find = (raw) => { const src = raw && raw.replace('img/thumbs/', 'img/'); return photos.find((p) => src && (src === p.src || src.endsWith('/' + p.src) || src.includes(p.src))); };
 
 	// название — по буквам в «окне»: буквы поднимаются снизу
 	function setTitle(text) {
