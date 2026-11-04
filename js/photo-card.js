@@ -24,7 +24,7 @@
 				<h2 class="pc__title" id="pc-title" data-pc="title"></h2>
 				<p class="pc__desc"><span class="pc__mask"><span class="pc__line" data-pc="desc"></span></span></p>
 				<!-- как «связаться со мной» в шапке: Telegram с готовым сообщением про этот снимок -->
-				<span class="pc__mask pc__contact-mask"><a class="pc__contact pc__line" data-pc="contact" href="https://t.me/Nikonovevgeny" target="_blank" rel="noopener">связаться с&nbsp;автором</a></span>
+				<span class="pc__mask pc__contact-mask"><a class="pc__contact pc__line" data-pc="contact" href="brief.html">связаться с&nbsp;автором</a></span>
 			</div>
 		</aside>`;
 	document.body.appendChild(root);
@@ -72,7 +72,8 @@
 		const chars = setTitle(p.label || p.alt || 'Без названия');
 		$('desc').textContent = nb(p.alt ? `${p.alt.replace(/[.\s]+$/, '')}.` : '');
 		const what = p.label ? `«${p.label}»` : '';
-		$('contact').href = `https://t.me/Nikonovevgeny?text=${encodeURIComponent(`Здравствуйте! На сайте понравился снимок ${what}${p.genre ? ` (${p.genre.toLowerCase()})` : ''}. Хочу обсудить съёмку.`)}`;
+		// бриф с пометкой о снимке и его жанром — анкета подставит их сама
+		$('contact').href = `brief.html?photo=${encodeURIComponent(`${what}${p.genre ? ` (${p.genre.toLowerCase()})` : ''}`.trim())}${p.genre ? `&genre=${encodeURIComponent(p.genre)}` : ''}`;
 		img.src = p.src;
 		img.alt = p.alt || '';
 		root.classList.add('is-open');

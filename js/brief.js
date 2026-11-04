@@ -1089,6 +1089,26 @@ function updateIntroButton() {
   $('#startLabel').textContent = d && d.step > 0 ? 'Продолжить' : 'Начать';
 }
 
+/* ---------- Подсказки из ссылки ----------
+   Кнопки сайта открывают бриф с контекстом: brief.html?genre=Портрет — жанр уже отмечен,
+   ?photo=«Название» — в идее съёмки пометка о понравившемся снимке. Ответы человека не перезаписываются */
+function applyLinkHints() {
+  let params;
+  try { params = new URLSearchParams(location.search); } catch (e) { return; }
+  const genre = (params.get('genre') || '').trim().slice(0, 60);
+  const photo = (params.get('photo') || '').trim().slice(0, 160);
+  if (genre) {
+    const q = qById.genre;
+    const match = q.options.find(o => o.toLowerCase() === genre.toLowerCase());
+    const picked = Array.isArray(state.answers.genre) ? state.answers.genre : [];
+    if (match && !picked.includes(match)) state.answers.genre = [...picked, match];
+    else if (!match && !picked.length && !state.answers.genre__other) state.answers.genre__other = genre;
+  }
+  if (photo && !String(state.answers.concept || '').trim()) {
+    state.answers.concept = `На сайте понравился снимок ${photo} — хочется похожего.`;
+  }
+}
+
 /* =========================================================
    Запуск
    ========================================================= */
@@ -1148,6 +1168,7 @@ async function init() {
     }
   } catch (e) { /* IndexedDB недоступна — файлы просто не восстановятся */ }
 
+  applyLinkHints();
   fillForm();
   const hasContent = Object.values(state.answers).some(v => Array.isArray(v) ? v.length : String(v || '').trim()) || state.files.length;
   if (draft && hasContent) {

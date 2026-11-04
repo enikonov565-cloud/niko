@@ -84,7 +84,7 @@
 					</div>
 				</div>
 				<div class="mn__foot mn__item">
-					<a class="mn__contact" href="https://t.me/Nikonovevgeny" ${ext}>заказать съёмку</a>
+					<a class="mn__contact" href="brief.html">заказать съёмку</a>
 				</div>
 			</nav>`;
 		document.body.appendChild(root);
@@ -174,7 +174,7 @@
 				<div class="inv__body">
 					<h2 class="inv__title" id="inv-title"><span>Следующий кадр</span> <span>за&nbsp;вами</span></h2>
 					<p class="inv__text"><span>Расскажите, какой момент хотите сохранить,</span> <span>а&nbsp;я&nbsp;подберу место, свет и&nbsp;время.</span></p>
-					<a class="inv__btn" href="https://t.me/Nikonovevgeny" ${ext}><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+					<a class="inv__btn" href="brief.html"><span class="inv__btn-label">записаться на&nbsp;съёмку</span><span class="inv__btn-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
 				</div>
 			</section>
 			<div class="ft__grid">

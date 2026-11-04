@@ -172,9 +172,13 @@
 	width: calc(clamp(7rem, 6rem + 2.5vw, 9.5rem) * 0.5);
 	aspect-ratio: 1;
 	translate: -50% 0;
+	z-index: -1; /* под знаком: из-под объектива видна только расходящаяся кайма */
 	border-radius: 50%;
-	box-shadow: 0 0 0 0 rgba(40, 76, 88, 0.55);
+	background: rgb(58, 104, 120);
+	opacity: 0;
+	/* волна — масштабом и прозрачностью: их считает видеокарта, без перерисовки на каждом кадре, как было с box-shadow */
 	animation: ge-pulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+	will-change: transform, opacity;
 	pointer-events: none;
 }
 
@@ -204,8 +208,8 @@
 }
 
 @keyframes ge-pulse {
-	0% { box-shadow: 0 0 0 0 rgba(58, 104, 120, 0.6); }
-	100% { box-shadow: 0 0 0 1.6rem rgba(58, 104, 120, 0); }
+	0% { transform: scale(0.95); opacity: 0.6; }
+	100% { transform: scale(1.75); opacity: 0; }
 }
 
 /* после блока — зал галереи */

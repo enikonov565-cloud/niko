@@ -465,8 +465,9 @@ function init() {
 		if (stR) stR.shadowMap.needsUpdate = true;
 	}
 
-	// лицо наклейки: бумага и написанная часть рукописи (рукопись — в координатах страницы, наклейка повёрнута)
-	sticker.paint = () => {
+	// лицо наклейки: бумага и написанная часть рукописи (рукопись — в координатах страницы, наклейка повёрнута).
+	// Рисуется не на каждом кадре письма, а только перед отправкой в видеокарту (uploadSheet, ~25 раз в секунду)
+	const drawSheet = () => {
 		const S = layout && layout.sheet;
 		if (!S || !sticker.ok) return;
 		const ctx = sheetCanvas.getContext('2d');
@@ -482,10 +483,11 @@ function init() {
 		ctx.translate(-(S.x + S.w / 2), -(S.y + S.h / 2));
 		handwriting(ctx, true);
 		ctx.restore();
-		// в видеокарту лист уходит не чаще ~25 раз в секунду (stickerFrame): ручка пишет плавно, кадры лёгкие
-		sticker.pending = true;
 	};
-	const uploadSheet = () => { stTex.needsUpdate = true; sticker.pending = false; sticker.dirty = true; };
+	// в видеокарту лист уходит не чаще ~25 раз в секунду (stickerFrame): ручка пишет плавно, кадры лёгкие
+	sticker.paint = () => { sticker.pending = true; };
+	// новая картинка листа — перерисовать наклейку, но без пересчёта изгиба и тени: от текста они не зависят
+	const uploadSheet = () => { drawSheet(); stTex.needsUpdate = true; sticker.pending = false; sticker.dirty = true; };
 
 	// под новый размер листа: холсты, сетка, место на экране
 	sticker.resize = () => {
@@ -549,8 +551,9 @@ function init() {
 		const target = sticker.press ? ST.peel.press : sticker.hover ? ST.peel.hover : ST.peel.rest;
 		const prev = sticker.amount;
 		sticker.amount += (target - sticker.amount) * (1 - Math.exp(-dt / 0.2));
-		if (Math.abs(sticker.amount - prev) > 1e-5 || sticker.dirty) {
-			bendSticker();
+		const bent = Math.abs(sticker.amount - prev) > 1e-5;
+		if (bent) bendSticker(); // изгиб и тень — только когда уголок правда двигается
+		if (bent || sticker.dirty) {
 			stR.render(stScene, stCam);
 			sticker.dirty = false;
 		}
@@ -585,6 +588,9 @@ function init() {
 	// В облёте в текстуру ложится снимок самой наклейки — с тем же скатанным уголком и тенью, что в покое
 	// (без видеокарты для наклейки — прежний лист с загибом из основы)
 	let pageMode = ''; // что сейчас в текстуре страницы: 'title' (покой, лист — в наклейке) или полный лист
+	// сцену перерисовываем только когда что-то изменилось: камера сдвинулась, обновилась страница или догрузился снимок.
+	// В покое кадр не меняется — видеокарта отдыхает, ручка и наклейка рисуются отдельно
+	let sceneDirty = true;
 	function renderPage() {
 		if (!layout) return null;
 		// покой: текстура страницы — один заголовок, он не меняется; на каждом кадре письма обновляем только наклейку
@@ -615,6 +621,7 @@ function init() {
 			ctx.restore();
 		}
 		pageTex.needsUpdate = true;
+		sceneDirty = true;
 		return tip;
 	}
 
@@ -638,11 +645,16 @@ function init() {
 		renderer.outputColorSpace = THREE.SRGBColorSpace;
 		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.PCFSoftShadowMap; // мягкие тени без лишних проходов (VSM нагружал видеокарту)
+		// предметы и свет неподвижны, двигается только камера — карта теней считается один раз, а не каждый кадр
+		renderer.shadowMap.autoUpdate = false;
+		renderer.shadowMap.needsUpdate = true;
 		stage.appendChild(renderer.domElement);
 		renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showFlat(true); });
 		renderer.domElement.addEventListener('webglcontextrestored', () => {
 			showFlat(false);
 			pageTex.needsUpdate = true;
+			renderer.shadowMap.needsUpdate = true;
+			sceneDirty = true;
 			resize(); // тени, размеры и картинка листа — заново
 		});
 	} catch (err) {
@@ -748,7 +760,7 @@ function init() {
 		return mesh;
 	};
 	const loader = new THREE.TextureLoader();
-	const photoTex = (src) => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+	const photoTex = (src) => { const t = loader.load(src, () => { sceneDirty = true; }); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
 
 	// ---------- сцена на всю страницу ----------
 	// стена за всем — на ней лежит цитата и тени
@@ -798,6 +810,7 @@ function init() {
 			c.restore();
 		}
 		filmTex.needsUpdate = true;
+		sceneDirty = true;
 	}
 	drawFilm();
 
@@ -926,6 +939,7 @@ function init() {
 		const W = stage.clientWidth || window.innerWidth;
 		const H = stage.clientHeight || window.innerHeight;
 		if (renderer) renderer.setSize(W, H, false);
+		sceneDirty = true;
 		pageCanvas.style.width = `${W}px`;
 		pageCanvas.style.height = `${H}px`;
 		const aspect = W / H;
@@ -969,6 +983,7 @@ function init() {
 	let visible = true;
 	if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(root);
 
+	let renderedP = -1; // при каком положении камеры нарисован последний кадр сцены
 	function frame() {
 		if (!visible) return;
 		const p = flight.p;
@@ -992,7 +1007,11 @@ function init() {
 		}
 		writeFrame(p);
 		stickerFrame(p, performance.now());
-		if (renderer && !glLost) renderer.render(scene, camera);
+		if (renderer && !glLost && (sceneDirty || p !== renderedP)) {
+			renderer.render(scene, camera);
+			renderedP = p;
+			sceneDirty = false;
+		}
 	}
 
 	// ---------- рукопись: ручка пишет цитату, когда экран встал перед зрителем ----------

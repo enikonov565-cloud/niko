@@ -17,7 +17,7 @@
 	};
 	const frames = [...root.querySelectorAll('.svc__polaroid')];
 	const cta = root.querySelector('[data-svc="cta"]');
-	const tgBase = cta ? cta.href.split('?')[0] : '';
+	const briefBase = cta ? cta.getAttribute('href').split('?')[0] : '';
 
 	// короткие предлоги и союзы не остаются в конце строки
 	const glue = (t) => t.replace(/(?<=^|[\s(«])(в|во|на|у|с|со|к|ко|о|об|от|из|до|по|за|под|над|при|без|для|про|и|а|но|или|не|ни|я|что)\s+/gi, '$1 ');
@@ -120,10 +120,9 @@
 
 	// ---------- описание и снимки ----------
 	function fillInfo(s) {
-		// Telegram сразу с сообщением про выбранный жанр — человеку остаётся нажать «отправить»
+		// бриф сразу с выбранным жанром — в анкете он уже отмечен
 		if (cta) {
-			const msg = `Здравствуйте! Хочу заказать съёмку: ${s.title.toLowerCase()} (${s.price}). Какие даты свободны?`;
-			cta.href = `${tgBase}?text=${encodeURIComponent(msg)}`;
+			cta.href = `${briefBase}?genre=${encodeURIComponent(s.title)}`;
 			cta.setAttribute('aria-label', `Заказать съёмку: ${s.title}, ${s.price}`);
 		}
 		info.name.textContent = s.title;
