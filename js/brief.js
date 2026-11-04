@@ -664,7 +664,9 @@ function saveDraft(silent = false) {
   try {
     localStorage.setItem(SETTINGS.draftKey, JSON.stringify({
       v: 1,
-      step: state.step === FINAL ? TOTAL : state.step,
+      // на вступлении (этап 0) помним этап, где остановились: бриф всегда открывается с начала,
+      // а «продолжить» ведёт туда
+      step: state.step === FINAL ? TOTAL : (state.step || ((readDraft() || {}).step) || 0),
       answers: state.answers,
       consent: state.consent,
       briefId: state.briefId,
@@ -1119,6 +1121,12 @@ function applyLinkHints() {
    Запуск
    ========================================================= */
 async function init() {
+  // «связаться со мной» в шапке — как на других страницах, к брифу: здесь это плавный подъём к началу анкеты
+  const contact = document.querySelector('.topbar__contact[href="#top"]');
+  if (contact) contact.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   renderStages();
   typoTree(document.body);
   $('#counterAll').textContent = pad2(TOTAL);
@@ -1177,15 +1185,18 @@ async function init() {
   applyLinkHints();
   fillForm();
   const hasContent = Object.values(state.answers).some(v => Array.isArray(v) ? v.length : String(v || '').trim()) || state.files.length;
-  if (draft && hasContent) {
-    goTo(Math.min(Math.max(draft.step || 1, 1), TOTAL), { instant: true, noFocus: true });
-    toast('Черновик восстановлен', {
-      label: 'Начать заново',
-      onClick: () => { resetBrief(); goTo(0); toast('Черновик удалён'); }
-    });
-  } else {
-    goTo(0, { instant: true, noFocus: true });
-  }
+  // бриф всегда открывается с начала — со вступления. Есть черновик — кнопка «продолжить» ведёт на этап,
+  // где остановились, а рядом тихое «начать заново»
+  goTo(0, { instant: true, noFocus: true });
+  const restart = $('#restartBtn');
+  restart.hidden = !(draft && hasContent);
+  restart.addEventListener('click', () => {
+    resetBrief();
+    applyLinkHints();
+    fillForm();
+    restart.hidden = true;
+    toast('Черновик удалён');
+  });
   updateIntroButton();
 }
 

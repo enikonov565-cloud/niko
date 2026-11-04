@@ -358,4 +358,62 @@
 		if (!snapT) snapT = setTimeout(check, 180);
 	}, { passive: true });
 	window.addEventListener('pointerdown', (e) => { if (e.clientX >= root.clientWidth) user(); }, { passive: true }); // полоса прокрутки
+
+	// ---------- переходы между страницами ----------
+	// Любая ссылка на другую страницу сайта (бриф, главная, «Мой подход», документы): прокрутка замирает, экран
+	// плавно гаснет в тёмный фон, следующая страница открывается под той же завесой и проявляется, только когда
+	// встала на место — тяжёлые экраны собраны, якорь (#services и т. п.) найден. Раньше переход был мгновенным:
+	// рывок при уходе и дёрганье при открытии (страница прыгала к якорю и подстраивалась под закреплённые экраны).
+	// Кнопка «назад» и обновление страницы — тоже под завесой (флаг ставится при уходе со страницы)
+	const veil = document.createElement('div');
+	veil.className = 'page-veil';
+	veil.setAttribute('aria-hidden', 'true');
+	document.body.appendChild(veil);
+	const markLeave = () => { try { sessionStorage.setItem('nk-veil', '1'); } catch (err) { /* без хранилища — переход без завесы */ } };
+	document.addEventListener('click', (e) => {
+		if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		const a = e.target.closest('a[href]');
+		if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+		const url = new URL(a.href, location.href);
+		if (url.origin !== location.origin || url.pathname === location.pathname) return; // якорь на этой же странице — не переход
+		e.preventDefault();
+		if (window.lenis) window.lenis.stop();
+		veil.classList.add('is-on');
+		markLeave();
+		setTimeout(() => { location.href = url.href; }, reduced ? 0 : 600);
+	});
+	window.addEventListener('pagehide', markLeave);
+
+	// пришли под завесой — снимаем её, когда страница загрузилась и браузер перестал «спотыкаться»
+	// (десяток ровных кадров подряд), но не позже чем через 3 с после загрузки
+	const html = document.documentElement;
+	const reveal = () => {
+		if (!html.classList.contains('veil-in') || html.classList.contains('veil-out')) return;
+		// пришли по ссылке с якорем — сначала на место, потом показ
+		if (onHome && location.hash.length > 1) go(decodeURIComponent(location.hash.slice(1)));
+		html.classList.add('veil-out');
+		setTimeout(() => html.classList.remove('veil-in', 'veil-out'), reduced ? 0 : 800);
+	};
+	if (html.classList.contains('veil-in')) {
+		const settle = () => {
+			const t0 = performance.now();
+			let last = t0, smooth = 0;
+			const tick = (now) => {
+				smooth = now - last < 34 ? smooth + 1 : 0;
+				last = now;
+				if (smooth >= 10 || now - t0 > 3000) { reveal(); return; }
+				requestAnimationFrame(tick);
+			};
+			requestAnimationFrame(tick);
+		};
+		if (document.readyState === 'complete') settle(); else window.addEventListener('load', settle, { once: true });
+	}
+	// вернулись кнопкой «назад» на страницу из кэша браузера — она уже на месте: без завесы
+	window.addEventListener('pageshow', (e) => {
+		if (!e.persisted) return;
+		try { sessionStorage.removeItem('nk-veil'); } catch (err) { /* нет хранилища */ }
+		veil.classList.remove('is-on');
+		html.classList.remove('veil-in', 'veil-out');
+		if (window.lenis) window.lenis.start();
+	});
 })();

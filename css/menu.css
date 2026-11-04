@@ -1021,3 +1021,41 @@ html.mn-open .topbar {
 		margin-top: 0;
 	}
 }
+
+/* переходы между страницами (js/menu.js): уходя, экран плавно гаснет в фон сайта (.page-veil);
+   следующая страница открывается под такой же завесой (html.veil-in) и проявляется, когда встала на место */
+.page-veil {
+	position: fixed;
+	z-index: 300;
+	inset: 0;
+	background: var(--c-dark);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.page-veil.is-on {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+html.veil-in::after {
+	content: "";
+	position: fixed;
+	z-index: 300;
+	inset: 0;
+	background: #0b0f15; /* --c-dark */
+	pointer-events: none;
+	transition: opacity 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html.veil-in.veil-out::after {
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.page-veil,
+	html.veil-in::after {
+		transition: none;
+	}
+}

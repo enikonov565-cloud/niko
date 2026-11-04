@@ -2,6 +2,9 @@
 <html lang="ru">
 	<head>
 		<meta charset="UTF-8" />
+		<!-- переход между страницами сайта: пришли с другой нашей страницы — открываемся под тёмной завесой,
+			js/menu.js снимает её, когда страница встала на место (css/menu.css) -->
+		<script>try { if (sessionStorage.getItem('nk-veil')) { sessionStorage.removeItem('nk-veil'); document.documentElement.classList.add('veil-in'); } } catch (e) {}</script>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Мой подход — nikonovphoto</title>
 		<meta name="description" content="Как снимает nikonovphoto: взгляд, свет, настоящие эмоции и только кадры со смыслом." />
@@ -14,7 +17,7 @@
 		<!-- ?v=… — версия файлов: после изменений CSS/JS увеличьте число, и браузеры не покажут старую копию из кэша -->
 		<link rel="stylesheet" href="css/hero.css?v=4" />
 		<link rel="stylesheet" href="css/art.css?v=56" />
-		<link rel="stylesheet" href="css/menu.css?v=62" />
+		<link rel="stylesheet" href="css/menu.css?v=64" />
 		<link rel="stylesheet" href="css/approach.css?v=31" />
 	</head>
 	<body class="approach-page">
@@ -74,6 +77,6 @@
 			}
 		</script>
 		<script type="module" src="js/approach.js?v=25"></script>
-		<script src="js/menu.js?v=43"></script>
+		<script src="js/menu.js?v=45"></script>
 	</body>
 </html>

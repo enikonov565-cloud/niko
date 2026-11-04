@@ -157,6 +157,12 @@ html.lenis body {
 	animation: logo-draw 4.5s cubic-bezier(0.45, 0.05, 0.25, 1) 0.4s forwards;
 }
 
+/* пришли с другой страницы сайта — главная открывается под тёмной завесой (js/menu.js, css/menu.css):
+   логотип ждёт и начинает рисоваться вместе с её исчезновением, а не впустую под ней */
+html.veil-in:not(.veil-out) .parallax__logo {
+	animation-play-state: paused;
+}
+
 @keyframes logo-draw {
 	to {
 		-webkit-mask-position: 0 0;
