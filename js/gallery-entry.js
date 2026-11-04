@@ -760,7 +760,7 @@ function init() {
 		return mesh;
 	};
 	const loader = new THREE.TextureLoader();
-	const photoTex = (src) => { const t = loader.load(src, () => { sceneDirty = true; }); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+	const photoTex = (src) => { const t = loader.load(src, () => { sceneDirty = true; warmSoon(); }); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
 
 	// ---------- сцена на всю страницу ----------
 	// стена за всем — на ней лежит цитата и тени
@@ -984,6 +984,23 @@ function init() {
 	if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(root);
 
 	let renderedP = -1; // при каком положении камеры нарисован последний кадр сцены
+
+	// прогрев: пока экран ещё не виден, в свободную минуту браузера рисуем сцену один раз «вхолостую» —
+	// снимки, лист с цитатой и карта теней уходят в видеокарту заранее. Иначе всё это грузилось на первом кадре,
+	// когда экран подъезжал снизу, и прокрутка «Я фотограф» спотыкалась на 0,1–0,2 секунды
+	let warmT = 0;
+	function warmSoon() {
+		clearTimeout(warmT);
+		warmT = setTimeout(() => {
+			const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 0));
+			idle(() => {
+				if (!renderer || glLost || visible) return; // экран уже виден — его и так рисует frame()
+				renderer.render(scene, camera);
+				if (stR && stScene.children.length) stR.render(stScene, stCam);
+			}, { timeout: 2000 });
+		}, 300);
+	}
+	if (document.readyState === 'complete') warmSoon(); else window.addEventListener('load', warmSoon, { once: true });
 	function frame() {
 		if (!visible) return;
 		const p = flight.p;
@@ -1079,7 +1096,7 @@ function init() {
 	if (stR && stR.compileAsync && stScene.children.length) stR.compileAsync(stScene, stCam).catch(() => {});
 	if (document.fonts) {
 		Promise.all(['500 40px Inter', '40px Lemon'].map((f) => document.fonts.load(f)))
-			.then(() => { drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); fontsReady = true; });
+			.then(() => { drawPage(stage.clientWidth || window.innerWidth, stage.clientHeight || window.innerHeight); fontsReady = true; warmSoon(); });
 	} else fontsReady = true;
 	let resizeTimer = 0;
 	window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });

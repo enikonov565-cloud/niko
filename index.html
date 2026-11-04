@@ -777,6 +777,13 @@
 
 			    // шейдеры собираются заранее, в фоне — первое появление экрана без рывка на сборку
 			    if (renderer.compileAsync) renderer.compileAsync(scene, camera).catch(() => {});
+			    // compileAsync собирает только материалы сцены; проход постобработки (виньетка) и карта высот
+			    // создаются на первом кадре — рисуем его вхолостую в свободную минуту, пока экран не виден
+			    if (!reduced) (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => {
+			        if (running) return;
+			        renderHeights();
+			        composer.render();
+			    }, { timeout: 4000 });
 
 			    if (reduced) {
 			        // без анимации: одна волна, один кадр
@@ -803,18 +810,18 @@
 		<script src="js/film.js?v=54"></script>
 		<script src="js/about.js?v=54"></script>
 		<script src="js/gallery-photos.js?v=59"></script>
-		<script src="js/room.js?v=54"></script>
+		<script src="js/room.js?v=55"></script>
 		<script src="js/art.js?v=55"></script>
 		<script src="js/approach-data.js?v=15"></script>
-		<script type="module" src="js/approach.js?v=20"></script>
+		<script type="module" src="js/approach.js?v=21"></script>
 		<script src="js/services-data.js?v=4"></script>
 		<script src="js/services.js?v=29"></script>
 		<script src="js/works.js?v=66"></script>
 		<script src="js/stages.js?v=34"></script>
 		<script src="js/photo-card.js?v=14"></script>
-		<script type="module" src="js/gallery-entry.js?v=53"></script>
+		<script type="module" src="js/gallery-entry.js?v=54"></script>
 		<script src="js/gallery-transition.js?v=14"></script>
 		<script src="js/menu.js?v=43"></script>
-		<script type="module" src="js/invite-tunnel.js?v=15"></script>
+		<script type="module" src="js/invite-tunnel.js?v=16"></script>
 	</body>
 </html>

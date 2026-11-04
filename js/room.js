@@ -32,6 +32,11 @@
     new IntersectionObserver((entries, io) => {
         if (!entries[0].isIntersecting) return;
         io.disconnect();
+        // до зала ещё экран — готовим его в свободную минуту браузера, а не посреди кадра прокрутки
+        (window.requestIdleCallback || ((fn) => setTimeout(fn, 0)))(prepare, { timeout: 1200 });
+    }, { rootMargin: '100% 0px' }).observe(section);
+
+    function prepare() {
         // ждём и шрифт: от него зависит, сколько строк займёт название на этикетке
         // (начертания и кириллицу этикетки грузим явно — браузер скачивает шрифт, только когда текст им уже нарисован)
         const fontsReady = document.fonts
@@ -41,7 +46,7 @@
             const items = list.filter(Boolean);
             if (items.length) init(items);
         });
-    }, { rootMargin: '100% 0px' }).observe(section);
+    }
 
     function init(items) {
         // стены делят снимки поровну, лишние достаются первым стенам

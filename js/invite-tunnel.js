@@ -214,6 +214,9 @@ function init(host) {
 	new MutationObserver(start).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 	// шейдеры собираются заранее, а не в первом кадре анимации
 	renderer.compile(scene, camera);
+	// и первый кадр (буферы геометрии, тени) — в свободную минуту, пока коридор ещё не виден: иначе он рисовался
+	// на подходе к футеру, посреди прокрутки
+	(window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => { if (!visible) renderer.render(scene, camera); }, { timeout: 5000 });
 	// рисуется, только когда виден на экране
 	new IntersectionObserver(([e]) => { visible = e.isIntersecting; start(); }).observe(host);
 	// впервые показался — коридор медленно выходит из-за центральной композиции
