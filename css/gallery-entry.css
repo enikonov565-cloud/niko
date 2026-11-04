@@ -9,10 +9,6 @@
 	font-display: swap;
 }
 
-.ge-page {
-	background: var(--c-dark);
-}
-
 .sr-only {
 	position: absolute;
 	width: 1px;
@@ -211,22 +207,6 @@
 	0% { transform: scale(0.95); opacity: 0.6; }
 	100% { transform: scale(1.75); opacity: 0; }
 }
-
-/* после блока — зал галереи */
-.ge-next {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);
-	min-height: 70svh;
-	padding: clamp(4rem, 2rem + 6vw, 9rem) var(--gutter);
-	background: var(--c-dark);
-}
-
-.ge-next__text {
-	margin: 0;
-}
-
 
 @media (prefers-reduced-motion: reduce) {
 	.ge__invite-ring,
