@@ -204,16 +204,24 @@ html:has(.brief-page) {
 
 /* компьютер: заголовок — тенью вдоль левого края; блок фото с текстом — посередине между шапкой и низом окна */
 @media (min-width: 1280px) {
+	/* ширина вступления — от неё считаются размеры фото и надписи-тени (100cqw) */
+	.brf__intro {
+		container-type: inline-size;
+	}
+
 	/* блок занимает окно за вычетом шапки, ряд стоит по центру, воздух сверху и снизу одинаковый. Фото своего размера */
 	.brf__intro-body {
-		/* надпись-тень: размер — по высоте окна, чтобы целиком помещалась по высоте блока;
-		   слева под неё полоса --brf-ghost-w, фото той же ширины, что и без надписи, — уже становится только текст */
-		--brf-ghost: min(clamp(2.5rem, 0.5rem + 3vw, 5.5rem), 4.4svh);
-		--brf-ghost-w: calc(var(--brf-ghost) * 1.45);
+		/* фото — квадрат шириной (ширина блока − промежуток) / 2.4, как и без надписи-тени.
+		   Надпись-тень — ровно во всю высоту фото: её длина — 17.2 кегля («Расскажите о вашей съёмке» капсом,
+		   Inter 500, разрядка 0.02em); поменяется текст — пересчитать число.
+		   Слева под надпись — полоса --brf-ghost-w; уже становится только колонка с текстом */
 		--brf-gap: clamp(40px, 5vw, 100px);
+		--brf-photo: calc((100cqw - var(--brf-gap)) / 2.4);
+		--brf-ghost: calc(var(--brf-photo) / 17.2);
+		--brf-ghost-w: calc(var(--brf-ghost) * 1.45);
 		--brf-hdr: calc(var(--topbar-y) * 2 + var(--burger-h) + 0.5rem); /* до низа логотипа в шапке */
 		position: relative;
-		grid-template-columns: minmax(0, calc((100% + var(--brf-ghost-w) - var(--brf-gap)) / 2.4)) minmax(0, 1fr);
+		grid-template-columns: minmax(0, var(--brf-photo)) minmax(0, 1fr);
 		align-content: center;
 		box-sizing: border-box;
 		min-height: calc(100svh - var(--brf-hdr));
@@ -234,7 +242,7 @@ html:has(.brief-page) {
 		white-space: nowrap;
 		writing-mode: vertical-rl;
 		transform: translateY(-50%) rotate(180deg);
-		color: rgba(235, 235, 235, 0.08);
+		color: rgba(235, 235, 235, 0.14);
 		pointer-events: none;
 	}
 }
