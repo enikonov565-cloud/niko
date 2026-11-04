@@ -1031,7 +1031,7 @@ html.mn-open .topbar {
 	background: var(--c-dark);
 	opacity: 0;
 	pointer-events: none;
-	transition: opacity 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+	transition: opacity 0.45s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .page-veil.is-on {
@@ -1045,8 +1045,11 @@ html.veil-in::after {
 	z-index: 300;
 	inset: 0;
 	background: #0b0f15; /* --c-dark */
+	/* не 1: полностью непрозрачную завесу браузер считает крышкой и не рисует страницу под ней —
+	   тогда вся отрисовка первого экрана (фото, логотип, сцены) падала на первый кадр проявления и он замирал */
+	opacity: 0.995;
 	pointer-events: none;
-	transition: opacity 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+	transition: opacity 0.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 html.veil-in.veil-out::after {
@@ -1057,5 +1060,23 @@ html.veil-in.veil-out::after {
 	.page-veil,
 	html.veil-in::after {
 		transition: none;
+	}
+}
+
+/* браузеры с переходами между документами (Chrome, Edge, Safari 18.2+): никакой тёмной паузы — старая страница
+   остаётся на экране, пока новая не готова к показу, и перетекает в неё; завеса выше — только запасной путь.
+   Само включение (@view-transition) — в <style> в начале каждой страницы: отсюда браузер его не успевал прочитать
+   на главной и пропускал переход */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.55s;
+	animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
 	}
 }

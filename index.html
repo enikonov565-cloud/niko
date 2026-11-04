@@ -4,7 +4,8 @@
 		<meta charset="UTF-8" />
 		<!-- переход между страницами сайта: пришли с другой нашей страницы — открываемся под тёмной завесой,
 			js/menu.js снимает её, когда страница встала на место (css/menu.css) -->
-		<script>try { if (sessionStorage.getItem('nk-veil')) { sessionStorage.removeItem('nk-veil'); document.documentElement.classList.add('veil-in'); } } catch (e) {}</script>
+		<script>(function () { var h = document.documentElement; if (document.prerendering) { h.classList.add('nk-prerender'); document.addEventListener('prerenderingchange', function () { h.classList.remove('nk-prerender'); }, { once: true }); } try { if (sessionStorage.getItem('nk-veil')) { sessionStorage.removeItem('nk-veil'); h.classList.add('veil-in'); } } catch (e) {} addEventListener('pagereveal', function (e) { if (!e.viewTransition) return; e.viewTransition.ready.catch(function () {}); if (location.hash.length > 1) h.classList.add('veil-in'); else h.classList.remove('veil-in'); }); })();</script>
+		<style>@view-transition { navigation: auto; }</style>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>nikonovphoto — фотограф</title>
 		<meta name="description" content="nikonovphoto: портретная фотография. Кадр, стиль, креатив." />
@@ -17,12 +18,12 @@
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap">
 		<!-- ?v=… — версия файлов: после изменений CSS/JS увеличьте число, и браузеры не покажут старую копию из кэша -->
 		<link rel="stylesheet" href="css/hero.css?v=56" />
-		<link rel="stylesheet" href="css/parallax.css?v=55" />
+		<link rel="stylesheet" href="css/parallax.css?v=57" />
 		<link rel="stylesheet" href="css/showreel.css?v=54" />
 		<link rel="stylesheet" href="css/about.css?v=54" />
 		<link rel="stylesheet" href="css/room.css?v=56" />
 		<link rel="stylesheet" href="css/art.css?v=56" />
-		<link rel="stylesheet" href="css/menu.css?v=64" />
+		<link rel="stylesheet" href="css/menu.css?v=66" />
 		<link rel="stylesheet" href="css/approach.css?v=31" />
 		<link rel="stylesheet" href="css/works.css?v=64" />
 		<link rel="stylesheet" href="css/stages.css?v=74" />
@@ -819,9 +820,9 @@
 		<script src="js/works.js?v=66"></script>
 		<script src="js/stages.js?v=34"></script>
 		<script src="js/photo-card.js?v=14"></script>
-		<script type="module" src="js/gallery-entry.js?v=59"></script>
+		<script type="module" src="js/gallery-entry.js?v=60"></script>
 		<script src="js/gallery-transition.js?v=14"></script>
-		<script src="js/menu.js?v=45"></script>
+		<script src="js/menu.js?v=47"></script>
 		<script type="module" src="js/invite-tunnel.js?v=21"></script>
 	</body>
 </html>

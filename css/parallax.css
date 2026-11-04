@@ -81,6 +81,7 @@ html.lenis body {
 }
 
 .parallax__title {
+	--plogo-w: clamp(300px, 58vw, 1100px); /* ширина самой подписи */
 	margin: 0;
 	line-height: 0;
 }
@@ -89,7 +90,6 @@ html.lenis body {
    живых фильтров нет — браузер ничего не пересчитывает при скролле.
    В картинке поля под тени (80 из 1570 px с каждой стороны) — компенсируем отрицательным отступом */
 .parallax__logo {
-	--plogo-w: clamp(300px, 58vw, 1100px); /* ширина самой подписи */
 	display: block;
 	width: calc(var(--plogo-w) * 1.1019);
 	max-width: none;
@@ -138,41 +138,68 @@ html.lenis body {
 }
 
 @media (max-width: 767px) {
-	.parallax__logo {
+	.parallax__title {
 		--plogo-w: 88vw;
 	}
 }
 
 /* ---------- логотип «рисуется» слева направо ----------
-   маска с мягким краем едет по подписи, как перо по бумаге */
-.parallax__logo {
-	-webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
-	mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
-	-webkit-mask-size: 250% 100%;
-	mask-size: 250% 100%;
-	-webkit-mask-repeat: no-repeat;
-	mask-repeat: no-repeat;
-	-webkit-mask-position: 100% 0;
-	mask-position: 100% 0;
-	animation: logo-draw 4.5s cubic-bezier(0.45, 0.05, 0.25, 1) 0.4s forwards;
+   «окно» с мягким правым краем (маска на заголовке) едет вправо и открывает подпись, а сама картинка внутри
+   едет ему навстречу ровно на столько же: на экране она стоит на месте, движется только край, как перо по бумаге.
+   Оба движения — сдвиги (transform), их ведёт видеокарта: перо не спотыкается, даже пока страница ещё собирает
+   3D-сцены (раньше ехала сама маска — её перерисовывал процессор, и при загрузке штрих замирал и прыгал).
+   Окно шире подписи: слева поле под тень, справа мягкий край (0,55 ширины подписи, как было) */
+.parallax__title {
+	--ink-l: calc(var(--plogo-w) * 0.06);
+	--ink-r: calc(var(--plogo-w) * 0.6);
+	--ink-run: calc(var(--plogo-w) * 1.66);
+	padding: 0 var(--ink-r) 0 var(--ink-l);
+	margin: 0 calc(var(--ink-r) * -1) 0 calc(var(--ink-l) * -1);
+	-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - var(--plogo-w) * 0.55), transparent);
+	mask-image: linear-gradient(90deg, #000 calc(100% - var(--plogo-w) * 0.55), transparent);
+	animation: logo-ink 4.5s cubic-bezier(0.45, 0.05, 0.25, 1) 0.4s both;
 }
 
-/* пришли с другой страницы сайта — главная открывается под тёмной завесой (js/menu.js, css/menu.css):
-   логотип ждёт и начинает рисоваться вместе с её исчезновением, а не впустую под ней */
-html.veil-in:not(.veil-out) .parallax__logo {
+.parallax__logo {
+	animation: logo-ink-back 4.5s cubic-bezier(0.45, 0.05, 0.25, 1) 0.4s both;
+}
+
+/* пришли под тёмной завесой (js/menu.js, css/menu.css) — рисуется вместе с её исчезновением, а не впустую под ней;
+   страница, собранная браузером заранее (prerender), — с момента показа */
+html.veil-in:not(.veil-out) .parallax__title,
+html.veil-in:not(.veil-out) .parallax__logo,
+html.nk-prerender .parallax__title,
+html.nk-prerender .parallax__logo {
 	animation-play-state: paused;
 }
 
-@keyframes logo-draw {
+@keyframes logo-ink {
+	from {
+		transform: translateX(calc(var(--ink-run) * -1));
+	}
+
 	to {
-		-webkit-mask-position: 0 0;
-		mask-position: 0 0;
+		transform: translateX(0);
+	}
+}
+
+@keyframes logo-ink-back {
+	from {
+		transform: translateX(var(--ink-run));
+	}
+
+	to {
+		transform: translateX(0);
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.parallax__title,
 	.parallax__logo {
 		animation: none;
+	}
+
+	.parallax__title {
 		-webkit-mask-image: none;
 		mask-image: none;
 	}

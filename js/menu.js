@@ -370,44 +370,104 @@
 	veil.setAttribute('aria-hidden', 'true');
 	document.body.appendChild(veil);
 	const markLeave = () => { try { sessionStorage.setItem('nk-veil', '1'); } catch (err) { /* без хранилища — переход без завесы */ } };
+	const pageLink = (target) => {
+		const a = target && target.closest ? target.closest('a[href]') : null;
+		if (!a || a.target === '_blank' || a.hasAttribute('download')) return null;
+		const url = new URL(a.href, location.href);
+		if (url.origin !== location.origin || url.pathname === location.pathname) return null; // якорь на этой же странице — не переход
+		return url;
+	};
+	// курсор навёлся / палец коснулся ссылки — следующая страница начинает грузиться заранее, пока гаснет экран
+	const fetched = new Set();
+	const prefetch = (e) => {
+		const url = pageLink(e.target);
+		if (!url || fetched.has(url.pathname)) return;
+		fetched.add(url.pathname);
+		const l = document.createElement('link');
+		l.rel = 'prefetch';
+		l.href = url.pathname;
+		document.head.appendChild(l);
+	};
+	// браузер умеет переходы между документами (Chrome, Edge, Safari 18.2+, css/menu.css → @view-transition) —
+	// ссылку не перехватываем: старая страница стоит, пока новая не готова, и перетекает в неё без тёмной паузы.
+	// А чтобы новая была готова сразу, Chrome собирает её заранее, пока курсор задержался на ссылке (prerender)
+	const nativeVT = !reduced && 'onpagereveal' in window && !!(window.CSS && CSS.supports && CSS.supports('view-transition-class', 'x'));
+	if (nativeVT && HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules')) {
+		const rules = document.createElement('script');
+		rules.type = 'speculationrules';
+		rules.textContent = JSON.stringify({
+			prerender: [{
+				where: { and: [{ href_matches: '/*' }, { not: { selector_matches: '[target="_blank"], [download]' } }] },
+				eagerness: 'moderate',
+			}],
+		});
+		document.head.appendChild(rules);
+	} else {
+		document.addEventListener('pointerover', prefetch, { passive: true });
+		document.addEventListener('pointerdown', prefetch, { passive: true });
+	}
 	document.addEventListener('click', (e) => {
 		if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-		const a = e.target.closest('a[href]');
-		if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
-		const url = new URL(a.href, location.href);
-		if (url.origin !== location.origin || url.pathname === location.pathname) return; // якорь на этой же странице — не переход
+		const url = pageLink(e.target);
+		if (!url) return;
+		if (nativeVT) { markLeave(); return; }
 		e.preventDefault();
 		if (window.lenis) window.lenis.stop();
 		veil.classList.add('is-on');
 		markLeave();
-		setTimeout(() => { location.href = url.href; }, reduced ? 0 : 600);
+		setTimeout(() => { location.href = url.href; }, reduced ? 0 : 450);
 	});
 	window.addEventListener('pagehide', markLeave);
 
-	// пришли под завесой — снимаем её, когда страница загрузилась и браузер перестал «спотыкаться»
-	// (десяток ровных кадров подряд), но не позже чем через 3 с после загрузки
+	// пришли под завесой — снимаем её, как только собран первый экран: разметка и скрипты готовы, картинки
+	// в окне декодированы, шрифты пришли (не дольше 0,8 с), и после этого браузер выдал полдюжины ровных кадров
+	// подряд — стартовая работа сцен позади, проявление не споткнётся (не дольше 1,5 с). Полную загрузку страницы
+	// не ждём: на главной это все фото галереи — секунды тёмного экрана
 	const html = document.documentElement;
 	const reveal = () => {
 		if (!html.classList.contains('veil-in') || html.classList.contains('veil-out')) return;
 		// пришли по ссылке с якорем — сначала на место, потом показ
 		if (onHome && location.hash.length > 1) go(decodeURIComponent(location.hash.slice(1)));
 		html.classList.add('veil-out');
-		setTimeout(() => html.classList.remove('veil-in', 'veil-out'), reduced ? 0 : 800);
+		if (performance.mark) performance.mark('nk-veil-out');
+		setTimeout(() => html.classList.remove('veil-in', 'veil-out'), reduced ? 0 : 600);
 	};
-	if (html.classList.contains('veil-in')) {
-		const settle = () => {
+	// «страница собралась» — тогда снимается завеса. Страница, собранная браузером заранее (prerender), кадров
+	// не рисует — тогда это случится уже после её показа
+	let settled = false;
+	const settle = () => {
+		const steady = () => {
 			const t0 = performance.now();
 			let last = t0, smooth = 0;
 			const tick = (now) => {
 				smooth = now - last < 34 ? smooth + 1 : 0;
 				last = now;
-				if (smooth >= 10 || now - t0 > 3000) { reveal(); return; }
+				if (smooth >= 6 || now - t0 > 1500) {
+					settled = true;
+					if (performance.mark) performance.mark('nk-settled');
+					reveal();
+					return;
+				}
 				requestAnimationFrame(tick);
 			};
 			requestAnimationFrame(tick);
 		};
-		if (document.readyState === 'complete') settle(); else window.addEventListener('load', settle, { once: true });
-	}
+		const ready = () => {
+			const vh = window.innerHeight;
+			const first = Array.from(document.images).filter((img) => {
+				const r = img.getBoundingClientRect();
+				return r.width > 0 && r.bottom > 0 && r.top < vh;
+			});
+			const waits = first.map((img) => (img.decode ? img.decode() : Promise.resolve()).catch(() => {}));
+			if (document.fonts) waits.push(document.fonts.ready);
+			Promise.race([Promise.all(waits), new Promise((r) => setTimeout(r, 800))]).then(steady);
+		};
+		if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready, { once: true }); else ready();
+	};
+	settle();
+	// переход браузера на ссылку с якорем: завесу ставит скрипт в <head> в момент показа; если страница к тому
+	// времени уже собралась (prerender) — снимаем сразу, иначе это сделает settle
+	window.addEventListener('pagereveal', () => { if (settled) reveal(); });
 	// вернулись кнопкой «назад» на страницу из кэша браузера — она уже на месте: без завесы
 	window.addEventListener('pageshow', (e) => {
 		if (!e.persisted) return;

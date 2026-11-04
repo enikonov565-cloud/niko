@@ -773,7 +773,11 @@ function init() {
 	const filmTex = new THREE.CanvasTexture(filmCanvas);
 	filmTex.colorSpace = THREE.SRGBColorSpace;
 	filmTex.anisotropy = 8;
-	const filmImgs = FILM.map((src) => { const im = new Image(); im.src = src; im.onload = drawFilm; return im; });
+	// кадр плёнки ~160 px в высоту — хватает уменьшенных копий; перерисовка ленты (холст 4096 px и его загрузка
+	// в видеокарту) — одна на кадр, а не на каждый пришедший снимок: раньше восемь перерисовок подряд рвали проявление главной
+	let filmQueued = false;
+	const queueFilm = () => { if (filmQueued) return; filmQueued = true; requestAnimationFrame(() => { filmQueued = false; drawFilm(); }); };
+	const filmImgs = FILM.map((src) => { const im = new Image(); im.decoding = 'async'; im.src = src.replace(/^img\//, 'img/thumbs/'); im.onload = queueFilm; return im; });
 	function drawFilm() {
 		const c = filmCanvas.getContext('2d');
 		const W = filmCanvas.width;

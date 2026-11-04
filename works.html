@@ -4,7 +4,8 @@
 		<meta charset="UTF-8" />
 		<!-- переход между страницами сайта: пришли с другой нашей страницы — открываемся под тёмной завесой,
 			js/menu.js снимает её, когда страница встала на место (css/menu.css) -->
-		<script>try { if (sessionStorage.getItem('nk-veil')) { sessionStorage.removeItem('nk-veil'); document.documentElement.classList.add('veil-in'); } } catch (e) {}</script>
+		<script>(function () { var h = document.documentElement; if (document.prerendering) { h.classList.add('nk-prerender'); document.addEventListener('prerenderingchange', function () { h.classList.remove('nk-prerender'); }, { once: true }); } try { if (sessionStorage.getItem('nk-veil')) { sessionStorage.removeItem('nk-veil'); h.classList.add('veil-in'); } } catch (e) {} addEventListener('pagereveal', function (e) { if (!e.viewTransition) return; e.viewTransition.ready.catch(function () {}); if (location.hash.length > 1) h.classList.add('veil-in'); else h.classList.remove('veil-in'); }); })();</script>
+		<style>@view-transition { navigation: auto; }</style>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Мои работы — nikonovphoto</title>
 		<meta name="description" content="Работы nikonovphoto по разделам: портрет, уличный портрет, стрит-фото, архитектура и пейзаж." />
@@ -17,7 +18,7 @@
 		<!-- ?v=… — версия файлов: после изменений CSS/JS увеличьте число, и браузеры не покажут старую копию из кэша -->
 		<link rel="stylesheet" href="css/hero.css?v=4" />
 		<link rel="stylesheet" href="css/art.css?v=56" />
-		<link rel="stylesheet" href="css/menu.css?v=64" />
+		<link rel="stylesheet" href="css/menu.css?v=66" />
 		<link rel="stylesheet" href="css/works.css?v=64" />
 		<link rel="stylesheet" href="css/photo-card.css?v=9" />
 	</head>
@@ -70,7 +71,7 @@
 		<script src="js/services-data.js?v=4"></script>
 		<script src="js/works.js?v=66"></script>
 		<script src="js/photo-card.js?v=14"></script>
-		<script src="js/menu.js?v=45"></script>
+		<script src="js/menu.js?v=47"></script>
 		<script type="module" src="js/invite-tunnel.js?v=21"></script>
 	</body>
 </html>
