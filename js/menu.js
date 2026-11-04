@@ -19,8 +19,8 @@
 		{ id: 'stages', title: 'Как рождается кадр' },
 		{ id: 'services', title: 'Кадр под настроение' },
 		{ id: 'all-works', title: 'Мои работы' },
-		// бриф на съёмку — страница появится позже: впишите href: 'brief.html' (или адрес формы) и уберите soon (пока пункт не ссылка)
-		{ id: 'brief', title: 'Бриф на съёмку', soon: true },
+		// бриф на съёмку — анкета перед съёмкой, ответы приходят в Telegram (js/brief.js)
+		{ id: 'brief', title: 'Бриф на съёмку', page: 'brief.html', href: 'brief.html' },
 	];
 	const CONTACTS = [
 		{ title: 'Telegram', href: 'https://t.me/Nikonovevgeny', note: '@Nikonovevgeny' },
